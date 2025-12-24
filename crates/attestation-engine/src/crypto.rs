@@ -71,7 +71,9 @@ pub fn compute_attestation_id(contributor: &str, epoch: u64, evidence_root: &str
 
 pub fn verifying_key_from_hex(hex_str: &str) -> Result<VerifyingKey, CryptoError> {
     let bytes = Vec::from_hex(hex_str)?;
-    let key_bytes: [u8; 32] = bytes.try_into().map_err(|_| CryptoError::InvalidPublicKey)?;
+    let key_bytes: [u8; 32] = bytes
+        .try_into()
+        .map_err(|_| CryptoError::InvalidPublicKey)?;
     VerifyingKey::from_bytes(&key_bytes).map_err(|_| CryptoError::InvalidPublicKey)
 }
 
@@ -79,7 +81,10 @@ pub fn public_key_hex(signing_key: &SigningKey) -> String {
     hex::encode(signing_key.verifying_key().to_bytes())
 }
 
-pub fn sign_payload(payload: &AttestationPayload, signing_key: &SigningKey) -> Result<String, CryptoError> {
+pub fn sign_payload(
+    payload: &AttestationPayload,
+    signing_key: &SigningKey,
+) -> Result<String, CryptoError> {
     let payload_bytes = canonical_json(payload)?;
     let signature = signing_key.sign(&payload_bytes);
     Ok(hex::encode(signature.to_bytes()))
@@ -125,7 +130,10 @@ pub fn issue_attestation(
     Ok(payload.into_attestation(signature))
 }
 
-pub fn verify_attestation(attestation: &Attestation, evidence: &EvidenceBundle) -> Result<(), AttestationError> {
+pub fn verify_attestation(
+    attestation: &Attestation,
+    evidence: &EvidenceBundle,
+) -> Result<(), AttestationError> {
     validate_validation_score(attestation.validation_score)?;
 
     let evidence_root = compute_evidence_root(evidence)?;
@@ -133,7 +141,11 @@ pub fn verify_attestation(attestation: &Attestation, evidence: &EvidenceBundle) 
         return Err(AttestationError::EvidenceRootMismatch);
     }
 
-    let expected_id = compute_attestation_id(&attestation.contributor, attestation.epoch, &attestation.evidence_root);
+    let expected_id = compute_attestation_id(
+        &attestation.contributor,
+        attestation.epoch,
+        &attestation.evidence_root,
+    );
     if expected_id != attestation.attestation_id {
         return Err(AttestationError::AttestationIdMismatch);
     }
