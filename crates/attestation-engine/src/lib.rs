@@ -73,7 +73,8 @@ mod tests {
             },
         };
 
-        let attestation = issue_attestation("contributor", 42, &bundle, &signing_key, 0.99).unwrap();
+        let attestation =
+            issue_attestation("contributor", 42, &bundle, &signing_key, 0.99).unwrap();
         assert!(verify_attestation(&attestation, &bundle).is_ok());
     }
 
@@ -92,7 +93,8 @@ mod tests {
             },
         };
 
-        let mut attestation = issue_attestation("contributor", 7, &bundle, &signing_key, 0.99).unwrap();
+        let mut attestation =
+            issue_attestation("contributor", 7, &bundle, &signing_key, 0.99).unwrap();
         attestation.poi_score = 0.1;
         assert!(verify_attestation(&attestation, &bundle).is_err());
     }
