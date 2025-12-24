@@ -1,0 +1,1061 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "BIZRA AEON OMEGA Production Monitoring Dashboard",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": null,
+  "iteration": 1700000000000,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "🌟 IHSĀN METRIC OVERVIEW",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "expr": "bizra_ihsan_score{dimension=\"truthfulness\"}",
+          "legendFormat": "Truthfulness",
+          "refId": "A"
+        }
+      ],
+      "title": "📜 Truthfulness (Ikhlas)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "bizra_ihsan_score{dimension=\"dignity\"}",
+          "legendFormat": "Dignity",
+          "refId": "A"
+        }
+      ],
+      "title": "👑 Dignity (Karama)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "bizra_ihsan_score{dimension=\"fairness\"}",
+          "legendFormat": "Fairness",
+          "refId": "A"
+        }
+      ],
+      "title": "⚖️ Fairness (Adl)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "bizra_ihsan_score{dimension=\"excellence\"}",
+          "legendFormat": "Excellence",
+          "refId": "A"
+        }
+      ],
+      "title": "💎 Excellence (Kamal)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "bizra_ihsan_score{dimension=\"sustainability\"}",
+          "legendFormat": "Sustainability",
+          "refId": "A"
+        }
+      ],
+      "title": "🌱 Sustainability (Istidama)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#E02F44", "value": null },
+              { "color": "#FF9830", "value": 0.7 },
+              { "color": "#73BF69", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "expr": "bizra_ihsan_aggregate",
+          "legendFormat": "Aggregate IM",
+          "refId": "A"
+        }
+      ],
+      "title": "⭐ Aggregate Ihsān Metric",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 101,
+      "panels": [],
+      "title": "📊 IHSĀN DIMENSION TRENDS",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "scheme",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.85 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["mean", "min", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "expr": "bizra_ihsan_score{dimension=\"truthfulness\"}", "legendFormat": "Truthfulness", "refId": "A" },
+        { "expr": "bizra_ihsan_score{dimension=\"dignity\"}", "legendFormat": "Dignity", "refId": "B" },
+        { "expr": "bizra_ihsan_score{dimension=\"fairness\"}", "legendFormat": "Fairness", "refId": "C" },
+        { "expr": "bizra_ihsan_score{dimension=\"excellence\"}", "legendFormat": "Excellence", "refId": "D" },
+        { "expr": "bizra_ihsan_score{dimension=\"sustainability\"}", "legendFormat": "Sustainability", "refId": "E" }
+      ],
+      "title": "Ihsān Dimension Trends Over Time",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 102,
+      "panels": [],
+      "title": "⚡ VERIFICATION PERFORMANCE",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "latency (ms)",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "mappings": [],
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["mean", "p50", "p95", "p99"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(bizra_verification_duration_seconds_bucket{tier=\"STATISTICAL\"}[5m])) by (le)) * 1000", "legendFormat": "p50 Statistical", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(bizra_verification_duration_seconds_bucket{tier=\"STATISTICAL\"}[5m])) by (le)) * 1000", "legendFormat": "p95 Statistical", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(bizra_verification_duration_seconds_bucket{tier=\"STATISTICAL\"}[5m])) by (le)) * 1000", "legendFormat": "p99 Statistical", "refId": "C" },
+        { "expr": "histogram_quantile(0.50, sum(rate(bizra_verification_duration_seconds_bucket{tier=\"FULL_ZK\"}[5m])) by (le)) * 1000", "legendFormat": "p50 Full ZK", "refId": "D" },
+        { "expr": "histogram_quantile(0.95, sum(rate(bizra_verification_duration_seconds_bucket{tier=\"FULL_ZK\"}[5m])) by (le)) * 1000", "legendFormat": "p95 Full ZK", "refId": "E" }
+      ],
+      "title": "Verification Latency by Tier",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal" }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "sum(rate(bizra_verification_total{tier=\"STATISTICAL\"}[5m]))", "legendFormat": "Statistical", "refId": "A" },
+        { "expr": "sum(rate(bizra_verification_total{tier=\"INCREMENTAL\"}[5m]))", "legendFormat": "Incremental", "refId": "B" },
+        { "expr": "sum(rate(bizra_verification_total{tier=\"OPTIMISTIC\"}[5m]))", "legendFormat": "Optimistic", "refId": "C" },
+        { "expr": "sum(rate(bizra_verification_total{tier=\"FULL_ZK\"}[5m]))", "legendFormat": "Full ZK", "refId": "D" },
+        { "expr": "sum(rate(bizra_verification_total{tier=\"FORMAL\"}[5m]))", "legendFormat": "Formal", "refId": "E" }
+      ],
+      "title": "Verification Throughput by Tier",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 103,
+      "panels": [],
+      "title": "🔮 VALUE ORACLE ENSEMBLE",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "continuous-GrYlRd" },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 26 },
+      "id": 10,
+      "options": {
+        "displayMode": "lcd",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true
+      },
+      "targets": [
+        { "expr": "bizra_oracle_signal{oracle=\"shapley\"}", "legendFormat": "Shapley Value Oracle", "refId": "A" },
+        { "expr": "bizra_oracle_signal{oracle=\"prediction_market\"}", "legendFormat": "Prediction Market", "refId": "B" },
+        { "expr": "bizra_oracle_signal{oracle=\"reputation\"}", "legendFormat": "Reputation Oracle", "refId": "C" },
+        { "expr": "bizra_oracle_signal{oracle=\"formal_verification\"}", "legendFormat": "Formal Verification", "refId": "D" },
+        { "expr": "bizra_oracle_signal{oracle=\"information_theoretic\"}", "legendFormat": "Information Theoretic", "refId": "E" }
+      ],
+      "title": "Oracle Signal Values",
+      "type": "bargauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.2 },
+              { "color": "red", "value": 0.4 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 26 },
+      "id": 11,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        { "expr": "bizra_oracle_disagreement", "legendFormat": "Disagreement", "refId": "A" }
+      ],
+      "title": "Oracle Disagreement Score",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 0.8 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 26 },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_oracle_confidence", "legendFormat": "Confidence", "refId": "A" }
+      ],
+      "title": "Oracle Ensemble Confidence",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 33 },
+      "id": 104,
+      "panels": [],
+      "title": "🛡️ CIRCUIT BREAKER STATUS",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "green", "text": "CLOSED" } }, "type": "value" },
+            { "options": { "1": { "color": "yellow", "text": "HALF_OPEN" } }, "type": "value" },
+            { "options": { "2": { "color": "red", "text": "OPEN" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 34 },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_circuit_state{name=\"verification_circuit\"}", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Verification Circuit",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "green", "text": "CLOSED" } }, "type": "value" },
+            { "options": { "1": { "color": "yellow", "text": "HALF_OPEN" } }, "type": "value" },
+            { "options": { "2": { "color": "red", "text": "OPEN" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 34 },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_circuit_state{name=\"oracle_circuit\"}", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Oracle Circuit",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "green", "text": "CLOSED" } }, "type": "value" },
+            { "options": { "1": { "color": "yellow", "text": "HALF_OPEN" } }, "type": "value" },
+            { "options": { "2": { "color": "red", "text": "OPEN" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 34 },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_circuit_state{name=\"ethics_circuit\"}", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Ethics Circuit",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "green", "text": "CLOSED" } }, "type": "value" },
+            { "options": { "1": { "color": "yellow", "text": "HALF_OPEN" } }, "type": "value" },
+            { "options": { "2": { "color": "red", "text": "OPEN" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 34 },
+      "id": 16,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_circuit_state{name=\"quantum_security_circuit\"}", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Quantum Security Circuit",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2 },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 38 },
+      "id": 17,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "bizra_circuit_failure_rate{name=\"verification_circuit\"}", "legendFormat": "Verification", "refId": "A" },
+        { "expr": "bizra_circuit_failure_rate{name=\"oracle_circuit\"}", "legendFormat": "Oracle", "refId": "B" },
+        { "expr": "bizra_circuit_failure_rate{name=\"ethics_circuit\"}", "legendFormat": "Ethics", "refId": "C" },
+        { "expr": "bizra_circuit_failure_rate{name=\"quantum_security_circuit\"}", "legendFormat": "Quantum", "refId": "D" }
+      ],
+      "title": "Circuit Breaker Failure Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "bars", "fillOpacity": 80, "stacking": { "mode": "normal" } },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 38 },
+      "id": 18,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "sum(increase(bizra_circuit_calls_total{result=\"success\"}[5m])) by (name)", "legendFormat": "{{name}} Success", "refId": "A" },
+        { "expr": "sum(increase(bizra_circuit_calls_total{result=\"failure\"}[5m])) by (name)", "legendFormat": "{{name}} Failure", "refId": "B" }
+      ],
+      "title": "Circuit Breaker Call Distribution",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 44 },
+      "id": 105,
+      "panels": [],
+      "title": "🔗 TEMPORAL CHAIN INTEGRITY",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 45 },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_chain_length", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Chain Length",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "INVALID" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "text": "VALID" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 45 },
+      "id": 20,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_chain_integrity", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Chain Integrity Status",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "dateTimeAsIso"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 45 },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_chain_last_verification_timestamp * 1000", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Last Chain Verification",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 45 },
+      "id": 22,
+      "options": {
+        "legend": { "displayMode": "hidden" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        { "expr": "rate(bizra_chain_append_total[5m])", "legendFormat": "Append Rate", "refId": "A" }
+      ],
+      "title": "Chain Append Rate",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 },
+      "id": 106,
+      "panels": [],
+      "title": "🖥️ SYSTEM RESOURCES",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 51 },
+      "id": 23,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        { "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "CPU Usage",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 51 },
+      "id": 24,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        { "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Memory Usage",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2 },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 51 },
+      "id": 25,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "process_resident_memory_bytes", "legendFormat": "RSS", "refId": "A" },
+        { "expr": "go_memstats_heap_alloc_bytes", "legendFormat": "Heap", "refId": "B" }
+      ],
+      "title": "Process Memory",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 57 },
+      "id": 107,
+      "panels": [],
+      "title": "🔐 CRYPTOGRAPHIC OPERATIONS",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 58 },
+      "id": 26,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "rate(bizra_crypto_operations_total{operation=\"blake3_hash\"}[5m])", "legendFormat": "Blake3 Hash", "refId": "A" },
+        { "expr": "rate(bizra_crypto_operations_total{operation=\"sha3_hash\"}[5m])", "legendFormat": "SHA3 Hash", "refId": "B" },
+        { "expr": "rate(bizra_crypto_operations_total{operation=\"ed25519_sign\"}[5m])", "legendFormat": "Ed25519 Sign", "refId": "C" },
+        { "expr": "rate(bizra_crypto_operations_total{operation=\"ed25519_verify\"}[5m])", "legendFormat": "Ed25519 Verify", "refId": "D" },
+        { "expr": "rate(bizra_crypto_operations_total{operation=\"dilithium_sign\"}[5m])", "legendFormat": "Dilithium Sign", "refId": "E" }
+      ],
+      "title": "Cryptographic Operation Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "µs"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 58 },
+      "id": 27,
+      "options": {
+        "legend": { "calcs": ["mean", "p50", "p95"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(bizra_crypto_duration_seconds_bucket{operation=\"blake3_hash\"}[5m])) by (le)) * 1000000", "legendFormat": "Blake3 p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(bizra_crypto_duration_seconds_bucket{operation=\"blake3_hash\"}[5m])) by (le)) * 1000000", "legendFormat": "Blake3 p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.50, sum(rate(bizra_crypto_duration_seconds_bucket{operation=\"ed25519_sign\"}[5m])) by (le)) * 1000000", "legendFormat": "Ed25519 Sign p50", "refId": "C" },
+        { "expr": "histogram_quantile(0.95, sum(rate(bizra_crypto_duration_seconds_bucket{operation=\"ed25519_sign\"}[5m])) by (le)) * 1000000", "legendFormat": "Ed25519 Sign p95", "refId": "D" }
+      ],
+      "title": "Cryptographic Operation Latency",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 64 },
+      "id": 108,
+      "panels": [],
+      "title": "📈 BATCH VERIFICATION THROUGHPUT",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 500 },
+              { "color": "green", "value": 1000 }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 65 },
+      "id": 28,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_batch_throughput", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Batch Throughput (actions/sec)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "green", "value": 8 }
+            ]
+          },
+          "unit": "x"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 65 },
+      "id": 29,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "expr": "bizra_batch_efficiency_gain", "legendFormat": "", "refId": "A" }
+      ],
+      "title": "Batch Efficiency Gain",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2 },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 65 },
+      "id": 30,
+      "options": {
+        "legend": { "displayMode": "hidden" },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        { "expr": "bizra_batch_queue_size", "legendFormat": "Queue Size", "refId": "A" }
+      ],
+      "title": "Batch Queue Size",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["bizra", "ihsan", "cognitive", "verification", "ethics"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "BIZRA AEON OMEGA - Production Monitoring",
+  "uid": "bizra-aeon-omega-prod",
+  "version": 1,
+  "weekStart": ""
+}

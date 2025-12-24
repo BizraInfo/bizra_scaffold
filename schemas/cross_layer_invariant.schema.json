@@ -1,0 +1,78 @@
+{
+  "$id": "https://bizra.ai/schemas/cross_layer_invariant.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA Cross-Layer Invariant",
+  "description": "Formal specification of invariants spanning multiple cognitive layers",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "invariant_id",
+    "source_layer",
+    "target_layer",
+    "invariant_predicate",
+    "proof_type",
+    "verification_evidence",
+    "timestamp_ms"
+  ],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "kind": {"const": "cross_layer_invariant"},
+    "invariant_id": {
+      "type": "string",
+      "pattern": "^inv_[0-9a-f]{16}$"
+    },
+    "source_layer": {
+      "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "description": "Layer where condition originates"
+    },
+    "target_layer": {
+      "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "description": "Layer where consequence must hold"
+    },
+    "invariant_predicate": {
+      "type": "object",
+      "properties": {
+        "if_condition": {
+          "type": "string",
+          "description": "Condition expression (e.g., 'surprise_ppm > 200000')"
+        },
+        "then_consequence": {
+          "type": "string",
+          "description": "Required consequence (e.g., 'governance_escalate = true')"
+        },
+        "logical_operator": {
+          "enum": ["IMPLIES", "IFF", "AND", "OR"],
+          "description": "Logical relationship between condition and consequence"
+        }
+      }
+    },
+    "proof_type": {
+      "enum": ["DEDUCTIVE", "INDUCTIVE", "STATISTICAL", "MECHANIZED"],
+      "description": "Type of verification performed"
+    },
+    "verification_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dataset_size": {"type": "integer"},
+          "violation_count": {"type": "integer"},
+          "confidence_interval": {"type": "number"},
+          "proof_artifact_hash": {"type": "string"}
+        }
+      }
+    },
+    "violation_tolerance_ppm": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "Maximum acceptable violation rate (parts per million)"
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

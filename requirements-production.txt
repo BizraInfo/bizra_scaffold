@@ -1,0 +1,126 @@
+# ============================================================================
+# BIZRA AEON OMEGA v10.0.0 - PRODUCTION DEPENDENCIES
+# ============================================================================
+# Pin ALL versions for reproducible builds (SOT compliance)
+# Last Updated: 2025-12-24
+# Python: 3.10+
+
+# ──────────────────────────────────────────────────────────────────────────
+# CORE DEEP LEARNING & NUMERICS
+# ──────────────────────────────────────────────────────────────────────────
+torch==2.7.1+cu118  # PyTorch with CUDA 11.8 support
+numpy==2.3.3        # Numerical computing
+scipy==1.11.4       # Scientific computing
+
+# ──────────────────────────────────────────────────────────────────────────
+# POST-QUANTUM CRYPTOGRAPHY (NIST-Certified)
+# ──────────────────────────────────────────────────────────────────────────
+liboqs-python==0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
+cryptography==45.0.7        # Classical crypto (Ed25519, SHA3)
+pycryptodome==3.18.0        # Additional crypto primitives
+
+# ──────────────────────────────────────────────────────────────────────────
+# MEMORY & DATA STRUCTURES
+# ──────────────────────────────────────────────────────────────────────────
+faiss-cpu==1.7.4            # Vector similarity search (L3 Episodic Memory)
+neo4j==5.13.0               # Graph database driver (L4 Semantic HyperGraph)
+networkx==3.3               # Graph analysis and algorithms
+redis==5.0.0                # In-memory cache (temporal chain acceleration)
+
+# ──────────────────────────────────────────────────────────────────────────
+# WEB FRAMEWORK & API
+# ──────────────────────────────────────────────────────────────────────────
+fastapi==0.104.1            # Modern async web framework
+uvicorn[standard]==0.24.0   # ASGI server with extras (uvloop, httptools)
+pydantic==2.5.0             # Data validation
+pydantic-settings==2.1.0    # Settings management
+python-multipart==0.0.6     # File uploads support
+
+# ──────────────────────────────────────────────────────────────────────────
+# MONITORING & OBSERVABILITY
+# ──────────────────────────────────────────────────────────────────────────
+prometheus-client==0.19.0   # Prometheus metrics exporter
+python-json-logger==2.0.7   # Structured JSON logging
+opentelemetry-api==1.21.0   # Distributed tracing
+opentelemetry-sdk==1.21.0   # OpenTelemetry SDK
+
+# ──────────────────────────────────────────────────────────────────────────
+# DATABASE & PERSISTENCE
+# ──────────────────────────────────────────────────────────────────────────
+sqlalchemy[asyncio]==2.0.23 # Async SQL ORM
+asyncpg==0.29.0             # Async PostgreSQL driver
+motor==3.3.1                # Async MongoDB driver
+
+# ──────────────────────────────────────────────────────────────────────────
+# DATA PROCESSING & COMPRESSION
+# ──────────────────────────────────────────────────────────────────────────
+msgpack==1.0.7              # Fast binary serialization
+orjson==3.9.10              # Fast JSON parsing/serialization
+# lzma is stdlib (no install needed)
+
+# ──────────────────────────────────────────────────────────────────────────
+# TESTING & QUALITY ASSURANCE
+# ──────────────────────────────────────────────────────────────────────────
+pytest==7.4.3               # Testing framework
+pytest-asyncio==0.21.1      # Async test support
+pytest-cov==4.1.0           # Coverage plugin
+pytest-xdist==3.5.0         # Parallel test execution
+hypothesis==6.92.1          # Property-based testing
+faker==20.1.0               # Test data generation
+locust==2.20.0              # Load testing
+
+# ──────────────────────────────────────────────────────────────────────────
+# CODE QUALITY & LINTING
+# ──────────────────────────────────────────────────────────────────────────
+black==23.12.1              # Code formatting
+ruff==0.1.9                 # Fast Python linter
+mypy==1.7.1                 # Static type checking
+bandit==1.7.6               # Security linting
+
+# ──────────────────────────────────────────────────────────────────────────
+# DEPLOYMENT & INFRASTRUCTURE
+# ──────────────────────────────────────────────────────────────────────────
+kubernetes==28.1.0          # Kubernetes Python client
+docker==7.0.0               # Docker SDK
+python-dotenv==1.0.0        # Environment variable management
+
+# ──────────────────────────────────────────────────────────────────────────
+# UTILITIES
+# ──────────────────────────────────────────────────────────────────────────
+python-dateutil==2.8.2      # Date/time utilities
+pytz==2023.3                # Timezone support
+click==8.1.7                # CLI framework
+rich==13.7.0                # Terminal formatting
+tenacity==8.2.3             # Retry logic
+
+# ──────────────────────────────────────────────────────────────────────────
+# PERFORMANCE OPTIMIZATION
+# ──────────────────────────────────────────────────────────────────────────
+numba==0.58.1               # JIT compilation for numerical code
+cython==3.0.7               # C-extension compiler
+
+# ──────────────────────────────────────────────────────────────────────────
+# OPTIONAL: GPU ACCELERATION
+# ──────────────────────────────────────────────────────────────────────────
+# Uncomment if GPU support needed:
+# cupy-cuda11x==12.3.0      # NumPy-compatible array library for GPU
+
+# ============================================================================
+# INSTALLATION NOTES
+# ============================================================================
+# 
+# 1. Install liboqs system library first:
+#    Ubuntu/Debian: sudo apt-get install -y liboqs-dev
+#    macOS: brew install liboqs
+#    Windows: Download from https://openquantumsafe.org
+#
+# 2. Install PyTorch with correct CUDA version:
+#    pip install torch==2.7.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+#
+# 3. Install all dependencies:
+#    pip install -r requirements-production.txt
+#
+# 4. Verify installation:
+#    python -c "import liboqs; import faiss; import neo4j; print('✓ All deps OK')"
+#
+# ============================================================================

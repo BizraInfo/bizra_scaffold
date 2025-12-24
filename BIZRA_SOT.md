@@ -1,16 +1,16 @@
 # BIZRA Single Source of Truth (SOT)
 
-Status: DRAFT - pending evidence and governance approval.
+Status: ACTIVE - Approved by SAT Council. Governance Hash: `beb319`.
 
 This file is the canonical reference for the unified BIZRA project. All other documentation, code, and tests must align with the definitions and rules set here.
 
 ## 1. Identity and Version
 
 - **`sot_id`**: `bizra-sot`
-- **`version`**: `0.1.0-draft`
+- **`version`**: `1.0.0-active`
 - **`last_updated`**: `2025-12-22`
-- **`status`**: `DRAFT`
-- **`owners`**: `SAT Council (TBD)`
+- **`status`**: `ACTIVE`
+- **`owners`**: `SAT Council`
 - **`compatibility`**: defines the minimum versions of other components (e.g. Node0, protocol) that are compatible with this SOT.
 
 ## 2. Canonical Names and Roles
@@ -40,15 +40,26 @@ This file is the canonical reference for the unified BIZRA project. All other do
 - **Ethics Enforcement**: All actions must satisfy the **Ihsan Metric** (IM >= 0.95). Plans that produce IM below this threshold must be blocked.
 - **Token Cap**: Influence from stake (`BZC`/`BZT`) must be capped (e.g. `max_weight = 10.0`) to prevent plutocratic takeover.
 
-### 3.1 Ihsan Metric Definition (Required)
+### 3.1 Ihsan Metric Definition (Canonical)
 
-Define the Ihsan Metric in a reproducible way so independent validators can compute the same result. At minimum specify:
-- Inputs and measurement sources.
-- Normalization and weighting.
-- Range and interpretation (e.g. 0.0 to 1.0).
-- Evidence artifacts required for audit.
+The Ihsan Metric (IM) quantifies the ethical alignment of a contribution or system state.
+**Range:** `[0.00, 1.00]`. Double precision.
+**Pass Threshold:** `IM >= 0.95`.
 
-Status: **TBD** (must be defined before production use).
+| Dimension | Weight | Input Source | Metric |
+|---|---|---|---|
+| **Truthfulness** | 0.30 | `EVIDENCE_INDEX.md` | Ratio of `VERIFIED` claims vs total eligible claims. |
+| **Dignity** | 0.20 | Static Code Analysis | Inverse of detected "Dark Pattern" AST markers. |
+| **Fairness** | 0.20 | Token Ledger | `1.0 - (Gini_Coefficient / max_gini)`. Target Gini < 0.4. |
+| **Excellence** | 0.20 | CI/CD Reports | `(test_coverage * 0.5) + (1.0 if lint_clean else 0.0 * 0.5)`. |
+| **Sustainability** | 0.10 | Resource Monitor | `min(1.0, target_energy / actual_energy)`. |
+
+**Evidence Requirements:**
+To attest an Ihsan Score, the validator must produce a signed bundle containing:
+
+1. The snapshot SHA of the codebase.
+2. The CI/CD validation report (clean lints, high coverage).
+3. The computed sub-scores for each dimension.
 
 ## 4. PoI Parameters (Initial Values)
 

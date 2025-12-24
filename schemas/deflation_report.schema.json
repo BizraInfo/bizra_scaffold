@@ -1,0 +1,63 @@
+{
+  "$id": "https://bizra.ai/schemas/deflation_report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA Deflation Report",
+  "description": "Handles negative convergence events and growth token deflation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "node_id",
+    "regression_magnitude_ppm",
+    "affected_entities",
+    "governance_action",
+    "recovery_threshold_ppm",
+    "timestamp_ms",
+    "signing"
+  ],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "kind": {"const": "deflation_report"},
+    "node_id": {
+      "type": "string",
+      "description": "Node reporting regression"
+    },
+    "regression_magnitude_ppm": {
+      "type": "integer",
+      "minimum": -1000000,
+      "maximum": 0,
+      "description": "Negative convergence change in parts per million"
+    },
+    "affected_entities": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "PAT/SAT IDs experiencing deflation"
+    },
+    "governance_action": {
+      "enum": ["FREEZE_GROWTH_MINTING", "STAKE_SLASH", "OBSERVATION_REJECT"],
+      "description": "Automated governance response"
+    },
+    "recovery_threshold_ppm": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Convergence level required to resume normal operations"
+    },
+    "root_cause_analysis": {
+      "type": "object",
+      "description": "Optional diagnostic information",
+      "properties": {
+        "surprise_ppm": {"type": "integer"},
+        "novelty_score": {"type": "number"},
+        "system_health": {"type": "string"}
+      }
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json"
+    }
+  }
+}

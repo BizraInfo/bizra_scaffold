@@ -1,0 +1,109 @@
+---
+# BIZRA Horizontal Pod Autoscaler
+# Target: 5-20 pods based on CPU/Memory utilization
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bizra-api-hpa
+  namespace: bizra-system
+  labels:
+    app: bizra-api
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bizra-api
+  minReplicas: 5
+  maxReplicas: 20
+  metrics:
+    # CPU-based scaling
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    # Memory-based scaling
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    # Custom metric: requests per second
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+---
+# Pod Disruption Budget
+# Ensure minimum availability during updates
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bizra-api-pdb
+  namespace: bizra-system
+  labels:
+    app: bizra-api
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: pdb
+spec:
+  minAvailable: 80%
+  selector:
+    matchLabels:
+      app: bizra-api
+---
+# Vertical Pod Autoscaler (optional, requires VPA controller)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: bizra-api-vpa
+  namespace: bizra-system
+  labels:
+    app: bizra-api
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bizra-api
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: bizra-api
+        minAllowed:
+          cpu: "250m"
+          memory: "512Mi"
+        maxAllowed:
+          cpu: "4"
+          memory: "8Gi"
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits

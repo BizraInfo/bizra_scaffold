@@ -1,0 +1,25 @@
+# Pinned for reproducible builds. Adjust torch index/variant for your CUDA runtime.
+torch==2.7.1+cu118
+numpy==2.3.3
+networkx==3.3
+cryptography==45.0.7
+
+# Web API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic-settings>=2.1.0
+
+# Authentication
+PyJWT>=2.8.0
+
+# Metrics & Monitoring
+prometheus_client>=0.18.0
+
+# Database Drivers
+neo4j>=5.14.0
+
+# Vector Search
+faiss-cpu>=1.7.4
+
+# Cryptography
+blake3>=0.3.3

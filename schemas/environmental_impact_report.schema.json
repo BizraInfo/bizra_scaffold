@@ -1,0 +1,76 @@
+{
+  "$id": "https://bizra.ai/schemas/environmental_impact_report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA Environmental Impact Report",
+  "description": "Carbon footprint and energy efficiency tracking for Ihsān compliance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "node_id",
+    "observation_count",
+    "energy_consumption_kwh",
+    "carbon_intensity_gco2_per_kwh",
+    "total_carbon_gco2",
+    "efficiency_metric",
+    "timestamp_ms",
+    "signing"
+  ],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "kind": {"const": "environmental_impact_report"},
+    "node_id": {
+      "type": "string",
+      "description": "Node identifier generating this report"
+    },
+    "observation_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of observations processed"
+    },
+    "energy_consumption_kwh": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total energy consumed in kilowatt-hours"
+    },
+    "carbon_intensity_gco2_per_kwh": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Grid carbon intensity (grams CO2 per kWh)"
+    },
+    "total_carbon_gco2": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total carbon emissions in grams CO2"
+    },
+    "efficiency_metric": {
+      "type": "object",
+      "description": "Performance per unit energy",
+      "properties": {
+        "convergence_per_kwh": {
+          "type": "number",
+          "description": "Convergence improvement per kWh"
+        },
+        "observations_per_watt": {
+          "type": "number",
+          "description": "Processing efficiency"
+        }
+      }
+    },
+    "renewable_energy_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage of renewable energy used"
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Report generation timestamp"
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json"
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "$id": "https://bizra.ai/schemas/pat_manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA PAT Manifest (BIZRA-PAT-1)",
+  "description": "Personal Agentic Team configuration and state tracking",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "node_id",
+    "pat_id",
+    "owner_pubkey",
+    "agent_spec",
+    "growth_vector",
+    "staking",
+    "signing"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Schema version (semver)"
+    },
+    "kind": {
+      "const": "pat_manifest",
+      "description": "Document type identifier"
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Node identifier hosting this PAT"
+    },
+    "pat_id": {
+      "type": "string",
+      "pattern": "^pat_[0-9a-f]{16}$",
+      "description": "Unique PAT identifier"
+    },
+    "owner_pubkey": {
+      "type": "string",
+      "pattern": "^ed25519:[0-9a-f]{64}$",
+      "description": "Owner's Ed25519 public key"
+    },
+    "agent_spec": {
+      "type": "object",
+      "description": "Agent configuration and capabilities",
+      "properties": {
+        "primary_modality": {
+          "enum": ["vision", "audio", "code", "reasoning"],
+          "description": "Primary data processing modality"
+        },
+        "custom_goals": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "User-defined objectives"
+        },
+        "learning_rate_ppm": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "Learning rate in parts per million"
+        },
+        "personalization_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Hash of personalization data"
+        }
+      }
+    },
+    "growth_vector": {
+      "type": "object",
+      "description": "Experience and skill progression",
+      "properties": {
+        "experience_micro": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Accumulated experience in micro-units"
+        },
+        "reputation_ppm": {
+          "type": "integer",
+          "minimum": -1000000,
+          "maximum": 1000000,
+          "description": "Reputation score in parts per million"
+        },
+        "skill_tree": {
+          "type": "object",
+          "description": "Skill proficiency levels",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        }
+      }
+    },
+    "staking": {
+      "type": "object",
+      "description": "Token staking information",
+      "properties": {
+        "stable_staked_micro": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Staked SEED-S tokens in micro-units"
+        },
+        "growth_staked_micro": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Staked SEED-G tokens in micro-units"
+        },
+        "last_compound_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Timestamp of last reward compounding"
+        }
+      }
+    },
+    "universal_resource_pool_id": {
+      "type": "string",
+      "description": "Associated URP identifier"
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json",
+      "description": "Cryptographic signature"
+    }
+  }
+}

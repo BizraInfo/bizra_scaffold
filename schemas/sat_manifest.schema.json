@@ -1,0 +1,93 @@
+{
+  "$id": "https://bizra.ai/schemas/sat_manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA SAT Manifest (BIZRA-SAT-1)",
+  "description": "System Agentic Team configuration for autonomous governance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "sat_id",
+    "jurisdiction",
+    "autonomy_level",
+    "resource_controls",
+    "balancing_policy",
+    "signing"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "kind": {
+      "const": "sat_manifest"
+    },
+    "sat_id": {
+      "type": "string",
+      "pattern": "^sat_[0-9a-f]{16}$",
+      "description": "Unique SAT identifier"
+    },
+    "jurisdiction": {
+      "enum": ["network", "consensus", "resource", "security"],
+      "description": "SAT operational domain"
+    },
+    "autonomy_level": {
+      "enum": ["advisory", "supervisory", "executive"],
+      "description": "Decision-making authority level"
+    },
+    "resource_controls": {
+      "type": "object",
+      "description": "Resource allocation limits",
+      "properties": {
+        "cpu_quota_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "CPU allocation in parts per million"
+        },
+        "memory_limit_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Memory limit in bytes"
+        },
+        "bandwidth_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Bandwidth allocation in parts per million"
+        }
+      }
+    },
+    "balancing_policy": {
+      "type": "object",
+      "description": "Rebalancing rules and thresholds",
+      "properties": {
+        "target_utilization_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Target resource utilization"
+        },
+        "rebalancing_trigger_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Time interval for rebalancing checks"
+        },
+        "slashing_threshold_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Utilization threshold triggering slashing"
+        }
+      }
+    },
+    "universal_resource_pool_id": {
+      "type": "string",
+      "description": "Associated URP identifier"
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json"
+    }
+  }
+}

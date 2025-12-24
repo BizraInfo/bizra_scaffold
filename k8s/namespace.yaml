@@ -1,0 +1,61 @@
+---
+# BIZRA Kubernetes Namespace
+# Elite Practitioner Grade | Production Ready
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bizra-system
+  labels:
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: bizra-aeon-omega
+    environment: production
+    security.bizra.io/ihsan-compliant: "true"
+  annotations:
+    description: "BIZRA Cognitive Sovereign - AEON OMEGA Production Namespace"
+    contact: "bizra-ops@example.com"
+---
+# Resource Quota for namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: bizra-quota
+  namespace: bizra-system
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    pods: "50"
+    services: "20"
+    secrets: "50"
+    configmaps: "50"
+    persistentvolumeclaims: "20"
+---
+# Limit Range for pods
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: bizra-limits
+  namespace: bizra-system
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "500m"
+        memory: 512Mi
+      defaultRequest:
+        cpu: "100m"
+        memory: 128Mi
+      max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: "50m"
+        memory: 64Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 100Gi
+      min:
+        storage: 1Gi

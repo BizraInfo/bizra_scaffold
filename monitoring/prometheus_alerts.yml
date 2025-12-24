@@ -1,0 +1,310 @@
+# BIZRA Prometheus Alerting Rules
+# ================================
+# Elite Practitioner Grade | Production-Ready | Ihsān-Aligned
+#
+# These rules monitor system health and trigger alerts for:
+# - Performance degradation
+# - Security anomalies
+# - Ethical threshold violations
+# - Resource exhaustion
+
+groups:
+  - name: bizra_health_alerts
+    interval: 30s
+    rules:
+      # ═══════════════════════════════════════════════════════════════════════
+      # CRITICAL ALERTS (P0) - Immediate Response Required
+      # ═══════════════════════════════════════════════════════════════════════
+      
+      - alert: BIZRASystemCritical
+        expr: bizra_health_status == 3  # CRITICAL status
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "BIZRA system in CRITICAL state"
+          description: "System health has been CRITICAL for {{ $value }} minutes. Multiple subsystems may be failing."
+          runbook_url: "https://docs.bizra.io/runbooks/critical-health"
+          
+      - alert: IhsanThresholdViolation
+        expr: bizra_ihsan_score < 0.95
+        for: 30s
+        labels:
+          severity: critical
+          team: ethics
+        annotations:
+          summary: "Ihsān score below threshold ({{ $value }})"
+          description: "Ihsān Metric has dropped below 0.95 threshold. This blocks all actions per SOT §3.1."
+          runbook_url: "https://docs.bizra.io/runbooks/ihsan-violation"
+          
+      - alert: TemporalChainCompromised
+        expr: bizra_temporal_chain_valid == 0
+        for: 0s  # Immediate
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Temporal chain integrity failure"
+          description: "Quantum-temporal security chain has failed verification. Possible tampering detected."
+          runbook_url: "https://docs.bizra.io/runbooks/chain-compromise"
+          
+      - alert: VerificationEngineDown
+        expr: up{job="bizra-verification"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Verification engine is down"
+          description: "The tiered verification engine is not responding."
+          
+      # ═══════════════════════════════════════════════════════════════════════
+      # HIGH SEVERITY ALERTS (P1) - Response Within 15 Minutes
+      # ═══════════════════════════════════════════════════════════════════════
+      
+      - alert: BIZRASystemDegraded
+        expr: bizra_health_status == 2  # DEGRADED status
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "BIZRA system in DEGRADED state"
+          description: "System health has been DEGRADED for 5+ minutes. Performance may be impacted."
+          runbook_url: "https://docs.bizra.io/runbooks/degraded-health"
+          
+      - alert: HighVerificationLatency
+        expr: histogram_quantile(0.95, rate(bizra_verification_duration_seconds_bucket[5m])) > 0.25
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "Verification latency p95 exceeds 250ms"
+          description: "95th percentile verification latency is {{ $value | humanizeDuration }}. This may cause timeouts."
+          
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(bizra_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(bizra_http_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "Error rate exceeds 5%"
+          description: "HTTP 5xx error rate is {{ $value | humanizePercentage }}. Investigate immediately."
+          
+      - alert: MemoryPressure
+        expr: |
+          (
+            container_memory_usage_bytes{container="bizra-sovereign"}
+            /
+            container_spec_memory_limit_bytes{container="bizra-sovereign"}
+          ) > 0.85
+        for: 10m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "Memory usage exceeds 85%"
+          description: "Container memory at {{ $value | humanizePercentage }}. May trigger OOM."
+          
+      - alert: EthicsConsensusFailure
+        expr: bizra_ethics_consensus_reached == 0
+        for: 2m
+        labels:
+          severity: high
+          team: ethics
+        annotations:
+          summary: "Ethics oracles failed to reach consensus"
+          description: "The 5 ethical framework oracles could not reach consensus for 2+ minutes."
+          
+      # ═══════════════════════════════════════════════════════════════════════
+      # MEDIUM SEVERITY ALERTS (P2) - Response Within 1 Hour
+      # ═══════════════════════════════════════════════════════════════════════
+      
+      - alert: ValueOracleDisagreement
+        expr: bizra_value_oracle_disagreement > 0.3
+        for: 10m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "Value oracle disagreement exceeds 30%"
+          description: "The pluralistic value oracles are showing {{ $value | humanizePercentage }} disagreement."
+          
+      - alert: L3MemoryGrowth
+        expr: rate(bizra_l3_episode_count[1h]) > 100
+        for: 30m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "L3 episodic memory growing rapidly"
+          description: "L3 memory adding {{ $value | humanize }} episodes/hour. Consider consolidation."
+          
+      - alert: HighQuantizationError
+        expr: bizra_quantization_error > 0.05
+        for: 15m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "Quantization error exceeds 5%"
+          description: "Neural-symbolic quantization error at {{ $value | humanizePercentage }}."
+          
+      - alert: CompressionRatioExceeded
+        expr: bizra_l2_compression_ratio > 0.45
+        for: 30m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "L2 compression ratio exceeds 45% target"
+          description: "LZMA compression achieving only {{ $value | humanizePercentage }} (target: ≤45%)."
+          
+      - alert: FAISSRecallDegraded
+        expr: bizra_faiss_recall_latency_seconds > 0.005
+        for: 10m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "FAISS recall latency exceeds 5ms"
+          description: "Vector similarity search taking {{ $value | humanizeDuration }}."
+          
+      # ═══════════════════════════════════════════════════════════════════════
+      # LOW SEVERITY ALERTS (P3) - Response Within 24 Hours
+      # ═══════════════════════════════════════════════════════════════════════
+      
+      - alert: KeyRotationDue
+        expr: (time() - bizra_key_last_rotation_timestamp) > 2592000  # 30 days
+        for: 1h
+        labels:
+          severity: low
+          team: security
+        annotations:
+          summary: "Cryptographic key rotation due"
+          description: "Keys have not been rotated in {{ $value | humanizeDuration }}."
+          
+      - alert: HighChainEntropy
+        expr: bizra_temporal_chain_entropy > 7.5
+        for: 1h
+        labels:
+          severity: low
+          team: security
+        annotations:
+          summary: "Temporal chain entropy anomaly"
+          description: "Chain entropy at {{ $value }} bits (expected: 6-7 bits for healthy chain)."
+          
+      - alert: LowTestCoverage
+        expr: bizra_test_coverage_percent < 80
+        for: 24h
+        labels:
+          severity: low
+          team: platform
+        annotations:
+          summary: "Test coverage below 80%"
+          description: "Code coverage at {{ $value }}%. Consider adding tests."
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # IHSĀN DIMENSION MONITORING
+  # ═══════════════════════════════════════════════════════════════════════════
+  
+  - name: bizra_ihsan_dimension_alerts
+    interval: 60s
+    rules:
+      - alert: TruthfulnessDecline
+        expr: bizra_ihsan_dimension{dimension="truthfulness"} < 0.90
+        for: 5m
+        labels:
+          severity: high
+          team: ethics
+          dimension: truthfulness
+        annotations:
+          summary: "IKHLAS (Truthfulness) dimension declining"
+          description: "Truthfulness score at {{ $value }}. Weight: 0.30 (highest)."
+          
+      - alert: DignityDecline
+        expr: bizra_ihsan_dimension{dimension="dignity"} < 0.85
+        for: 5m
+        labels:
+          severity: high
+          team: ethics
+          dimension: dignity
+        annotations:
+          summary: "KARAMA (Dignity) dimension declining"
+          description: "Dignity score at {{ $value }}. Dark pattern detection may have triggered."
+          
+      - alert: FairnessDecline
+        expr: bizra_ihsan_dimension{dimension="fairness"} < 0.85
+        for: 5m
+        labels:
+          severity: high
+          team: ethics
+          dimension: fairness
+        annotations:
+          summary: "ADL (Fairness) dimension declining"
+          description: "Fairness score at {{ $value }}. Gini coefficient may have increased."
+          
+      - alert: ExcellenceDecline
+        expr: bizra_ihsan_dimension{dimension="excellence"} < 0.85
+        for: 5m
+        labels:
+          severity: medium
+          team: ethics
+          dimension: excellence
+        annotations:
+          summary: "KAMAL (Excellence) dimension declining"
+          description: "Excellence score at {{ $value }}. Check test coverage and lint status."
+          
+      - alert: SustainabilityDecline
+        expr: bizra_ihsan_dimension{dimension="sustainability"} < 0.80
+        for: 10m
+        labels:
+          severity: medium
+          team: ethics
+          dimension: sustainability
+        annotations:
+          summary: "ISTIDAMA (Sustainability) dimension declining"
+          description: "Sustainability score at {{ $value }}. Energy consumption may have increased."
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # RECORDING RULES FOR AGGREGATION
+  # ═══════════════════════════════════════════════════════════════════════════
+  
+  - name: bizra_recording_rules
+    interval: 15s
+    rules:
+      - record: bizra:request_rate:5m
+        expr: sum(rate(bizra_http_requests_total[5m]))
+        
+      - record: bizra:error_rate:5m
+        expr: |
+          sum(rate(bizra_http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(bizra_http_requests_total[5m]))
+          
+      - record: bizra:verification_latency_p95:5m
+        expr: histogram_quantile(0.95, rate(bizra_verification_duration_seconds_bucket[5m]))
+        
+      - record: bizra:verification_latency_p99:5m
+        expr: histogram_quantile(0.99, rate(bizra_verification_duration_seconds_bucket[5m]))
+        
+      - record: bizra:ihsan_aggregate:5m
+        expr: |
+          (
+            bizra_ihsan_dimension{dimension="truthfulness"} * 0.30 +
+            bizra_ihsan_dimension{dimension="dignity"} * 0.20 +
+            bizra_ihsan_dimension{dimension="fairness"} * 0.20 +
+            bizra_ihsan_dimension{dimension="excellence"} * 0.20 +
+            bizra_ihsan_dimension{dimension="sustainability"} * 0.10
+          )
+          
+      - record: bizra:cognitive_throughput:5m
+        expr: sum(rate(bizra_cognitive_cycles_total[5m]))
