@@ -10,6 +10,7 @@ This folder is a **starter kit** to help unify the scattered BIZRA components in
 | `SOT_template.md` | A template for your **Single Source of Truth (SOT)** file, where you define canonical names, invariants, PoI parameters, and evidence requirements. Customize this file to reflect your project's agreed rules. |
 | `BIZRA_SOT.md` | Draft single source of truth for the unified system, derived from `SOT_template.md`. |
 | `EVIDENCE_INDEX.md` | Index of evidence artifacts required to validate claims across documentation and reports. |
+| `cognitive_sovereign.py` | Cognitive Sovereign kernel implementation (AEON OMEGA v9.8.0). |
 | `Genesis_NodeZero_Attestation_Spec_v1.0.md` | Official specification of the Genesis Node Zero attestation protocol (for reference). |
 | `README.md` | This file. |
 

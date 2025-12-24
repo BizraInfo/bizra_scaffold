@@ -1,0 +1,87 @@
+{
+  "$id": "https://bizra.ai/schemas/governance_appeal.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA Governance Appeal",
+  "description": "Appeal mechanism for SAT autonomous decisions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "appeal_id",
+    "appealed_decision_hash",
+    "appellant_entity_id",
+    "counter_evidence",
+    "appeal_window_ms",
+    "quorum_requirements",
+    "timestamp_ms",
+    "signing"
+  ],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "kind": {"const": "governance_appeal"},
+    "appeal_id": {
+      "type": "string",
+      "pattern": "^appeal_[0-9a-f]{16}$",
+      "description": "Unique appeal identifier"
+    },
+    "appealed_decision_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Hash of the SAT decision being appealed"
+    },
+    "appellant_entity_id": {
+      "type": "string",
+      "description": "Entity filing the appeal"
+    },
+    "counter_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_type": {"type": "string"},
+          "evidence_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "attestation_uri": {"type": "string"}
+        }
+      },
+      "description": "New attestations supporting appeal"
+    },
+    "appeal_window_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Time window for appeal (default 48 hours)"
+    },
+    "quorum_requirements": {
+      "type": "object",
+      "properties": {
+        "required_majority_ppm": {
+          "type": "integer",
+          "minimum": 500001,
+          "maximum": 1000000,
+          "description": "Required majority for appeal success (>50%)"
+        },
+        "minimum_voters": {
+          "type": "integer",
+          "minimum": 3,
+          "description": "Minimum governance participants required"
+        }
+      }
+    },
+    "escrow_details": {
+      "type": "object",
+      "description": "Escrowed funds during appeal",
+      "properties": {
+        "stable_amount_micro": {"type": "integer"},
+        "growth_amount_micro": {"type": "integer"},
+        "release_condition": {"type": "string"}
+      }
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json"
+    }
+  }
+}

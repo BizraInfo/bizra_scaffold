@@ -1,0 +1,695 @@
+openapi: 3.0.3
+info:
+  title: BIZRA AEON OMEGA API
+  description: |
+    # BIZRA Verified Cognitive Convergence (VCC) Node0 API
+    
+    This API provides access to the BIZRA cognitive verification system, implementing
+    the complete Ihsān-compliant architecture for ethical AI decision-making.
+    
+    ## Core Concepts
+    
+    - **Ihsān Metric (IM)**: 5-dimensional ethical scoring (truthfulness, dignity, fairness, excellence, sustainability)
+    - **Tiered Verification**: Latency-aware verification from statistical to full ZK proofs
+    - **Value Oracle**: Pluralistic value assessment using 5 independent oracles
+    - **Temporal Chain**: Quantum-resistant audit trail with Blake3 hashing
+    
+    ## Authentication
+    
+    All endpoints require JWT authentication via Bearer token in the Authorization header.
+    Tokens are issued via the `/auth/token` endpoint.
+    
+    ## Rate Limiting
+    
+    - Standard tier: 100 requests/minute
+    - Premium tier: 1000 requests/minute
+    - Enterprise tier: Custom limits
+    
+  version: 1.0.0
+  contact:
+    name: BIZRA Development Team
+    email: api@bizra.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.bizra.ai/v1
+    description: Production server
+  - url: https://staging-api.bizra.ai/v1
+    description: Staging server
+  - url: http://localhost:8000/v1
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: JWT token management
+  - name: Verification
+    description: Tiered verification operations
+  - name: Value Oracle
+    description: Pluralistic value assessment
+  - name: Ethics
+    description: Consequential ethics evaluation
+  - name: Temporal Chain
+    description: Quantum-temporal audit trail
+  - name: Health
+    description: System health and metrics
+
+paths:
+  /auth/token:
+    post:
+      tags:
+        - Authentication
+      summary: Obtain JWT access token
+      description: Authenticate with credentials to receive a JWT token for API access.
+      operationId: getToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /verify:
+    post:
+      tags:
+        - Verification
+      summary: Verify an action
+      description: |
+        Submit an action for tiered verification. The verification tier is 
+        automatically selected based on the urgency level:
+        
+        - `REAL_TIME`: Statistical verification (<100ms)
+        - `NEAR_REAL_TIME`: Incremental verification (<500ms)
+        - `BATCH`: Full ZK verification (<5s)
+        - `DEFERRED`: Formal verification (async)
+      operationId: verifyAction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '200':
+          description: Verification completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until rate limit resets
+
+  /verify/batch:
+    post:
+      tags:
+        - Verification
+      summary: Batch verify multiple actions
+      description: |
+        Submit multiple actions for batch verification. Actions are aggregated
+        into a single Merkle proof for 10x throughput improvement.
+      operationId: batchVerifyActions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchVerificationRequest'
+      responses:
+        '200':
+          description: Batch verification completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchVerificationResponse'
+
+  /value/assess:
+    post:
+      tags:
+        - Value Oracle
+      summary: Assess convergence value
+      description: |
+        Compute the value of a convergence event using the pluralistic
+        oracle ensemble (Shapley, Market, Reputation, Formal, InfoTheory).
+      operationId: assessValue
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValueAssessmentRequest'
+      responses:
+        '200':
+          description: Value assessment completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValueAssessmentResponse'
+
+  /ethics/evaluate:
+    post:
+      tags:
+        - Ethics
+      summary: Evaluate ethical implications
+      description: |
+        Evaluate an action through the consequential ethics engine,
+        applying 5 ethical frameworks: Utilitarian, Deontological,
+        Virtue, Care, and Ihsān.
+      operationId: evaluateEthics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EthicsRequest'
+      responses:
+        '200':
+          description: Ethical evaluation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EthicsResponse'
+
+  /ihsan/score:
+    post:
+      tags:
+        - Ethics
+      summary: Calculate Ihsān score
+      description: |
+        Calculate the Ihsān Metric (IM) for given dimension scores.
+        Returns whether the action passes the threshold (IM ≥ 0.85).
+      operationId: calculateIhsanScore
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IhsanRequest'
+      responses:
+        '200':
+          description: Ihsān score calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IhsanResponse'
+
+  /chain/append:
+    post:
+      tags:
+        - Temporal Chain
+      summary: Append entry to temporal chain
+      description: |
+        Append a new entry to the quantum-temporal audit chain.
+        Each entry is linked via Blake3 hash to the previous entry.
+      operationId: appendChainEntry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChainAppendRequest'
+      responses:
+        '200':
+          description: Entry appended successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainAppendResponse'
+
+  /chain/verify:
+    get:
+      tags:
+        - Temporal Chain
+      summary: Verify chain integrity
+      description: Verify the integrity of the entire temporal chain.
+      operationId: verifyChain
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Chain verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChainVerifyResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Get system health status and component states.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /metrics:
+    get:
+      tags:
+        - Health
+      summary: Prometheus metrics
+      description: |
+        Get Prometheus-formatted metrics for monitoring.
+        Includes Ihsān dimension scores, verification latencies,
+        and system health indicators.
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP bizra_ihsan_score Current Ihsān Metric score
+                  # TYPE bizra_ihsan_score gauge
+                  bizra_ihsan_score{dimension="truthfulness"} 0.95
+                  bizra_ihsan_score{dimension="dignity"} 0.92
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/token
+
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - client_id
+        - client_secret
+      properties:
+        client_id:
+          type: string
+          description: API client identifier
+          example: "bizra-client-001"
+        client_secret:
+          type: string
+          format: password
+          description: API client secret
+          example: "sk_live_..."
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        token_type:
+          type: string
+          enum: [bearer]
+        expires_in:
+          type: integer
+          description: Token lifetime in seconds
+          example: 3600
+
+    VerificationRequest:
+      type: object
+      required:
+        - action_id
+        - payload
+        - urgency
+      properties:
+        action_id:
+          type: string
+          format: uuid
+          description: Unique action identifier
+        payload:
+          type: string
+          format: base64
+          description: Base64-encoded action payload
+        urgency:
+          type: string
+          enum: [REAL_TIME, NEAR_REAL_TIME, BATCH, DEFERRED]
+          description: Verification urgency level
+        context:
+          type: object
+          additionalProperties: true
+          description: Optional context metadata
+
+    VerificationResponse:
+      type: object
+      properties:
+        action_id:
+          type: string
+          format: uuid
+        tier:
+          type: string
+          enum: [STATISTICAL, INCREMENTAL, OPTIMISTIC, FULL_ZK, FORMAL]
+        valid:
+          type: boolean
+          description: Whether action passed verification
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Verification confidence score
+        proof_hash:
+          type: string
+          description: Blake3 hash of verification proof
+        latency_ms:
+          type: number
+          description: Verification latency in milliseconds
+        timestamp:
+          type: string
+          format: date-time
+
+    BatchVerificationRequest:
+      type: object
+      required:
+        - actions
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationRequest'
+          minItems: 1
+          maxItems: 64
+
+    BatchVerificationResponse:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        merkle_root:
+          type: string
+          description: Merkle root of all action proofs
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              action_id:
+                type: string
+              valid:
+                type: boolean
+        throughput:
+          type: number
+          description: Actions verified per second
+        efficiency_gain:
+          type: number
+          description: Speedup compared to individual verification
+
+    ValueAssessmentRequest:
+      type: object
+      required:
+        - convergence_id
+        - clarity_score
+        - mutual_information
+        - entropy
+        - synergy
+        - quantization_error
+      properties:
+        convergence_id:
+          type: string
+        clarity_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        mutual_information:
+          type: number
+          minimum: 0
+          maximum: 1
+        entropy:
+          type: number
+          minimum: 0
+          maximum: 1
+        synergy:
+          type: number
+          minimum: 0
+          maximum: 1
+        quantization_error:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    ValueAssessmentResponse:
+      type: object
+      properties:
+        value:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Aggregated value from oracle ensemble
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        disagreement_score:
+          type: number
+          description: Level of disagreement between oracles
+        oracle_signals:
+          type: array
+          items:
+            type: object
+            properties:
+              oracle_type:
+                type: string
+                enum: [SHAPLEY, PREDICTION_MARKET, REPUTATION, FORMAL_VERIFICATION, INFORMATION_THEORETIC]
+              value:
+                type: number
+              confidence:
+                type: number
+              reasoning:
+                type: string
+
+    EthicsRequest:
+      type: object
+      required:
+        - action_description
+        - context
+      properties:
+        action_description:
+          type: string
+          description: Human-readable action description
+        context:
+          type: object
+          properties:
+            stakeholders:
+              type: array
+              items:
+                type: string
+            urgency:
+              type: string
+              enum: [LOW, MEDIUM, HIGH, CRITICAL]
+
+    EthicsResponse:
+      type: object
+      properties:
+        verdict:
+          type: string
+          enum: [APPROVED, CONDITIONAL, FLAGGED, REJECTED]
+        severity:
+          type: string
+          enum: [ACCEPTABLE, CAUTION, CONCERNING, SEVERE, CRITICAL]
+        overall_score:
+          type: number
+          minimum: 0
+          maximum: 1
+        framework_scores:
+          type: object
+          properties:
+            utilitarian:
+              type: number
+            deontological:
+              type: number
+            virtue:
+              type: number
+            care:
+              type: number
+            ihsan:
+              type: number
+        reasoning:
+          type: string
+
+    IhsanRequest:
+      type: object
+      required:
+        - truthfulness
+        - dignity
+        - fairness
+        - excellence
+        - sustainability
+      properties:
+        truthfulness:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Ikhlas (Sincerity) score
+        dignity:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Karama (Human Dignity) score
+        fairness:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Adl (Justice) score
+        excellence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Kamal (Excellence) score
+        sustainability:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Istidama (Sustainability) score
+
+    IhsanResponse:
+      type: object
+      properties:
+        ihsan_metric:
+          type: number
+          description: Weighted Ihsān Metric (IM)
+        passes_threshold:
+          type: boolean
+          description: Whether IM >= 0.85
+        dimension_contributions:
+          type: object
+          properties:
+            truthfulness:
+              type: number
+            dignity:
+              type: number
+            fairness:
+              type: number
+            excellence:
+              type: number
+            sustainability:
+              type: number
+
+    ChainAppendRequest:
+      type: object
+      required:
+        - operation
+        - data_hash
+      properties:
+        operation:
+          type: string
+          description: Operation type for audit
+        data_hash:
+          type: string
+          description: Blake3 hash of operation data
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ChainAppendResponse:
+      type: object
+      properties:
+        entry_id:
+          type: string
+        prev_hash:
+          type: string
+        current_hash:
+          type: string
+        chain_length:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    ChainVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        chain_length:
+          type: integer
+        first_entry_timestamp:
+          type: string
+          format: date-time
+        last_entry_timestamp:
+          type: string
+          format: date-time
+        issues:
+          type: array
+          items:
+            type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, CRITICAL, RECOVERING]
+        components:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              latency_ms:
+                type: number
+        uptime_seconds:
+          type: integer
+        version:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

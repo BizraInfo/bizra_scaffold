@@ -1,0 +1,11 @@
+[package]
+name = "bizra-pat-sat"
+version = "0.1.0"
+edition = "2021"
+authors = ["BIZRA Team"]
+description = "Personal and System Agentic Teams for BIZRA Cognitive Continuum"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }

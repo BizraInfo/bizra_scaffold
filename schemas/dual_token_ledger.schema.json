@@ -1,0 +1,62 @@
+{
+  "$id": "https://bizra.ai/schemas/dual_token_ledger.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIZRA Dual Token Ledger Entry (BIZRA-TOKEN-1)",
+  "description": "Transaction entry for SEED-S (stable) and SEED-G (growth) tokens",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "kind",
+    "ledger_id",
+    "entry_type",
+    "entity_id",
+    "stable_amount_micro",
+    "growth_amount_micro",
+    "proof_of_impact_hash",
+    "timestamp_ms",
+    "signing"
+  ],
+  "properties": {
+    "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "kind": {"const": "dual_token_entry"},
+    "ledger_id": {
+      "type": "string",
+      "pattern": "^ledger_[0-9a-f]{16}$",
+      "description": "Ledger identifier"
+    },
+    "entry_type": {
+      "enum": ["MINT", "BURN", "STAKE", "UNSTAKE", "COMPOUND", "SLASH"],
+      "description": "Transaction type"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "PAT/SAT/Node identifier"
+    },
+    "stable_amount_micro": {
+      "type": "integer",
+      "description": "SEED-S amount in micro-units (can be negative for burns)"
+    },
+    "growth_amount_micro": {
+      "type": "integer",
+      "description": "SEED-G amount in micro-units (can be negative for burns)"
+    },
+    "proof_of_impact_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Reference to PoI attestation"
+    },
+    "universal_resource_pool_delta_micro": {
+      "type": "integer",
+      "description": "Change in URP balance (optional)"
+    },
+    "timestamp_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Transaction timestamp in milliseconds since epoch"
+    },
+    "signing": {
+      "$ref": "https://bizra.ai/schemas/signing_ed25519.schema.json"
+    }
+  }
+}

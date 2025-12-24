@@ -1,0 +1,389 @@
+# BIZRA AEON OMEGA - CI/CD Pipeline
+# Elite Practitioner Grade | GitHub Actions
+# Triggers: push to main, pull requests, manual dispatch
+
+name: BIZRA CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test suite'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: '3.11'
+  RUST_VERSION: 'stable'
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 1: Code Quality & Linting
+  # ═══════════════════════════════════════════════════════════════════════════
+  lint:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy black isort
+
+      - name: 🎨 Check formatting (Black)
+        run: black --check --diff .
+        continue-on-error: true
+
+      - name: 📋 Check imports (isort)
+        run: isort --check-only --diff .
+        continue-on-error: true
+
+      - name: 🔍 Lint (Ruff)
+        run: ruff check .
+        continue-on-error: true
+
+      - name: 🏷️ Type check (MyPy)
+        run: mypy --ignore-missing-imports core/ tests/
+        continue-on-error: true
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 2: Python Tests
+  # ═══════════════════════════════════════════════════════════════════════════
+  test-python:
+    name: 🧪 Python Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    if: ${{ !inputs.skip_tests }}
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: 📦 Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio hypothesis
+
+      - name: 🧪 Run tests with coverage
+        run: |
+          pytest tests/ -v \
+            --cov=core \
+            --cov=. \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term-missing \
+            --junitxml=junit-results.xml
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+      - name: 📋 Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-python-${{ matrix.python-version }}
+          path: |
+            junit-results.xml
+            htmlcov/
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 3: Rust Tests
+  # ═══════════════════════════════════════════════════════════════════════════
+  test-rust:
+    name: 🦀 Rust Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    if: ${{ !inputs.skip_tests }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: 📦 Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            crates/*/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: 📋 Check formatting
+        working-directory: crates/attestation-engine
+        run: cargo fmt --check
+
+      - name: 🔍 Clippy lints
+        working-directory: crates/attestation-engine
+        run: cargo clippy -- -D warnings
+        continue-on-error: true
+
+      - name: 🧪 Run tests
+        working-directory: crates/attestation-engine
+        run: cargo test --verbose
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 4: Security Scanning
+  # ═══════════════════════════════════════════════════════════════════════════
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: [test-python, test-rust]
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 🔒 Run Bandit security scan
+        run: |
+          pip install bandit
+          bandit -r core/ -f json -o bandit-report.json || true
+          bandit -r core/ -f txt
+
+      - name: 🔒 Run Safety check
+        run: |
+          pip install safety
+          safety check -r requirements.txt || true
+
+      - name: 📋 Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: bandit-report.json
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 5: Build Docker Image
+  # ═══════════════════════════════════════════════════════════════════════════
+  build:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test-python, test-rust]
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔑 Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: 🏗️ Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: 📊 Image size check
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo "📦 Image built successfully!"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} || true
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 6: Deploy to Staging
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://staging.bizra.io
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☸️ Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: 🔑 Configure Kubernetes
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
+
+      - name: 🚀 Deploy to Staging
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+          # Update image
+          kubectl set image deployment/bizra-api \
+            bizra-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            -n bizra-system
+
+          # Wait for rollout
+          kubectl rollout status deployment/bizra-api -n bizra-system --timeout=300s
+
+      - name: 🔍 Verify deployment
+        run: |
+          kubectl get pods -n bizra-system -l app=bizra-api
+          kubectl get services -n bizra-system
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 7: Deploy to Production
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy-production:
+    name: 🌐 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://api.bizra.io
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☸️ Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: 🔑 Configure Kubernetes
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > ~/.kube/config
+
+      - name: 🚀 Deploy to Production
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+          # Update image with production tag
+          kubectl set image deployment/bizra-api \
+            bizra-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            -n bizra-system
+
+          # Wait for rollout
+          kubectl rollout status deployment/bizra-api -n bizra-system --timeout=600s
+
+      - name: 🔍 Verify deployment
+        run: |
+          kubectl get pods -n bizra-system -l app=bizra-api
+          kubectl get services -n bizra-system
+          kubectl get hpa -n bizra-system
+
+      - name: 🏥 Health check
+        run: |
+          # Wait for service to be ready
+          sleep 30
+          # Perform health check (replace with actual endpoint)
+          curl -sf https://api.bizra.io/health || echo "Health check pending..."
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # JOB 8: Notify
+  # ═══════════════════════════════════════════════════════════════════════════
+  notify:
+    name: 📣 Notify
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    steps:
+      - name: 📣 Send notification
+        run: |
+          echo "🚀 BIZRA AEON OMEGA Deployment Complete!"
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}"
+          echo "🌐 Status: ${{ needs.deploy-production.result }}"

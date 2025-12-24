@@ -1,0 +1,124 @@
+---
+# BIZRA Configuration ConfigMap
+# SOT-Compliant | Environment Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bizra-config
+  namespace: bizra-system
+  labels:
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: config
+data:
+  # Application Configuration
+  BIZRA_ENV: "production"
+  BIZRA_DEBUG: "false"
+  BIZRA_LOG_LEVEL: "INFO"
+  BIZRA_LOG_FORMAT: "json"
+  
+  # API Configuration
+  BIZRA_API_HOST: "0.0.0.0"
+  BIZRA_API_PORT: "8000"
+  BIZRA_API_WORKERS: "4"
+  BIZRA_API_TIMEOUT: "30"
+  
+  # SOT Compliance (from BIZRA_SOT.md)
+  BIZRA_IHSAN_THRESHOLD: "0.95"
+  BIZRA_POI_QUALITY_WEIGHT: "0.30"
+  BIZRA_POI_UTILITY_WEIGHT: "0.30"
+  BIZRA_POI_TRUST_WEIGHT: "0.20"
+  BIZRA_POI_FAIRNESS_WEIGHT: "0.10"
+  BIZRA_POI_DIVERSITY_WEIGHT: "0.10"
+  BIZRA_POI_MAX_PENALTY: "0.15"
+  BIZRA_POI_DECAY_LAMBDA: "0.90"
+  BIZRA_WEIGHT_CAP_MAX: "10.0"
+  
+  # Memory Layer Configuration
+  BIZRA_L1_CAPACITY: "9"
+  BIZRA_L2_DECAY_RATE: "0.95"
+  BIZRA_L2_COMPRESSION_TARGET: "0.45"
+  BIZRA_L3_VECTOR_DIM: "768"
+  BIZRA_L4_MAX_NODES: "100000"
+  BIZRA_L5_CRYSTALLIZATION_THRESHOLD: "0.95"
+  
+  # Neo4j Configuration
+  NEO4J_HOST: "neo4j-service"
+  NEO4J_PORT: "7687"
+  NEO4J_DATABASE: "bizra"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Prometheus Configuration
+  PROMETHEUS_ENABLED: "true"
+  PROMETHEUS_PORT: "9090"
+  
+  # Security Configuration
+  BIZRA_SECURITY_ALGORITHM: "dilithium5"
+  BIZRA_SECURITY_KEM: "kyber1024"
+  BIZRA_TEMPORAL_CHAIN_ENABLED: "true"
+  
+  # Byzantine Fault Tolerance
+  BIZRA_BFT_ENABLED: "true"
+  BIZRA_BFT_MIN_VALIDATORS: "4"
+  BIZRA_BFT_QUORUM_RATIO: "0.67"
+---
+# FAISS Index Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bizra-faiss-config
+  namespace: bizra-system
+  labels:
+    app.kubernetes.io/name: bizra
+    app.kubernetes.io/component: faiss-config
+data:
+  faiss_config.json: |
+    {
+      "index_type": "IVF4096,Flat",
+      "metric": "L2",
+      "dimension": 768,
+      "nprobe": 64,
+      "use_gpu": false,
+      "train_size": 100000
+    }
+---
+# Prometheus Scrape Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: bizra-system
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: 'bizra-api'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - bizra-system
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: bizra-api
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            regex: "8000"
+            action: keep
+
+      - job_name: 'neo4j'
+        static_configs:
+          - targets: ['neo4j-service:2004']
+
+      - job_name: 'redis'
+        static_configs:
+          - targets: ['redis-service:9121']

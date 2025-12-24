@@ -1,0 +1,59 @@
+# ============================================================================
+# PROMETHEUS CONFIGURATION
+# ============================================================================
+# Scrapes metrics from BIZRA and system components
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'bizra-local'
+    environment: 'development'
+
+# Alerting configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Scrape configurations
+scrape_configs:
+  # BIZRA Cognitive Engine
+  - job_name: 'bizra'
+    static_configs:
+      - targets: ['bizra:8000']
+        labels:
+          service: 'bizra-engine'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Neo4j Database
+  - job_name: 'neo4j'
+    static_configs:
+      - targets: ['neo4j:7474']
+        labels:
+          service: 'neo4j'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+        labels:
+          service: 'redis'
+    scrape_interval: 30s
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+# ============================================================================
+# RECORDING RULES (Optional - for aggregations)
+# ============================================================================
+# rule_files:
+#   - "rules/*.yml"
