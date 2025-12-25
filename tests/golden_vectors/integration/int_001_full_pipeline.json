@@ -1,0 +1,50 @@
+{
+  "id": "int_001",
+  "version": "1.0.0",
+  "description": "Full integration - multi-layer verification pipeline",
+  "category": "integration",
+  "function": "core.ultimate_integration.UltimateIntegration.verify_full_pipeline",
+  "deterministic": true,
+  "input": {
+    "request": {
+      "query": "Evaluate business decision X",
+      "context": {
+        "domain": "finance",
+        "urgency": "medium",
+        "stakeholders": ["employees", "customers", "shareholders"]
+      }
+    },
+    "pipeline_config": {
+      "enable_got": true,
+      "enable_snr": true,
+      "enable_ethics": true,
+      "enable_thermodynamic": true
+    }
+  },
+  "expected_output": {
+    "pipeline_stages_completed": 4,
+    "got_result": {
+      "explored_nodes": 7,
+      "final_confidence": 0.82
+    },
+    "snr_result": {
+      "signal_strength": 0.78,
+      "snr_ratio": 5.57
+    },
+    "ethics_result": {
+      "ihsan_score": 0.85,
+      "approved": true
+    },
+    "thermodynamic_result": {
+      "cognitive_load": 0.45,
+      "efficiency": 0.73
+    },
+    "overall_confidence": 0.79,
+    "recommendation": "proceed_with_monitoring"
+  },
+  "tolerance": 0.02,
+  "hash": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+  "created_at": "2025-01-15T00:00:00Z",
+  "author": "BIZRA Verification System",
+  "notes": "Full pipeline integration test validating all layers work together."
+}

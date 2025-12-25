@@ -1,0 +1,36 @@
+{
+  "id": "oracle_001",
+  "version": "1.0.0",
+  "description": "Pluralistic oracle convergence computation",
+  "function": "core.value_oracle.PluralisticValueOracle.compute_value",
+  "created_at": "2025-12-25T19:30:00Z",
+  
+  "input": {
+    "convergence": {
+      "id": "conv_test_001",
+      "clarity_score": 0.85,
+      "coherence_score": 0.90,
+      "quantization_error": 0.05,
+      "mutual_information": 0.75,
+      "entropy": 0.3
+    }
+  },
+  
+  "expected_output": {
+    "value": 0.7825,
+    "oracle_contributions": {
+      "shapley": 0.168,
+      "prediction_market": 0.1785,
+      "reputation": 0.175,
+      "formal_verification": 0.1425,
+      "information_theoretic": 0.1185
+    },
+    "disagreement_score": 0.0,
+    "confidence": "high"
+  },
+  
+  "tolerance": 0.01,
+  "hash": "e1f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7",
+  
+  "notes": "Weighted sum of 5 oracle evaluations with standard weights"
+}

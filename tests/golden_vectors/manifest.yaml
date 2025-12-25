@@ -1,0 +1,151 @@
+# BIZRA AEON OMEGA - Golden Vectors Manifest
+# ═══════════════════════════════════════════════════════════════════════════════
+# Index of all golden vectors with metadata for determinism verification
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: "1.0.0"
+generated_at: "2025-12-25T19:30:00Z"
+python_version: "3.11+"
+random_seed: 42
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SNR SCORING VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+snr_scoring:
+  - id: "snr_001"
+    file: "snr_scoring/snr_001_basic_scoring.json"
+    description: "Basic SNR computation with standard input"
+    function: "core.snr_scorer.SNRScorer.compute_snr"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "snr_002"
+    file: "snr_scoring/snr_002_high_signal.json"
+    description: "High signal, minimal noise scenario"
+    function: "core.snr_scorer.SNRScorer.compute_snr"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "snr_003"
+    file: "snr_scoring/snr_003_domain_boost.json"
+    description: "Domain-aware SNR with knowledge graph boost"
+    function: "core.snr_scorer.SNRScorer.compute_domain_aware_snr"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GRAPH-OF-THOUGHTS VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+got_reasoning:
+  - id: "got_001"
+    file: "got_reasoning/got_001_linear_chain.json"
+    description: "Simple linear thought chain without branching"
+    function: "core.graph_of_thoughts.GraphOfThoughts.expand_thought"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "got_002"
+    file: "got_reasoning/got_002_beam_search.json"
+    description: "Beam search with width=3, depth=2"
+    function: "core.graph_of_thoughts.GraphOfThoughts.beam_search"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "got_003"
+    file: "got_reasoning/got_003_ranking.json"
+    description: "SNR-based thought ranking"
+    function: "core.graph_of_thoughts.GraphOfThoughts.rank_thoughts"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ETHICAL CONSTRAINT VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ethical_constraints:
+  - id: "eth_001"
+    file: "ethical_constraints/eth_001_ihsan_acceptance.json"
+    description: "High Ihsān metric passes threshold"
+    function: "core.consequential_ethics.ConsequentialEthicsEngine.evaluate"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "eth_002"
+    file: "ethical_constraints/eth_002_ihsan_rejection.json"
+    description: "Low Ihsān metric triggers rejection"
+    function: "core.consequential_ethics.ConsequentialEthicsEngine.evaluate"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+    
+  - id: "eth_003"
+    file: "ethical_constraints/eth_003_snr_ihsan_coupling.json"
+    description: "High SNR requires high Ihsān (coupling enforcement)"
+    function: "core.enhanced_cognitive_integration.EnhancedCognitiveProcessor"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# THERMODYNAMIC VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+thermodynamic:
+  - id: "thermo_001"
+    file: "thermodynamic/thermo_001_carnot.json"
+    description: "Carnot cycle efficiency computation"
+    function: "core.thermodynamic_engine.ThermodynamicEngine.carnot_efficiency"
+    tolerance: 1e-9
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VALUE ORACLE VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+value_oracle:
+  - id: "oracle_001"
+    file: "value_oracle/oracle_001_convergence.json"
+    description: "Pluralistic oracle convergence computation"
+    function: "core.value_oracle.PluralisticValueOracle.compute_value"
+    tolerance: 1e-6
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTEGRATION VECTORS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+integration:
+  - id: "int_001"
+    file: "integration/int_001_full_pipeline.json"
+    description: "End-to-end observation processing pipeline"
+    function: "core.enhanced_cognitive_integration.EnhancedCognitiveProcessor.process_observation"
+    tolerance: 1e-4
+    created_at: "2025-12-25T19:30:00Z"
+    status: active
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# METADATA
+# ═══════════════════════════════════════════════════════════════════════════════
+
+statistics:
+  total_vectors: 10
+  categories: 5
+  active: 10
+  deprecated: 0
+  
+verification:
+  last_run: null
+  passed: null
+  failed: null
+  command: "python -m pytest tests/test_golden_vectors.py -v"

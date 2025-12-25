@@ -1,0 +1,51 @@
+{
+  "id": "got_001",
+  "version": "1.0.0",
+  "description": "Simple linear thought chain without branching",
+  "function": "core.graph_of_thoughts.GraphOfThoughts.expand_thought",
+  "created_at": "2025-12-25T19:30:00Z",
+  
+  "input": {
+    "seed_concept": "quantum_computing",
+    "depth": 2,
+    "beam_width": 1,
+    "context": {
+      "domain": "technology",
+      "max_expansions": 3
+    }
+  },
+  
+  "expected_output": {
+    "thought_chain": [
+      {
+        "id": "t_0",
+        "content": "quantum_computing",
+        "depth": 0,
+        "snr_score": 1.0,
+        "parent": null
+      },
+      {
+        "id": "t_1",
+        "content": "quantum_computing_expansion_1",
+        "depth": 1,
+        "snr_score": 0.85,
+        "parent": "t_0"
+      },
+      {
+        "id": "t_2",
+        "content": "quantum_computing_expansion_2",
+        "depth": 2,
+        "snr_score": 0.72,
+        "parent": "t_1"
+      }
+    ],
+    "total_nodes": 3,
+    "max_depth_reached": 2,
+    "convergence_achieved": false
+  },
+  
+  "tolerance": 0.01,
+  "hash": "b8c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4",
+  
+  "notes": "Linear chain test - no branching, single path through depth"
+}

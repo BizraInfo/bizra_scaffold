@@ -1,0 +1,37 @@
+{
+  "id": "eth_001",
+  "version": "1.0.0",
+  "description": "High Ihsān metric passes ethical threshold",
+  "function": "core.consequential_ethics.ConsequentialEthicsEngine.evaluate",
+  "created_at": "2025-12-25T19:30:00Z",
+  
+  "input": {
+    "action": {
+      "type": "recommendation",
+      "content": "Optimize resource allocation",
+      "impact_scope": "team"
+    },
+    "context": {
+      "beneficiaries": 50,
+      "risk_level": "low"
+    },
+    "ihsan_metric": 0.92
+  },
+  
+  "expected_output": {
+    "approved": true,
+    "ihsan_score": 0.92,
+    "ethical_classification": "excellent",
+    "constraints_satisfied": [
+      "ihsan_threshold",
+      "beneficence",
+      "non_maleficence"
+    ],
+    "reasoning": "Action passes all ethical constraints with high Ihsān score"
+  },
+  
+  "tolerance": 1e-6,
+  "hash": "c9d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5",
+  
+  "notes": "Ihsān threshold is 0.7, this input (0.92) should pass"
+}

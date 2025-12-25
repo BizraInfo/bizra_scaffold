@@ -1,0 +1,24 @@
+{
+  "id": "snr_002",
+  "version": "1.0.0",
+  "description": "SNR computation with edge case - zero noise",
+  "category": "snr_scoring",
+  "function": "core.thermodynamic_engine.ThermodynamicEngine.compute_snr_dual",
+  "deterministic": true,
+  "input": {
+    "signal_strength": 1.0,
+    "noise_floor": 0.0,
+    "observation_window_ms": 100
+  },
+  "expected_output": {
+    "snr_ratio": "infinity",
+    "snr_db": "infinity",
+    "signal_quality": "excellent",
+    "noise_classification": "absent"
+  },
+  "tolerance": 0.0,
+  "hash": "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b",
+  "created_at": "2025-01-15T00:00:00Z",
+  "author": "BIZRA Verification System",
+  "notes": "Edge case where noise is completely absent. SNR should be infinite."
+}

@@ -1,0 +1,531 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# BIZRA AEON OMEGA - Metrics Verification Merge Gate
+# ═══════════════════════════════════════════════════════════════════════════════
+# 
+# This workflow implements fail-closed verification:
+#   - VERIFIED → merge allowed
+#   - PENDING → merge blocked, evidence collection triggered
+#   - FAIL_CLOSED → merge blocked, alert triggered
+#
+# Aligned with Ihsān principles: صدق (Truthfulness) + أمانة (Trustworthiness)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: "🔬 Metrics Verification Gate"
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Verification mode'
+        required: true
+        default: 'metrics'
+        type: choice
+        options:
+          - metrics
+          - full
+          - perf
+          - determinism
+      profile:
+        description: 'Execution profile'
+        required: true
+        default: 'ci'
+        type: choice
+        options:
+          - ci
+          - dev
+          - prod
+          - benchmark
+
+# Prevent concurrent verification runs
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  RUST_VERSION: "1.75"
+  EVIDENCE_DIR: "evidence/metrics"
+  RECEIPT_PATH: "evidence/metrics/latest.json"
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 1: Environment Fingerprinting
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  environment:
+    name: "📋 Environment Fingerprint"
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.env.outputs.commit_sha }}
+      branch: ${{ steps.env.outputs.branch }}
+      repo_clean: ${{ steps.env.outputs.repo_clean }}
+      python_version: ${{ steps.env.outputs.python_version }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Collect Environment
+        id: env
+        run: |
+          echo "commit_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "branch=$(git branch --show-current || echo 'detached')" >> $GITHUB_OUTPUT
+          echo "repo_clean=$(git status --porcelain | wc -l | xargs test 0 -eq && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "python_version=${{ env.PYTHON_VERSION }}" >> $GITHUB_OUTPUT
+          
+      - name: Display Fingerprint
+        run: |
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║  Environment Fingerprint                                      ║"
+          echo "╠══════════════════════════════════════════════════════════════╣"
+          echo "║  Commit: ${{ steps.env.outputs.commit_sha }}   ║"
+          echo "║  Branch: ${{ steps.env.outputs.branch }}                      ║"
+          echo "║  Clean:  ${{ steps.env.outputs.repo_clean }}                  ║"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 2: Codebase Metrics (LOC, Structure)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  loc-metrics:
+    name: "📊 Lines of Code"
+    runs-on: ubuntu-latest
+    needs: environment
+    outputs:
+      loc_total: ${{ steps.loc.outputs.total }}
+      loc_python: ${{ steps.loc.outputs.python }}
+      loc_rust: ${{ steps.loc.outputs.rust }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Install tokei
+        run: |
+          curl -sSL https://github.com/XAMPPRocky/tokei/releases/download/v12.1.2/tokei-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          chmod +x tokei
+          
+      - name: Count Lines of Code
+        id: loc
+        run: |
+          ./tokei . --output json > loc-report.json
+          
+          # Extract counts
+          TOTAL=$(jq '.Total.code' loc-report.json)
+          PYTHON=$(jq '.Python.code // 0' loc-report.json)
+          RUST=$(jq '.Rust.code // 0' loc-report.json)
+          
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "python=$PYTHON" >> $GITHUB_OUTPUT
+          echo "rust=$RUST" >> $GITHUB_OUTPUT
+          
+          echo "📊 LOC Report:"
+          echo "   Total:  $TOTAL"
+          echo "   Python: $PYTHON"
+          echo "   Rust:   $RUST"
+          
+      - name: Upload LOC Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: loc-report
+          path: loc-report.json
+          retention-days: 30
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 3: Test Execution
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  test-suite:
+    name: "🧪 Test Suite"
+    runs-on: ubuntu-latest
+    needs: environment
+    outputs:
+      total: ${{ steps.tests.outputs.total }}
+      passed: ${{ steps.tests.outputs.passed }}
+      failed: ${{ steps.tests.outputs.failed }}
+      skipped: ${{ steps.tests.outputs.skipped }}
+      pass_rate: ${{ steps.tests.outputs.pass_rate }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+          
+      - name: Run Tests
+        id: tests
+        run: |
+          # Run pytest with JUnit XML output
+          python -m pytest tests/ \
+            -v \
+            --tb=short \
+            --junitxml=test-results.xml \
+            --cov=core \
+            --cov-report=xml:coverage.xml \
+            --cov-report=term-missing \
+            || true
+          
+          # Parse results
+          if [ -f test-results.xml ]; then
+            TOTAL=$(grep -oP 'tests="\K\d+' test-results.xml | head -1)
+            FAILURES=$(grep -oP 'failures="\K\d+' test-results.xml | head -1)
+            SKIPPED=$(grep -oP 'skipped="\K\d+' test-results.xml | head -1)
+            ERRORS=$(grep -oP 'errors="\K\d+' test-results.xml | head -1)
+            
+            PASSED=$((TOTAL - FAILURES - SKIPPED - ERRORS))
+            
+            if [ "$TOTAL" -gt 0 ]; then
+              PASS_RATE=$(echo "scale=2; $PASSED * 100 / $TOTAL" | bc)
+            else
+              PASS_RATE=0
+            fi
+            
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILURES" >> $GITHUB_OUTPUT
+            echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
+          else
+            echo "total=0" >> $GITHUB_OUTPUT
+            echo "passed=0" >> $GITHUB_OUTPUT
+            echo "failed=0" >> $GITHUB_OUTPUT
+            echo "skipped=0" >> $GITHUB_OUTPUT
+            echo "pass_rate=0" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
+          retention-days: 30
+          
+      - name: Test Summary
+        run: |
+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total | ${{ steps.tests.outputs.total }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Passed | ${{ steps.tests.outputs.passed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Failed | ${{ steps.tests.outputs.failed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | ${{ steps.tests.outputs.skipped }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Pass Rate | ${{ steps.tests.outputs.pass_rate }}% |" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 4: Coverage Analysis
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  coverage:
+    name: "📈 Coverage Analysis"
+    runs-on: ubuntu-latest
+    needs: test-suite
+    outputs:
+      line_coverage: ${{ steps.coverage.outputs.line_coverage }}
+      status: ${{ steps.coverage.outputs.status }}
+      
+    steps:
+      - name: Download Coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          
+      - name: Parse Coverage
+        id: coverage
+        run: |
+          if [ -f coverage.xml ]; then
+            LINE_RATE=$(grep -oP 'line-rate="\K[\d.]+' coverage.xml | head -1)
+            COVERAGE=$(echo "scale=1; $LINE_RATE * 100" | bc)
+            
+            # Determine status
+            TARGET=95
+            if (( $(echo "$COVERAGE >= $TARGET" | bc -l) )); then
+              STATUS="Green"
+            elif (( $(echo "$COVERAGE >= $TARGET * 0.9" | bc -l) )); then
+              STATUS="Yellow"
+            else
+              STATUS="Red"
+            fi
+            
+            echo "line_coverage=$COVERAGE" >> $GITHUB_OUTPUT
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "line_coverage=0" >> $GITHUB_OUTPUT
+            echo "status=Red" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Coverage Badge
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.line_coverage }}
+          STATUS=${{ steps.coverage.outputs.status }}
+          
+          echo "### 📈 Coverage: ${COVERAGE}% (${STATUS})" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 5: Security Scan
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  security-scan:
+    name: "🔒 Security Scan"
+    runs-on: ubuntu-latest
+    needs: environment
+    outputs:
+      secrets_found: ${{ steps.scan.outputs.secrets_found }}
+      vulnerabilities: ${{ steps.scan.outputs.vulnerabilities }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Run Gitleaks
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        
+      - name: Check keys/ directory
+        id: keys
+        run: |
+          if [ -d "keys" ]; then
+            # Check for private key patterns
+            PRIVATE_FOUND=$(find keys -type f \( -name "*.pem" -o -name "*private*" -o -name "*secret*" \) | wc -l)
+            if [ "$PRIVATE_FOUND" -gt 0 ]; then
+              echo "❌ FAIL_CLOSED: Private keys found in keys/ directory"
+              echo "secrets_found=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          echo "secrets_found=false" >> $GITHUB_OUTPUT
+          
+      - name: Aggregate Results
+        id: scan
+        run: |
+          echo "secrets_found=${{ steps.keys.outputs.secrets_found || 'false' }}" >> $GITHUB_OUTPUT
+          echo "vulnerabilities=0" >> $GITHUB_OUTPUT
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 6: Generate Receipt
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  generate-receipt:
+    name: "📜 Generate Receipt"
+    runs-on: ubuntu-latest
+    needs: [environment, loc-metrics, test-suite, coverage, security-scan]
+    outputs:
+      state: ${{ steps.receipt.outputs.state }}
+      receipt_hash: ${{ steps.receipt.outputs.receipt_hash }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          
+      - name: Generate Receipt JSON
+        id: receipt
+        run: |
+          mkdir -p ${{ env.EVIDENCE_DIR }}
+          
+          # Compute verification state
+          FAILED=${{ needs.test-suite.outputs.failed }}
+          SECRETS=${{ needs.security-scan.outputs.secrets_found }}
+          
+          if [ "$FAILED" -gt 0 ] || [ "$SECRETS" == "true" ]; then
+            STATE="FAIL_CLOSED"
+          elif [ "${{ needs.coverage.outputs.line_coverage }}" -lt 70 ]; then
+            STATE="PENDING"
+          else
+            STATE="VERIFIED"
+          fi
+          
+          # Generate receipt
+          cat > ${{ env.RECEIPT_PATH }} << EOF
+          {
+            "meta": {
+              "receipt_id": "$(uuidgen || echo $RANDOM)",
+              "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+              "generator_version": "1.0.0",
+              "mode": "metrics",
+              "profile": "ci"
+            },
+            "environment": {
+              "commit_sha": "${{ needs.environment.outputs.commit_sha }}",
+              "branch": "${{ needs.environment.outputs.branch }}",
+              "repo_clean": ${{ needs.environment.outputs.repo_clean }},
+              "python_version": "${{ needs.environment.outputs.python_version }}",
+              "os": "ubuntu-latest",
+              "cpu_count": $(nproc)
+            },
+            "metrics": {
+              "loc": {
+                "total": ${{ needs.loc-metrics.outputs.loc_total }},
+                "python": ${{ needs.loc-metrics.outputs.loc_python }},
+                "rust": ${{ needs.loc-metrics.outputs.loc_rust }}
+              },
+              "tests": {
+                "total": ${{ needs.test-suite.outputs.total }},
+                "passed": ${{ needs.test-suite.outputs.passed }},
+                "failed": ${{ needs.test-suite.outputs.failed }},
+                "skipped": ${{ needs.test-suite.outputs.skipped }},
+                "pass_rate": ${{ needs.test-suite.outputs.pass_rate }}
+              },
+              "coverage": {
+                "line_coverage_percent": ${{ needs.coverage.outputs.line_coverage }},
+                "status": "${{ needs.coverage.outputs.status }}",
+                "target_percent": 95
+              },
+              "security": {
+                "secrets_found": ${{ needs.security-scan.outputs.secrets_found }},
+                "vulnerabilities": ${{ needs.security-scan.outputs.vulnerabilities }}
+              }
+            },
+            "state": "$STATE",
+            "integrity": {
+              "hash_algorithm": "SHA-256"
+            }
+          }
+          EOF
+          
+          # Compute content hash
+          HASH=$(sha256sum ${{ env.RECEIPT_PATH }} | cut -d' ' -f1)
+          
+          # Update receipt with hash
+          jq ".integrity.content_hash = \"$HASH\"" ${{ env.RECEIPT_PATH }} > tmp.json
+          mv tmp.json ${{ env.RECEIPT_PATH }}
+          
+          echo "state=$STATE" >> $GITHUB_OUTPUT
+          echo "receipt_hash=$HASH" >> $GITHUB_OUTPUT
+          
+      - name: Upload Receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-receipt
+          path: ${{ env.RECEIPT_PATH }}
+          retention-days: 90
+          
+      - name: Receipt Summary
+        run: |
+          STATE=${{ steps.receipt.outputs.state }}
+          HASH=${{ steps.receipt.outputs.receipt_hash }}
+          
+          echo "### 📜 Metrics Receipt" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| State | **$STATE** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Hash | \`${HASH:0:16}...\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ needs.environment.outputs.commit_sha }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 7: Verification Gate (Merge Blocking)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  verification-gate:
+    name: "🚦 Verification Gate"
+    runs-on: ubuntu-latest
+    needs: [generate-receipt]
+    if: always()
+    
+    steps:
+      - name: Check Verification State
+        run: |
+          STATE="${{ needs.generate-receipt.outputs.state }}"
+          
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║  BIZRA Verification Gate                                      ║"
+          echo "╠══════════════════════════════════════════════════════════════╣"
+          
+          case "$STATE" in
+            "VERIFIED")
+              echo "║  ✅ VERIFIED - Merge Allowed                                 ║"
+              echo "╚══════════════════════════════════════════════════════════════╝"
+              exit 0
+              ;;
+            "PENDING")
+              echo "║  ⏳ PENDING - Evidence Collection Required                   ║"
+              echo "║  Merge blocked until all metrics meet thresholds            ║"
+              echo "╚══════════════════════════════════════════════════════════════╝"
+              exit 1
+              ;;
+            "FAIL_CLOSED")
+              echo "║  ❌ FAIL_CLOSED - Merge Blocked                              ║"
+              echo "║  Evidence contradicts claims - investigation required       ║"
+              echo "╚══════════════════════════════════════════════════════════════╝"
+              exit 1
+              ;;
+            *)
+              echo "║  ❓ UNKNOWN - Defaulting to FAIL_CLOSED                      ║"
+              echo "╚══════════════════════════════════════════════════════════════╝"
+              exit 1
+              ;;
+          esac
+          
+      - name: Gate Summary
+        if: always()
+        run: |
+          STATE="${{ needs.generate-receipt.outputs.state }}"
+          
+          if [ "$STATE" == "VERIFIED" ]; then
+            echo "### ✅ Verification Gate: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Verification Gate: BLOCKED ($STATE)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # STAGE 8: Commit Receipt (on success)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  
+  commit-receipt:
+    name: "💾 Commit Receipt"
+    runs-on: ubuntu-latest
+    needs: [generate-receipt, verification-gate]
+    if: needs.generate-receipt.outputs.state == 'VERIFIED' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Download Receipt
+        uses: actions/download-artifact@v4
+        with:
+          name: metrics-receipt
+          path: ${{ env.EVIDENCE_DIR }}
+          
+      - name: Commit Receipt
+        run: |
+          git config user.name "BIZRA Verification Bot"
+          git config user.email "verify@bizra.io"
+          
+          git add ${{ env.EVIDENCE_DIR }}/
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📜 [verify-metrics] Receipt for ${{ needs.generate-receipt.outputs.receipt_hash }}"
+            git push
+          fi

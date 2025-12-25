@@ -1,0 +1,429 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bizra.io/schemas/metrics-receipt/v1.0.0",
+  "title": "BIZRA Metrics Receipt",
+  "description": "Cryptographically-bound verification receipt for BIZRA AEON OMEGA metrics. Implements Ihsān principles (صدق + أمانة + إحسان).",
+  "type": "object",
+  "required": ["meta", "environment", "metrics", "claims", "state", "integrity"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Receipt metadata",
+      "required": ["receipt_id", "generated_at", "generator_version", "mode", "profile"],
+      "properties": {
+        "receipt_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Unique identifier for this receipt"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of receipt generation"
+        },
+        "generator_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Version of bizra-core that generated this receipt"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["metrics", "full", "perf", "determinism"],
+          "description": "Verification mode used"
+        },
+        "profile": {
+          "type": "string",
+          "enum": ["ci", "dev", "prod", "benchmark"],
+          "description": "Execution profile used"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "description": "Build environment fingerprint for reproducibility",
+      "required": ["commit_sha", "branch", "repo_clean", "os", "cpu_count"],
+      "properties": {
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$",
+          "description": "Git commit SHA (40 hex characters)"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Git branch name"
+        },
+        "repo_clean": {
+          "type": "boolean",
+          "description": "Whether the repository had no uncommitted changes"
+        },
+        "rust_version": {
+          "type": ["string", "null"],
+          "description": "Rust toolchain version"
+        },
+        "python_version": {
+          "type": ["string", "null"],
+          "description": "Python version"
+        },
+        "node_version": {
+          "type": ["string", "null"],
+          "description": "Node.js version"
+        },
+        "os": {
+          "type": "string",
+          "description": "Operating system identifier"
+        },
+        "cpu": {
+          "type": "string",
+          "description": "CPU brand/model"
+        },
+        "ram_gb": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total RAM in gigabytes"
+        },
+        "cpu_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of CPU cores"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Measured metrics",
+      "required": ["loc", "tests", "coverage", "scorecard"],
+      "properties": {
+        "loc": {
+          "type": "object",
+          "description": "Lines of code breakdown",
+          "required": ["total", "method", "excluded_patterns"],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Total lines of code"
+            },
+            "rust": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "python": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "typescript": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "markdown": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "yaml": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "other": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Patterns excluded from counting"
+            },
+            "method": {
+              "type": "string",
+              "description": "Tool/method used for counting"
+            }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "description": "Test execution results",
+          "required": ["total", "passed", "failed", "skipped", "duration_seconds"],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "passed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "failed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "skipped": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "duration_seconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "rust_tests": {
+              "$ref": "#/definitions/test_suite_result"
+            },
+            "python_tests": {
+              "$ref": "#/definitions/test_suite_result"
+            },
+            "node_tests": {
+              "$ref": "#/definitions/test_suite_result"
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "description": "Code coverage metrics",
+          "required": ["line_coverage_percent", "target_percent", "status", "method"],
+          "properties": {
+            "line_coverage_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "branch_coverage_percent": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "target_percent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["Green", "Yellow", "Red"]
+            },
+            "artifact_hash": {
+              "type": "string",
+              "description": "SHA-256 hash prefix of coverage artifact"
+            },
+            "method": {
+              "type": "string"
+            }
+          }
+        },
+        "performance": {
+          "type": ["object", "null"],
+          "description": "Performance benchmark results (optional)",
+          "properties": {
+            "latency_p50_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "latency_p95_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "latency_p99_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "throughput_rps": {
+              "type": "number",
+              "minimum": 0
+            },
+            "reproducibility_rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "profile": {
+              "type": "string"
+            }
+          }
+        },
+        "graph": {
+          "type": ["object", "null"],
+          "description": "Knowledge graph metrics (optional)",
+          "properties": {
+            "node_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "edge_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "dataset_hash": {
+              "type": "string",
+              "description": "Hash of canonical dataset snapshot"
+            },
+            "counting_method": {
+              "type": "string"
+            },
+            "inclusion_rules": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "exclusion_rules": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "scorecard": {
+          "type": "object",
+          "description": "Health scorecard (Ihsān dimensions)",
+          "required": ["excellence", "benevolence", "justice", "trust", "overall_grade", "overall_score"],
+          "properties": {
+            "excellence": {
+              "$ref": "#/definitions/scorecard_dimension"
+            },
+            "benevolence": {
+              "$ref": "#/definitions/scorecard_dimension"
+            },
+            "justice": {
+              "$ref": "#/definitions/scorecard_dimension"
+            },
+            "trust": {
+              "$ref": "#/definitions/scorecard_dimension"
+            },
+            "overall_grade": {
+              "type": "string",
+              "enum": ["A", "B", "C", "D", "F"]
+            },
+            "overall_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "description": "Verified claims from CLAIM_REGISTRY",
+      "items": {
+        "type": "object",
+        "required": ["claim_id", "claim_text", "claim_tag", "status", "last_verified"],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^[A-Z]+-\\d+$"
+          },
+          "claim_text": {
+            "type": "string"
+          },
+          "claim_tag": {
+            "type": "string",
+            "enum": ["MEASURED", "IMPLEMENTED", "TARGET", "HYPOTHESIS"]
+          },
+          "verification_command": {
+            "type": ["string", "null"]
+          },
+          "expected_threshold": {
+            "type": ["number", "null"]
+          },
+          "measured_value": {
+            "type": ["number", "null"]
+          },
+          "status": {
+            "$ref": "#/definitions/verification_state"
+          },
+          "evidence_artifact": {
+            "type": ["string", "null"]
+          },
+          "last_verified": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "state": {
+      "$ref": "#/definitions/verification_state",
+      "description": "Overall verification state"
+    },
+    "integrity": {
+      "type": "object",
+      "description": "Cryptographic integrity binding",
+      "required": ["content_hash", "hash_algorithm"],
+      "properties": {
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of receipt content (excluding this field)"
+        },
+        "signature": {
+          "type": ["string", "null"],
+          "description": "Ed25519 signature (base64 encoded)"
+        },
+        "signer_fingerprint": {
+          "type": ["string", "null"],
+          "description": "Public key fingerprint of signer"
+        },
+        "hash_algorithm": {
+          "type": "string",
+          "const": "SHA-256"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "verification_state": {
+      "type": "string",
+      "enum": ["HYPOTHESIS", "PENDING", "VERIFIED", "FAIL_CLOSED"],
+      "description": "Verification state machine: HYPOTHESIS → PENDING → VERIFIED | FAIL_CLOSED"
+    },
+    "test_suite_result": {
+      "type": ["object", "null"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "duration_seconds": { "type": "number", "minimum": 0 },
+        "command": { "type": "string" },
+        "exit_code": { "type": "integer" }
+      }
+    },
+    "scorecard_dimension": {
+      "type": "object",
+      "required": ["score", "weight", "metrics"],
+      "properties": {
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "target", "current", "unit", "method", "trend", "status"],
+            "properties": {
+              "name": { "type": "string" },
+              "target": { "type": "number" },
+              "current": { "type": "number" },
+              "unit": { "type": "string" },
+              "method": { "type": "string" },
+              "trend": { 
+                "type": "string",
+                "enum": ["↑", "→", "↓"]
+              },
+              "status": {
+                "type": "string",
+                "enum": ["Green", "Yellow", "Red"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
