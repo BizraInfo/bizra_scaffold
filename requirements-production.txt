@@ -26,15 +26,18 @@ faiss-cpu==1.7.4            # Vector similarity search (L3 Episodic Memory)
 neo4j==5.13.0               # Graph database driver (L4 Semantic HyperGraph)
 networkx==3.3               # Graph analysis and algorithms
 redis==5.0.0                # In-memory cache (temporal chain acceleration)
+filelock>=3.20.1            # File locking (security fix CVE-2025-68146)
 
 # ──────────────────────────────────────────────────────────────────────────
 # WEB FRAMEWORK & API
 # ──────────────────────────────────────────────────────────────────────────
-fastapi==0.104.1            # Modern async web framework
-uvicorn[standard]==0.24.0   # ASGI server with extras (uvloop, httptools)
-pydantic==2.5.0             # Data validation
+fastapi==0.127.0            # Modern async web framework
+uvicorn[standard]==0.40.0   # ASGI server with extras (uvloop, httptools)
+pydantic==2.12.5            # Data validation
 pydantic-settings==2.1.0    # Settings management
 python-multipart==0.0.6     # File uploads support
+werkzeug>=3.1.4             # WSGI utilities (security fix CVE-2025-66221)
+flask-cors>=6.0.0           # CORS support (security fix CVE-2024-6844/6866/6839)
 
 # ──────────────────────────────────────────────────────────────────────────
 # MONITORING & OBSERVABILITY
@@ -43,6 +46,7 @@ prometheus-client==0.19.0   # Prometheus metrics exporter
 python-json-logger==2.0.7   # Structured JSON logging
 opentelemetry-api==1.21.0   # Distributed tracing
 opentelemetry-sdk==1.21.0   # OpenTelemetry SDK
+urllib3>=2.6.0              # HTTP client (security fix CVE-2025-66418/66471)
 
 # ──────────────────────────────────────────────────────────────────────────
 # DATABASE & PERSISTENCE
