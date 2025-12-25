@@ -569,6 +569,26 @@ class AuditLogger:
         event_copy = {k: v for k, v in event.items() if k != 'integrity_hash'}
         event_str = str(sorted(event_copy.items()))
         return hashlib.sha256(event_str.encode()).hexdigest()[:16]
+    
+    def log_event(self, event_type: str, details: Dict[str, Any]):
+        """
+        Log a generic event with arbitrary details.
+        
+        Args:
+            event_type: Type of event (e.g., 'value_oracle_fallback')
+            details: Dictionary of event details
+        """
+        self.event_count += 1
+        
+        event = {
+            'event_type': event_type.upper(),
+            'event_id': self.event_count,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            **details
+        }
+        
+        event['integrity_hash'] = self._compute_hash(event)
+        self.logger.info(f"AUDIT: {event}")
 
 
 # Global instances for convenience

@@ -37,7 +37,7 @@ from core.layers.memory_layers_v2 import L4SemanticHyperGraphV2
 from core.tiered_verification import QuantizedConvergence, ConvergenceResult
 from core.narrative_compiler import CognitiveSynthesis, NarrativeCompiler, NarrativeStyle
 from core.ultimate_integration import UltimateResult, Observation
-from core.observability import MetricsCollector
+from core.observability import MeterProvider
 from core.production_safeguards import (
     InputValidator,
     CircuitBreaker,
@@ -93,7 +93,7 @@ class EnhancedCognitiveProcessor:
         l4_hypergraph: L4SemanticHyperGraphV2,
         quantized_convergence: QuantizedConvergence,
         narrative_compiler: NarrativeCompiler,
-        metrics_collector: Optional[MetricsCollector] = None,
+        metrics_collector: Optional[MeterProvider] = None,
         enable_graph_of_thoughts: bool = True,
         beam_width: int = 10,
         max_thought_depth: int = 5
@@ -113,7 +113,7 @@ class EnhancedCognitiveProcessor:
         self.l4 = l4_hypergraph
         self.convergence = quantized_convergence
         self.narrative_compiler = narrative_compiler
-        self.metrics = metrics_collector or MetricsCollector("enhanced_cognitive")
+        self.metrics = metrics_collector or MeterProvider("enhanced_cognitive")
         
         # Initialize production safeguards
         self.validator = InputValidator()
@@ -528,7 +528,9 @@ class EnhancedCognitiveProcessor:
                 self._value_oracle = PluralisticValueOracle()
             
             # Create convergence object from observation for oracle evaluation
+            import uuid
             convergence = Convergence(
+                id=str(uuid.uuid4()),
                 clarity_score=observation.context.get('clarity', 0.7),
                 mutual_information=observation.context.get('mutual_info', 0.6),
                 entropy=observation.context.get('entropy', 0.3),
@@ -721,7 +723,7 @@ async def process_with_graph_of_thoughts(
     # Create minimal dependencies
     convergence = QuantizedConvergence()
     narrative = NarrativeCompiler()
-    metrics = MetricsCollector("quick_process")
+    metrics = MeterProvider("quick_process")
     
     processor = EnhancedCognitiveProcessor(
         l4_hypergraph=l4_hypergraph,
