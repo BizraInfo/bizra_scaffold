@@ -95,7 +95,11 @@ class QuantizedConvergenceResult:
 
 @dataclass
 class UltimateResult:
-    """Complete result from the Ultimate Implementation."""
+    """
+    Complete result from the Ultimate Implementation.
+    
+    Enhanced with SNR metrics and graph-of-thoughts reasoning.
+    """
     # Primary outputs
     action: Dict[str, Any]
     confidence: float
@@ -114,6 +118,11 @@ class UltimateResult:
     
     # Human-readable explanation
     explanation: CompiledNarrative
+    
+    # SNR and Graph-of-Thoughts enhancements
+    snr_metrics: Optional[Dict[str, Any]] = None  # SNR scoring for all components
+    thought_chains: Optional[List[Dict[str, Any]]] = None  # Reasoning paths
+    domain_bridges: Optional[List[Dict[str, Any]]] = None  # Cross-domain insights
     
     # Elite metadata for continuous improvement
     metadata: Dict[str, Any] = field(default_factory=dict)

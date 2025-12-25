@@ -38,7 +38,11 @@ class ConfidenceLevel(Enum):
 
 @dataclass
 class CognitiveSynthesis:
-    """Complete cognitive output to be compiled into narrative."""
+    """
+    Complete cognitive output to be compiled into narrative.
+    
+    Enhanced with SNR metrics and graph-of-thoughts reasoning.
+    """
     action: Dict[str, Any]
     confidence: float
     verification_tier: str
@@ -50,6 +54,11 @@ class CognitiveSynthesis:
     interdisciplinary_consistency: float = 0.0
     quantization_error: float = 0.0
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # SNR and Graph-of-Thoughts enhancements
+    snr_scores: Dict[str, float] = field(default_factory=dict)  # {component: SNR}
+    thought_graph_metrics: Dict[str, Any] = field(default_factory=dict)  # Chain metrics
+    domain_bridges: List[Dict[str, Any]] = field(default_factory=list)  # Cross-domain insights
 
 
 @dataclass
@@ -193,20 +202,52 @@ class TechnicalNarrativeTemplate(NarrativeTemplate):
     
     def _format_action_analysis(self, synthesis: CognitiveSynthesis) -> str:
         action = synthesis.action
-        return (
+        base_text = (
             f"The system produced an action with confidence {synthesis.confidence:.2%}. "
             f"Action type: {action.get('type', 'unspecified')}. "
             f"Payload hash: {self._hash_dict(action)[:16]}. "
             f"Value score: {synthesis.value_score:.4f}."
         )
+        
+        # Add SNR insights if available
+        if synthesis.snr_scores:
+            avg_snr = sum(synthesis.snr_scores.values()) / len(synthesis.snr_scores)
+            high_snr_components = [k for k, v in synthesis.snr_scores.items() if v > 0.8]
+            
+            snr_text = (
+                f"\n\n**Signal Quality:** Average SNR: {avg_snr:.3f}. "
+            )
+            
+            if high_snr_components:
+                snr_text += (
+                    f"HIGH-SNR components (breakthrough insights): "
+                    f"{', '.join(high_snr_components)}. "
+                )
+            
+            base_text += snr_text
+        
+        return base_text
     
     def _format_verification(self, synthesis: CognitiveSynthesis) -> str:
-        return (
+        base_text = (
             f"Verification completed at {synthesis.verification_tier} tier. "
             f"System health status: {synthesis.health_status}. "
             f"Temporal integrity maintained with quantization error "
             f"of {synthesis.quantization_error:.6f}."
         )
+        
+        # Add graph-of-thoughts reasoning summary if available
+        if synthesis.thought_graph_metrics:
+            metrics = synthesis.thought_graph_metrics
+            got_text = (
+                f"\n\n**Reasoning Path:** "
+                f"{metrics.get('chain_depth', 0)}-hop thought chain constructed. "
+                f"Domain diversity: {metrics.get('domain_diversity', 0.0):.2f}. "
+                f"Path SNR: {metrics.get('avg_snr', 0.0):.3f}."
+            )
+            base_text += got_text
+        
+        return base_text
     
     def _format_ihsan_analysis(self, synthesis: CognitiveSynthesis) -> str:
         scores = synthesis.ihsan_scores
@@ -215,12 +256,30 @@ class TechnicalNarrativeTemplate(NarrativeTemplate):
         highest = max(scores.items(), key=lambda x: x[1]) if scores else ("N/A", 0)
         lowest = min(scores.items(), key=lambda x: x[1]) if scores else ("N/A", 0)
         
-        return (
+        base_text = (
             f"Ihsān composite score: {total:.2f}. "
             f"Highest dimension: {highest[0].upper()} ({highest[1]:.2f}). "
             f"Lowest dimension: {lowest[0].upper()} ({lowest[1]:.2f}). "
             f"Alignment with SOT weights: verified."
         )
+        
+        # Add interdisciplinary insights if domain bridges discovered
+        if synthesis.domain_bridges:
+            bridge_count = len(synthesis.domain_bridges)
+            domains_crossed = set()
+            for bridge in synthesis.domain_bridges:
+                domains_crossed.add(bridge.get('source_domain'))
+                domains_crossed.add(bridge.get('target_domain'))
+            
+            bridge_text = (
+                f"\n\n**Interdisciplinary Insights:** "
+                f"{bridge_count} domain bridges discovered, connecting "
+                f"{len(domains_crossed)} knowledge domains. "
+                f"Cross-domain reasoning demonstrates elite cognitive synthesis."
+            )
+            base_text += bridge_text
+        
+        return base_text
     
     def _format_ethical_analysis(self, synthesis: CognitiveSynthesis) -> str:
         verdict = synthesis.ethical_verdict
@@ -232,13 +291,34 @@ class TechnicalNarrativeTemplate(NarrativeTemplate):
         )
     
     def _generate_technical_summary(self, synthesis: CognitiveSynthesis) -> str:
-        return (
+        base_summary = (
             f"Cognitive cycle completed at {synthesis.timestamp.isoformat()}. "
             f"Action confidence: {synthesis.confidence:.2%}. "
             f"Verification: {synthesis.verification_tier}. "
             f"Ethical clearance: {synthesis.ethical_verdict.get('permitted', True)}. "
             f"System status: {synthesis.health_status}."
         )
+        
+        # Enhanced summary with SNR and graph-of-thoughts
+        if synthesis.snr_scores or synthesis.thought_graph_metrics:
+            enhancement = "\n\n**Advanced Reasoning:**"
+            
+            if synthesis.snr_scores:
+                avg_snr = sum(synthesis.snr_scores.values()) / len(synthesis.snr_scores)
+                enhancement += f" SNR Quality: {avg_snr:.3f}."
+            
+            if synthesis.thought_graph_metrics:
+                enhancement += (
+                    f" Graph-of-Thoughts: {synthesis.thought_graph_metrics.get('chain_depth', 0)} hops, "
+                    f"{synthesis.thought_graph_metrics.get('domain_diversity', 0.0):.2f} diversity."
+                )
+            
+            if synthesis.domain_bridges:
+                enhancement += f" {len(synthesis.domain_bridges)} interdisciplinary bridges."
+            
+            base_summary += enhancement
+        
+        return base_summary
     
     def _confidence_level(self, score: float) -> ConfidenceLevel:
         if score >= 0.9:

@@ -920,6 +920,94 @@ class MeterProvider:
                 for name, h in self._histograms.items()
             },
         }
+    
+    def record_snr_metrics(
+        self,
+        snr_score: float,
+        snr_level: str,
+        component: str = "overall"
+    ) -> None:
+        """
+        Record SNR (Signal-to-Noise Ratio) metrics for insight quality tracking.
+        
+        Args:
+            snr_score: SNR value (0.0-1.0+)
+            snr_level: Classification (HIGH/MEDIUM/LOW)
+            component: Component name (e.g., 'convergence', 'value_oracle')
+        """
+        # Record SNR score as gauge
+        gauge_name = f"bizra_snr_score_{component}"
+        gauge = self.get_gauge(
+            gauge_name,
+            description=f"SNR quality score for {component}",
+            unit="ratio"
+        )
+        gauge.set(snr_score)
+        
+        # Record SNR level distribution as counter
+        counter_name = f"bizra_snr_level_{snr_level.lower()}_{component}"
+        counter = self.get_counter(
+            counter_name,
+            description=f"Count of {snr_level} SNR insights in {component}"
+        )
+        counter.add(1)
+        
+        # Record in histogram for distribution analysis
+        hist_name = f"bizra_snr_distribution_{component}"
+        histogram = self.get_histogram(
+            hist_name,
+            description=f"Distribution of SNR scores in {component}",
+            unit="ratio",
+            buckets=[0.0, 0.3, 0.5, 0.8, 1.0, 2.0]
+        )
+        histogram.record(snr_score)
+    
+    def record_thought_graph_metrics(
+        self,
+        chain_depth: int,
+        domain_diversity: float,
+        bridge_count: int
+    ) -> None:
+        """
+        Record graph-of-thoughts reasoning metrics.
+        
+        Args:
+            chain_depth: Thought chain length (hops)
+            domain_diversity: Entropy of domain distribution
+            bridge_count: Number of cross-domain bridges discovered
+        """
+        # Thought chain depth histogram
+        hist = self.get_histogram(
+            "bizra_thought_chain_depth",
+            description="Depth of reasoning chains (hops)",
+            unit="hops",
+            buckets=[1, 2, 3, 5, 10, 20]
+        )
+        hist.record(chain_depth)
+        
+        # Domain diversity gauge
+        gauge = self.get_gauge(
+            "bizra_domain_diversity",
+            description="Interdisciplinary diversity score",
+            unit="entropy"
+        )
+        gauge.set(domain_diversity)
+        
+        # Bridge discovery counter - add all at once for efficiency
+        counter = self.get_counter(
+            "bizra_domain_bridges_discovered",
+            description="Total cross-domain bridges discovered"
+        )
+        counter.add(bridge_count)
+        
+        # Average bridges per chain
+        if chain_depth > 0:
+            avg_gauge = self.get_gauge(
+                "bizra_avg_bridges_per_hop",
+                description="Average domain bridges per reasoning hop",
+                unit="ratio"
+            )
+            avg_gauge.set(bridge_count / chain_depth)
 
 
 # ============================================================================

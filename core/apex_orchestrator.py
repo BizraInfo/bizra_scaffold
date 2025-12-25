@@ -128,6 +128,15 @@ class BackpressureStrategy(Enum):
     SAMPLE = auto()          # Probabilistic sampling
 
 
+class GraphOfThoughtsEventType(Enum):
+    """Event types for graph-of-thoughts reasoning and SNR tracking."""
+    
+    THOUGHT_CHAIN_CONSTRUCTED = "thought_chain_constructed"  # Reasoning chain completed
+    DOMAIN_BRIDGE_DISCOVERED = "domain_bridge_discovered"   # Cross-domain insight found
+    HIGH_SNR_INSIGHT = "high_snr_insight"          # Breakthrough discovery (SNR > 0.8)
+    RETROGRADE_SIGNAL = "retrograde_signal"        # Attention guidance from high-SNR
+
+
 # ============================================================================
 # PROTOCOLS (STRUCTURAL TYPING)
 # ============================================================================

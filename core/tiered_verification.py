@@ -20,6 +20,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from collections import deque
 import secrets
 
+from core.architecture.modular_components import ConvergenceResult, ConvergenceQuality
+
 
 class UrgencyLevel(Enum):
     """Verification urgency classification."""
@@ -89,6 +91,19 @@ class VerificationStrategy(ABC):
     def expected_latency_ms(self) -> float:
         """Expected latency in milliseconds."""
         pass
+
+
+class QuantizedConvergence:
+    """
+    Compatibility wrapper for QuantizedConvergence.
+
+    Avoids eager imports to prevent circular dependencies with
+    core.ultimate_integration while keeping the public API stable.
+    """
+
+    def __new__(cls, *args, **kwargs):
+        from core.ultimate_integration import QuantizedConvergence as _QuantizedConvergence
+        return _QuantizedConvergence(*args, **kwargs)
 
 
 class StatisticalVerification(VerificationStrategy):

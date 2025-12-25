@@ -448,15 +448,17 @@ class L4SemanticHyperGraphV2:
                                nodes: List[str],
                                relation: str,
                                weights: Optional[List[float]] = None,
-                               properties: Optional[Dict[str, Any]] = None) -> str:
+                               properties: Optional[Dict[str, Any]] = None,
+                               domain_tags: Optional[List[str]] = None) -> str:
         """
-        Create hyperedge connecting multiple nodes.
+        Create hyperedge connecting multiple nodes with domain awareness.
         
         Args:
             nodes: List of node names
             relation: Relationship type
             weights: Optional weights for each node
             properties: Optional additional properties
+            domain_tags: Optional domain tags (math, physics, economics, ethics, etc.)
             
         Returns: Hyperedge ID
         """
@@ -469,6 +471,11 @@ class L4SemanticHyperGraphV2:
         
         weights = weights if weights else [1.0] * len(nodes)
         properties = properties if properties else {}
+        domain_tags = domain_tags if domain_tags else []
+        
+        # Add domain tags to properties
+        if domain_tags:
+            properties["domains"] = domain_tags
         
         async with self.driver.session() as session:
             # Create hyperedge node
@@ -477,18 +484,25 @@ class L4SemanticHyperGraphV2:
                 MERGE (e:HyperEdge {id: $edge_id})
                 SET e.relation = $relation,
                     e.timestamp = datetime(),
+                    e.domains = $domains,
                     e += $properties
                 """,
                 edge_id=edge_id,
                 relation=relation,
+                domains=domain_tags,
                 properties=properties
             )
             
-            # Connect entity nodes to hyperedge
+            # Connect entity nodes to hyperedge with domain awareness
             for i, node_name in enumerate(nodes):
                 await session.run(
                     """
                     MERGE (n:Entity {name: $node_name})
+                    ON CREATE SET n.domains = $domains
+                    ON MATCH SET n.domains = CASE 
+                        WHEN n.domains IS NULL THEN $domains
+                        ELSE [d IN n.domains WHERE NOT d IN $domains] + $domains
+                    END
                     WITH n
                     MATCH (e:HyperEdge {id: $edge_id})
                     MERGE (n)-[r:PARTICIPANT]->(e)
@@ -496,7 +510,8 @@ class L4SemanticHyperGraphV2:
                     """,
                     node_name=node_name,
                     edge_id=edge_id,
-                    weight=weights[i]
+                    weight=weights[i],
+                    domains=domain_tags
                 )
             
             # Create implicit connections between entities
@@ -513,6 +528,19 @@ class L4SemanticHyperGraphV2:
                         node_b=nodes[j],
                         edge_id=edge_id
                     )
+            
+            # If cross-domain bridge detected, create DomainBridge edge
+            if len(domain_tags) > 1:
+                await session.run(
+                    """
+                    MATCH (e:HyperEdge {id: $edge_id})
+                    SET e:DomainBridge,
+                        e.bridge_type = 'INTERDISCIPLINARY',
+                        e.domain_count = $domain_count
+                    """,
+                    edge_id=edge_id,
+                    domain_count=len(domain_tags)
+                )
         
         # Invalidate topology cache
         self._topology_cache = None
@@ -541,9 +569,9 @@ class L4SemanticHyperGraphV2:
     
     async def analyze_topology(self) -> Dict[str, float]:
         """
-        Analyze hypergraph topology with caching.
+        Analyze hypergraph topology with caching and domain metrics.
         
-        Returns: Topology metrics (clustering, rich-club, etc.)
+        Returns: Topology metrics (clustering, rich-club, domain-crossing, etc.)
         """
         # Check cache
         if self._topology_cache and self._cache_timestamp:
@@ -570,6 +598,25 @@ class L4SemanticHyperGraphV2:
             edge_data = await edge_count.single()
             metrics["edge_count"] = edge_data["count"] if edge_data else 0
             
+            # Count domain bridges
+            bridge_count = await session.run(
+                "MATCH (e:DomainBridge) RETURN count(e) as count"
+            )
+            bridge_data = await bridge_count.single()
+            metrics["domain_bridge_count"] = bridge_data["count"] if bridge_data else 0
+            
+            # Domain diversity (number of unique domains)
+            domain_diversity = await session.run(
+                """
+                MATCH (e:HyperEdge)
+                WHERE e.domains IS NOT NULL
+                UNWIND e.domains as domain
+                RETURN count(DISTINCT domain) as unique_domains
+                """
+            )
+            diversity_data = await domain_diversity.single()
+            metrics["unique_domains"] = diversity_data["unique_domains"] if diversity_data else 0
+            
             # Calculate clustering coefficient (approximate)
             if metrics["node_count"] > 0:
                 clustering = await session.run(
@@ -593,6 +640,15 @@ class L4SemanticHyperGraphV2:
             
             # Calculate rich-club coefficient
             metrics["rich_club_coefficient"] = await self._calculate_rich_club(session)
+            
+            # Calculate interdisciplinary connectivity (domain-crossing ratio)
+            if metrics["edge_count"] > 0:
+                metrics["interdisciplinary_ratio"] = (
+                    float(metrics["domain_bridge_count"]) / metrics["edge_count"]
+                    if metrics["edge_count"] > 0 else 0.0
+                )
+            else:
+                metrics["interdisciplinary_ratio"] = 0.0
         
         # Update cache
         self._topology_cache = metrics
@@ -638,4 +694,150 @@ class L4SemanticHyperGraphV2:
                 if self._cache_timestamp
                 else None
             )
-        }
+        }    
+    async def find_interdisciplinary_paths(
+        self,
+        source_node: str,
+        target_node: str,
+        max_hops: int = 5,
+        min_domains: int = 2
+    ) -> List[Dict[str, Any]]:
+        """
+        Find paths between nodes that cross multiple knowledge domains.
+        
+        Elite Pattern: Interdisciplinary Reasoning via Graph Traversal
+        
+        Args:
+            source_node: Starting entity name
+            target_node: Destination entity name
+            max_hops: Maximum path length
+            min_domains: Minimum number of domains path must cross
+            
+        Returns: List of paths with domain crossing information
+        """
+        if not self.driver:
+            raise RuntimeError("Neo4j driver not initialized")
+        
+        async with self.driver.session() as session:
+            result = await session.run(
+                """
+                MATCH path = (source:Entity {name: $source})-[*1..$max_hops]-(target:Entity {name: $target})
+                WHERE source <> target
+                WITH path, nodes(path) as path_nodes, relationships(path) as path_rels
+                
+                // Collect all domains along path
+                UNWIND path_nodes as n
+                WITH path, path_nodes, path_rels, 
+                     collect(DISTINCT CASE WHEN n.domains IS NOT NULL 
+                                          THEN n.domains 
+                                          ELSE [] 
+                                     END) as node_domains
+                UNWIND node_domains as domain_list
+                UNWIND domain_list as domain
+                
+                WITH path, path_nodes, path_rels, collect(DISTINCT domain) as all_domains
+                WHERE size(all_domains) >= $min_domains
+                
+                // Calculate path metrics
+                WITH path, path_nodes, path_rels, all_domains,
+                     reduce(total = 0.0, r in path_rels | 
+                            total + coalesce(r.weight, 0.5)) as total_weight
+                
+                RETURN 
+                    [n in path_nodes | n.name] as node_sequence,
+                    all_domains as domains_crossed,
+                    size(all_domains) as domain_diversity,
+                    length(path) as hop_count,
+                    total_weight as path_weight,
+                    [r in path_rels | type(r)] as edge_types
+                ORDER BY domain_diversity DESC, total_weight DESC
+                LIMIT 10
+                """,
+                source=source_node,
+                target=target_node,
+                max_hops=max_hops,
+                min_domains=min_domains
+            )
+            
+            records = await result.data()
+            
+            # Enrich with domain bridge annotations
+            enriched_paths = []
+            for record in records:
+                domains = record["domains_crossed"]
+                
+                # Identify domain transitions
+                domain_transitions = []
+                if len(domains) > 1:
+                    for i in range(len(domains) - 1):
+                        domain_transitions.append({
+                            "from_domain": domains[i],
+                            "to_domain": domains[i + 1],
+                            "transition_type": "INTERDISCIPLINARY_BRIDGE"
+                        })
+                
+                enriched_paths.append({
+                    "node_sequence": record["node_sequence"],
+                    "domains_crossed": domains,
+                    "domain_diversity": record["domain_diversity"],
+                    "hop_count": record["hop_count"],
+                    "path_weight": record["path_weight"],
+                    "edge_types": record["edge_types"],
+                    "domain_transitions": domain_transitions,
+                    "is_cross_domain": record["domain_diversity"] >= min_domains
+                })
+            
+            return enriched_paths
+    
+    async def get_neighbors_with_domains(
+        self,
+        node_name: str,
+        max_neighbors: int = 20
+    ) -> List[Dict[str, Any]]:
+        """
+        Get neighbor nodes with domain information for graph-of-thoughts expansion.
+        
+        Args:
+            node_name: Entity name to get neighbors for
+            max_neighbors: Maximum neighbors to return
+            
+        Returns: List of neighbor info dicts with domains, weights, relations
+        """
+        if not self.driver:
+            raise RuntimeError("Neo4j driver not initialized")
+        
+        async with self.driver.session() as session:
+            result = await session.run(
+                """
+                MATCH (source:Entity {name: $node_name})-[r]-(neighbor:Entity)
+                WHERE source <> neighbor
+                WITH DISTINCT neighbor, collect(DISTINCT type(r)) as relation_types,
+                     avg(coalesce(r.weight, 0.5)) as avg_weight
+                RETURN 
+                    neighbor.name as id,
+                    neighbor.domains as domains,
+                    relation_types,
+                    avg_weight as weight
+                ORDER BY avg_weight DESC
+                LIMIT $max_neighbors
+                """,
+                node_name=node_name,
+                max_neighbors=max_neighbors
+            )
+            
+            records = await result.data()
+            
+            # Format for graph-of-thoughts engine
+            neighbors = []
+            for record in records:
+                neighbors.append({
+                    "id": record["id"],
+                    "domains": record["domains"] if record["domains"] else [],
+                    "relation_types": record["relation_types"],
+                    "weight": record["weight"],
+                    "consistency": 0.7,  # Could be computed from historical data
+                    "disagreement": 0.2,  # Could be computed from oracle variance
+                    "ihsan": 0.95  # Default ethical metric
+                })
+            
+            return neighbors
