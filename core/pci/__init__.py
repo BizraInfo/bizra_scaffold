@@ -24,14 +24,6 @@ from core.pci.envelope import (
     canonical_json,
     compute_digest,
 )
-from core.pci.gate import (
-    GateResult,
-    PCIGate,
-    PCIRejectionError,
-    get_pci_gate,
-    pci_protected,
-    reset_pci_gate,
-)
 from core.pci.reject_codes import (
     LatencyBudget,
     RejectCode,
@@ -39,6 +31,27 @@ from core.pci.reject_codes import (
     VerificationGate,
 )
 from core.pci.replay_guard import ReplayGuard, get_replay_guard, reset_replay_guard
+
+# NOTE: Gate imports are deferred to avoid circular imports with core.agents
+# Import gate module only when needed, not at module load time
+
+
+def __getattr__(name: str):
+    """Lazy import of gate module to avoid circular import with core.agents."""
+    gate_exports = {
+        "GateResult",
+        "PCIGate",
+        "PCIRejectionError",
+        "get_pci_gate",
+        "pci_protected",
+        "reset_pci_gate",
+    }
+    if name in gate_exports:
+        from core.pci import gate
+
+        return getattr(gate, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     # Reject codes
