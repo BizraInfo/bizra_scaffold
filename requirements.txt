@@ -41,6 +41,8 @@ toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
 filelock==3.20.1            # CVE-2025-68146: race condition in lock acquisition
 urllib3==2.6.0              # CVE-2025-66418, CVE-2025-66471: request smuggling
+python-multipart>=0.0.18    # CVE-2024-53981, CVE-2024-24762: DoS in form parsing
+pycryptodome>=3.19.1        # CVE-2023-52323: OAEP decryption side-channel (3.23.0 installed)
 
 # ──────────────────────────────────────────────────────────────────────────
 # Transitive Security Fixes (indirect deps - pinned via constraints)

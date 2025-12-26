@@ -177,7 +177,7 @@ jobs:
 
       - name: Install linters
         run: |
-          pip install ruff mypy black isort
+          pip install ruff mypy 'black>=24.3.0' isort
 
       - name: Ruff lint
         run: |
