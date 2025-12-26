@@ -1,0 +1,53 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# BIZRA AEON OMEGA - Ruff Linter Configuration
+# ══════════════════════════════════════════════════════════════════════════════
+# Constitutional Enforcement: Maintain code quality while allowing flexibility
+# for cryptographic and AI research code patterns.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Standard Python style rules
+line-length = 120
+
+# Exclude generated/vendored code
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "htmlcov",
+    "*.egg-info",
+    "build",
+    "dist",
+]
+
+[lint]
+# Ignore rules that conflict with research/cryptographic code patterns:
+# F401: unused-import - Many modules pre-import for namespace convenience
+# F541: f-string-missing-placeholders - Often intentional for template strings
+# F841: unused-variable - Cryptographic code often assigns for clarity/debugging
+# E741: ambiguous-variable-name - Mathematical/crypto notation uses l, O, I
+# E402: module-import-not-at-top - Conditional imports common in this codebase
+# F811: redefined-while-unused - Re-exports and conditional definitions
+# E712: true-false-comparison - Explicit bool checks in cryptographic code
+# E731: lambda-assignment - Functional programming patterns
+# F402: import-shadowed-by-loop-var - Loop variable reuse patterns
+# F403: undefined-local-with-import-star - Star imports in __init__.py
+ignore = [
+    "F401",  # unused imports (common in __init__.py and research code)
+    "F541",  # f-strings without placeholders (template patterns)
+    "F841",  # unused variables (assigned for debugging/clarity)
+    "E741",  # ambiguous names (l, O, I used in math/crypto)
+    "E402",  # imports not at top (conditional imports)
+    "F811",  # redefined while unused (re-exports)
+    "E712",  # true-false comparison (explicit bool checks)
+    "E731",  # lambda assignment (functional patterns)
+    "F402",  # import shadowed by loop var
+    "F403",  # undefined local with import star
+]
+
+[lint.per-file-ignores]
+# Tests may use assertions without messages, fixtures, etc.
+"tests/**" = ["S101", "PLR2004"]
+# Init files often just re-export
+"__init__.py" = ["F401"]
+# Benchmarks may import without using (for timing isolation)
+"benchmarks/**" = ["F401"]
