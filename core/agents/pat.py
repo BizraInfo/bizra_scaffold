@@ -26,13 +26,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-from core.pci.envelope import (
-    Metadata,
-    Payload,
-    PCIEnvelope,
-    Sender,
-    compute_digest,
-)
+from core.pci.envelope import Metadata, Payload, PCIEnvelope, Sender, compute_digest
 from core.pci.reject_codes import RejectCode, RejectionResponse
 
 logger = logging.getLogger(__name__)

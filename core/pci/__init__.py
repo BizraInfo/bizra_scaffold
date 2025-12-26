@@ -38,11 +38,7 @@ from core.pci.reject_codes import (
     RejectionResponse,
     VerificationGate,
 )
-from core.pci.replay_guard import (
-    ReplayGuard,
-    get_replay_guard,
-    reset_replay_guard,
-)
+from core.pci.replay_guard import ReplayGuard, get_replay_guard, reset_replay_guard
 
 __all__ = [
     # Reject codes

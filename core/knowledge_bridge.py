@@ -55,17 +55,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    FrozenSet,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Callable, Dict, FrozenSet, List, Optional, Set, Tuple, TypeVar
 
 logger = logging.getLogger(__name__)
 

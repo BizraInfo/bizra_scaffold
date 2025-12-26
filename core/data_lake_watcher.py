@@ -60,16 +60,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    Union,
-)
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, Union
 
 logger = logging.getLogger(__name__)
 

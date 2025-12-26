@@ -162,11 +162,7 @@ except ImportError:
     Timeout = None
 
 try:
-    from core.event_sourcing import (
-        Aggregate,
-        Event,
-        EventStore,
-    )
+    from core.event_sourcing import Aggregate, Event, EventStore
 except ImportError:
     Event = None
     EventStore = None

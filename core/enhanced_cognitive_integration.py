@@ -579,14 +579,9 @@ class EnhancedCognitiveProcessor:
         """
         try:
             # Import here to avoid circular dependency
-            from core.consequential_ethics import (
-                Action,
-                ConsequentialEthicsEngine,
-            )
+            from core.consequential_ethics import Action, ConsequentialEthicsEngine
             from core.consequential_ethics import Context as EthicsContext
-            from core.consequential_ethics import (
-                EthicalFramework,
-            )
+            from core.consequential_ethics import EthicalFramework
 
             # Get or create ethics engine instance
             if not hasattr(self, "_ethics_engine"):
