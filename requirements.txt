@@ -2,15 +2,19 @@
 # BIZRA AEON OMEGA - Development Dependencies
 # ============================================================================
 # Pin ALL versions for reproducible builds (SOT compliance)
-# Last Updated: 2025-12-25
+# Last Updated: 2025-12-26
 # Python: 3.10+
 #
 # NOTE: This project uses FastAPI (ASGI/Starlette stack), NOT Flask.
 # CORS is handled via fastapi.middleware.cors.CORSMiddleware (see core/engine/api.py)
+#
+# CUDA Note: For GPU support, install torch with:
+#   pip install torch==2.7.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
 # ============================================================================
 
 # Core ML & Numerics (pinned for reproducible builds)
-torch==2.7.1+cu118
+# Using CPU version for CI compatibility - see CUDA Note above for GPU
+torch>=2.7.1                # CVE-2025-3730 affects 2.6.0 only (disputed)
 numpy==2.3.3
 networkx==3.3
 cryptography==45.0.7
