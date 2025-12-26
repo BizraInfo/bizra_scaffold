@@ -101,7 +101,7 @@ jobs:
           fetch-depth: 0
 
       - name: TruffleHog Scan
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.88.13
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}
@@ -158,7 +158,7 @@ jobs:
 
       - name: Safety check
         run: |
-          safety check -r requirements.txt --full-report || true
+          safety check -r requirements.txt --full-report
 
   # ────────────────────────────────────────────────────────────────────────────
   # GATE 4: CODE QUALITY (MEDIUM TIER)
@@ -181,17 +181,17 @@ jobs:
 
       - name: Ruff lint
         run: |
-          ruff check . --output-format=github || true
+          ruff check . --output-format=github
 
       - name: Type checking (mypy)
         run: |
           pip install -r requirements.txt
-          mypy core/ --ignore-missing-imports --no-error-summary || true
+          mypy core/ --ignore-missing-imports --no-error-summary
 
       - name: Format check
         run: |
-          black --check . || echo "⚠️ Formatting issues found"
-          isort --check-only . || echo "⚠️ Import order issues found"
+          black --check .
+          isort --check-only .
 
   # ────────────────────────────────────────────────────────────────────────────
   # GATE 5: TEST SUITE (MEDIUM TIER)

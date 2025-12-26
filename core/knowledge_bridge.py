@@ -46,7 +46,9 @@ import asyncio
 import hashlib
 import json
 import logging
+import os
 import re
+import tempfile
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -66,6 +68,41 @@ from typing import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _atomic_write_json(path: Path, payload: Dict[str, Any], indent: int = 2) -> None:
+    """Atomically write JSON data to disk with a write-then-rename pattern."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    tmp_file = tempfile.NamedTemporaryFile(
+        mode="w",
+        delete=False,
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+    )
+    tmp_path = Path(tmp_file.name)
+    try:
+        json.dump(payload, tmp_file, indent=indent, ensure_ascii=False)
+        tmp_file.flush()
+        os.fsync(tmp_file.fileno())
+        tmp_file.close()
+
+        try:
+            os.chmod(tmp_path, 0o644)
+        except OSError:
+            pass
+
+        tmp_path.replace(path)
+    except Exception:
+        try:
+            tmp_file.close()
+        except Exception:
+            pass
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -365,9 +402,15 @@ class KnowledgeGraph:
         for key in keys_to_remove:
             if key in self._edges:
                 del self._edges[key]
+                removed = True
+
+        if removed:
+            has_remaining = any(
+                (source_id, target_id, et) in self._edges for et in EdgeType
+            )
+            if not has_remaining:
                 self._adjacency[source_id].discard(target_id)
                 self._reverse_adjacency[target_id].discard(source_id)
-                removed = True
         
         return removed
     
@@ -544,9 +587,7 @@ class KnowledgeGraph:
     
     def save(self, path: Path) -> None:
         """Save graph to JSON file."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(self.to_dict(), f, indent=2)
+        _atomic_write_json(path, self.to_dict(), indent=2)
     
     @classmethod
     def load(cls, path: Path) -> "KnowledgeGraph":
@@ -566,6 +607,10 @@ class KnowledgeGraph:
                 source_line=node_data.get("source_line"),
                 properties=frozenset(node_data.get("properties", {}).items()),
                 signal_strength=node_data.get("signal_strength", 0.5),
+                created_at=node_data.get(
+                    "created_at",
+                    datetime.now(timezone.utc).isoformat(),
+                ),
             )
             graph.add_node(node)
         
@@ -661,17 +706,20 @@ class KnowledgeExtractor:
         """
         start_time = time.time()
         
-        if not file_path.exists():
+        try:
+            content = await asyncio.to_thread(
+                file_path.read_text,
+                encoding="utf-8",
+                errors="ignore",
+            )
+        except (FileNotFoundError, IsADirectoryError):
             return ExtractionResult(
                 source_file=str(file_path),
                 nodes=[],
                 edges=[],
                 confidence=0.0,
             )
-        
-        try:
-            content = file_path.read_text(encoding='utf-8', errors='ignore')
-        except Exception as e:
+        except OSError as e:
             logger.warning(f"Failed to read {file_path}: {e}")
             return ExtractionResult(
                 source_file=str(file_path),
@@ -805,8 +853,13 @@ class KnowledgeExtractor:
         """Extract relationship edges from content."""
         edges = []
         
-        # Build label -> node mapping
-        label_to_node = {n.label.lower(): n for n in nodes}
+        # Build label -> strongest node mapping to avoid collisions
+        label_to_node: Dict[str, KnowledgeNode] = {}
+        for node in nodes:
+            key = node.label.lower()
+            existing = label_to_node.get(key)
+            if not existing or node.signal_strength > existing.signal_strength:
+                label_to_node[key] = node
         
         for pattern, edge_type in self._compiled_relationship_patterns:
             for match in pattern.finditer(content):
@@ -872,21 +925,53 @@ class KnowledgeGraphBridge:
         
         # Register change listener if watcher available
         if self.watcher:
-            self.watcher.add_listener(self._on_file_change)
+            if hasattr(self.watcher, "add_change_listener"):
+                self.watcher.add_change_listener(self._on_file_change_sync)
+            elif hasattr(self.watcher, "add_listener"):
+                self.watcher.add_listener(self._on_file_change)
+            else:
+                logger.warning("Watcher does not support change listener registration.")
+
+    def _on_file_change_sync(self, change: Any) -> None:
+        """Bridge sync watcher callbacks into the async handler."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(self._on_file_change(change))
+        else:
+            loop.create_task(self._on_file_change(change))
     
-    async def _on_file_change(self, changes: List[Any]) -> None:
+    async def _on_file_change(self, changes: Any) -> None:
         """Handle file changes from the watcher."""
+        if not isinstance(changes, list):
+            changes = [changes]
+
         for change in changes:
-            if hasattr(change, 'path'):
+            file_path: Optional[Path] = None
+            if isinstance(change, (str, Path)):
+                file_path = Path(change)
+            elif hasattr(change, "path"):
                 file_path = Path(change.path)
-                if self.extractor.can_extract(file_path):
-                    # Get SNR score from watcher if available
-                    snr = 0.5
-                    if self.watcher and hasattr(self.watcher, 'get_snr_score'):
-                        snr = await self.watcher.get_snr_score(file_path)
-                    
-                    result = await self.extractor.extract_from_file(file_path, snr)
-                    self._apply_extraction(result)
+            elif hasattr(change, "asset") and hasattr(change.asset, "path"):
+                file_path = Path(change.asset.path)
+
+            if not file_path or not self.extractor.can_extract(file_path):
+                continue
+
+            # Get SNR score from watcher or change asset when available
+            snr = 0.5
+            if hasattr(change, "asset") and getattr(change.asset, "snr_score", None) is not None:
+                snr = change.asset.snr_score
+            elif self.watcher and hasattr(self.watcher, "get_snr_score"):
+                get_score = self.watcher.get_snr_score
+                try:
+                    score_result = get_score(file_path)
+                    snr = await score_result if asyncio.iscoroutine(score_result) else score_result
+                except Exception as e:
+                    logger.warning(f"Failed to get SNR score for {file_path}: {e}")
+
+            result = await self.extractor.extract_from_file(file_path, snr)
+            self._apply_extraction(result)
     
     def _apply_extraction(self, result: ExtractionResult) -> None:
         """Apply extraction result to the graph."""
@@ -1008,6 +1093,10 @@ class KnowledgeGraphBridge:
     def load_graph(self, path: Path) -> None:
         """Load the knowledge graph from file."""
         self.graph = KnowledgeGraph.load(path)
+        stats = self.graph.get_statistics()
+        self._nodes_created = stats.node_count
+        self._edges_created = stats.edge_count
+        self._files_processed = len(self.graph.get_nodes_by_type(NodeType.FILE))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1033,6 +1122,7 @@ def create_knowledge_bridge(
 async def run_knowledge_bridge_cli():
     """CLI entry point for the Knowledge Graph Bridge."""
     import argparse
+    import sys
     
     parser = argparse.ArgumentParser(description="BIZRA Knowledge Graph Bridge")
     parser.add_argument("--process", type=str, help="Process directory")
@@ -1054,8 +1144,12 @@ async def run_knowledge_bridge_cli():
     print()
     
     if args.load:
-        bridge.load_graph(Path(args.load))
-        print(f"Loaded graph from {args.load}")
+        try:
+            bridge.load_graph(Path(args.load))
+            print(f"Loaded graph from {args.load}")
+        except (OSError, json.JSONDecodeError, ValueError) as e:
+            print(f"Failed to load graph from {args.load}: {e}", file=sys.stderr)
+            return
     
     if args.process:
         results = await bridge.process_directory(Path(args.process))
@@ -1072,8 +1166,12 @@ async def run_knowledge_bridge_cli():
             print(f"  [{score:.2f}] {node.node_type.name}: {node.label}")
     
     if args.save:
-        bridge.save_graph(Path(args.save))
-        print(f"Saved graph to {args.save}")
+        try:
+            bridge.save_graph(Path(args.save))
+            print(f"Saved graph to {args.save}")
+        except OSError as e:
+            print(f"Failed to save graph to {args.save}: {e}", file=sys.stderr)
+            return
     
     if args.stats or not any([args.process, args.search, args.save]):
         stats = bridge.get_statistics()

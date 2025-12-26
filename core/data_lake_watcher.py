@@ -52,6 +52,7 @@ import hashlib
 import json
 import logging
 import os
+import tempfile
 import time
 import threading
 from collections import defaultdict
@@ -72,6 +73,40 @@ from typing import (
 
 logger = logging.getLogger(__name__)
 
+
+def _atomic_write_json(path: Path, payload: Dict[str, Any], indent: int = 2) -> None:
+    """Atomically write JSON data to disk with a write-then-rename pattern."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    tmp_file = tempfile.NamedTemporaryFile(
+        mode="w",
+        delete=False,
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+    )
+    tmp_path = Path(tmp_file.name)
+    try:
+        json.dump(payload, tmp_file, indent=indent, ensure_ascii=False)
+        tmp_file.flush()
+        os.fsync(tmp_file.fileno())
+        tmp_file.close()
+
+        try:
+            os.chmod(tmp_path, 0o644)
+        except OSError:
+            pass
+
+        tmp_path.replace(path)
+    except Exception:
+        try:
+            tmp_file.close()
+        except Exception:
+            pass
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ENUMERATIONS
@@ -388,6 +423,7 @@ class DataLakeWatcher:
         with self._lock:
             result = []
             for alias, wp in self.watched_paths.items():
+                base_path = wp.path.resolve()
                 result.append({
                     "alias": alias,
                     "path": str(wp.path),
@@ -395,8 +431,8 @@ class DataLakeWatcher:
                     "enabled": wp.enabled,
                     "recursive": wp.recursive,
                     "asset_count": sum(
-                        1 for a in self.assets.values() 
-                        if str(a.path).startswith(str(wp.path))
+                        1 for a in self.assets.values()
+                        if a.path.resolve().is_relative_to(base_path)
                     ),
                 })
             return result
@@ -493,67 +529,60 @@ class DataLakeWatcher:
         changes: List[FileChange] = []
         
         try:
-            # Track seen paths for deletion detection
-            seen_paths: Set[str] = set()
-            
             with self._lock:
-                for watched in self.watched_paths.values():
-                    if not watched.enabled:
-                        continue
-                    
-                    for asset in self._scan_directory(watched):
-                        seen_paths.add(asset.relative_path)
-                        
-                        if asset.relative_path in self.assets:
-                            # Existing asset - check for changes
-                            existing = self.assets[asset.relative_path]
-                            if existing.sha256_hash != asset.sha256_hash:
-                                change = FileChange(
-                                    asset=asset,
-                                    change_type=FileChangeType.MODIFIED,
-                                    previous_hash=existing.sha256_hash,
-                                )
-                                changes.append(change)
-                                self._notify_listeners(change)
-                            
-                            # Update asset
-                            asset.first_seen = existing.first_seen
-                            asset.snr_score = existing.snr_score
-                            asset.quality = existing.quality
-                            asset.domains = existing.domains
-                            asset.tags = existing.tags
-                        else:
-                            # New asset
-                            change = FileChange(
+                watched_paths = [wp for wp in self.watched_paths.values() if wp.enabled]
+                existing_assets = dict(self.assets)
+
+            scanned_assets: Dict[str, FileAsset] = {}
+
+            for watched in watched_paths:
+                for asset in self._scan_directory(watched):
+                    existing = existing_assets.get(asset.relative_path)
+                    if existing:
+                        if existing.sha256_hash != asset.sha256_hash:
+                            changes.append(FileChange(
                                 asset=asset,
-                                change_type=FileChangeType.CREATED,
-                            )
-                            changes.append(change)
-                            self._notify_listeners(change)
-                        
-                        self.assets[asset.relative_path] = asset
-                
-                # Detect deletions
-                for rel_path in list(self.assets.keys()):
-                    if rel_path not in seen_paths:
-                        deleted_asset = self.assets[rel_path]
-                        change = FileChange(
-                            asset=deleted_asset,
-                            change_type=FileChangeType.DELETED,
-                        )
-                        changes.append(change)
-                        self._notify_listeners(change)
-                        del self.assets[rel_path]
+                                change_type=FileChangeType.MODIFIED,
+                                previous_hash=existing.sha256_hash,
+                            ))
+
+                        # Preserve metadata from existing asset
+                        asset.first_seen = existing.first_seen
+                        asset.snr_score = existing.snr_score
+                        asset.quality = existing.quality
+                        asset.domains = set(existing.domains)
+                        asset.tags = set(existing.tags)
+                        asset.metadata = dict(existing.metadata)
+                    else:
+                        changes.append(FileChange(
+                            asset=asset,
+                            change_type=FileChangeType.CREATED,
+                        ))
+
+                    scanned_assets[asset.relative_path] = asset
+
+            # Detect deletions
+            for rel_path, existing in existing_assets.items():
+                if rel_path not in scanned_assets:
+                    changes.append(FileChange(
+                        asset=existing,
+                        change_type=FileChangeType.DELETED,
+                    ))
             
             # Update stats
             duration_ms = (time.time() - start_time) * 1000
-            self.stats["total_scans"] += 1
-            self.stats["total_changes_detected"] += len(changes)
-            self.stats["last_scan_time"] = datetime.now(timezone.utc).isoformat()
-            self.stats["last_scan_duration_ms"] = duration_ms
+            with self._lock:
+                self.assets = scanned_assets
+                self.stats["total_scans"] += 1
+                self.stats["total_changes_detected"] += len(changes)
+                self.stats["last_scan_time"] = datetime.now(timezone.utc).isoformat()
+                self.stats["last_scan_duration_ms"] = duration_ms
+
+            for change in changes:
+                self._notify_listeners(change)
             
             logger.info(
-                f"Scan complete. Assets: {len(self.assets)}, "
+                f"Scan complete. Assets: {len(scanned_assets)}, "
                 f"Changes: {len(changes)}, Duration: {duration_ms:.2f}ms"
             )
             
@@ -607,13 +636,16 @@ class DataLakeWatcher:
                 ],
                 "assets": [a.to_dict() for a in self.assets.values()],
             }
-            
-            manifest_path = self.manifest_dir / filename
-            with open(manifest_path, "w", encoding="utf-8") as f:
-                json.dump(manifest, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"Manifest saved: {manifest_path} ({len(self.assets)} assets)")
-            return manifest_path
+
+        manifest_path = self.manifest_dir / filename
+        try:
+            _atomic_write_json(manifest_path, manifest, indent=2)
+        except OSError as e:
+            logger.error(f"Failed to save manifest {manifest_path}: {e}")
+            raise
+
+        logger.info(f"Manifest saved: {manifest_path} ({len(manifest['assets'])} assets)")
+        return manifest_path
     
     def load_manifest(self, filename: str = "data_lake_manifest.json") -> bool:
         """
@@ -622,15 +654,18 @@ class DataLakeWatcher:
         Returns True if manifest was loaded successfully.
         """
         manifest_path = self.manifest_dir / filename
-        
-        if not manifest_path.exists():
-            logger.warning(f"Manifest not found: {manifest_path}")
-            return False
-        
+
         try:
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
-            
+        except FileNotFoundError:
+            logger.warning(f"Manifest not found: {manifest_path}")
+            return False
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error(f"Failed to load manifest: {e}")
+            return False
+        
+        try:
             with self._lock:
                 # Load watched paths
                 for wp_data in manifest.get("watched_paths", []):
@@ -650,7 +685,7 @@ class DataLakeWatcher:
             logger.info(f"Manifest loaded: {len(self.assets)} assets from {manifest_path}")
             return True
             
-        except (json.JSONDecodeError, KeyError) as e:
+        except KeyError as e:
             logger.error(f"Failed to load manifest: {e}")
             return False
     
@@ -814,12 +849,14 @@ class DataLakeWatcher:
     
     def add_change_listener(self, callback: Callable[[FileChange], None]) -> None:
         """Register callback for file change events."""
-        self._change_listeners.append(callback)
+        with self._lock:
+            self._change_listeners.append(callback)
     
     def remove_change_listener(self, callback: Callable[[FileChange], None]) -> bool:
         """Unregister change callback. Returns True if callback was removed."""
         try:
-            self._change_listeners.remove(callback)
+            with self._lock:
+                self._change_listeners.remove(callback)
             return True
         except ValueError:
             logger.warning(f"Attempted to remove unregistered listener: {callback}")
@@ -828,7 +865,9 @@ class DataLakeWatcher:
     def _notify_listeners(self, change: FileChange) -> None:
         """Notify all registered listeners of a change."""
         # Iterate over a copy to prevent issues if listener modifies the list
-        for listener in list(self._change_listeners):
+        with self._lock:
+            listeners = list(self._change_listeners)
+        for listener in listeners:
             try:
                 listener(change)
             except Exception as e:
@@ -903,7 +942,7 @@ class DataLakeWatcher:
                 "total_size_human": self._human_size(total_size),
                 "quality_distribution": dict(quality_dist),
                 "file_type_distribution": dict(type_dist),
-                "stats": self.stats,
+                "stats": dict(self.stats),
             }
     
     @staticmethod
@@ -951,6 +990,7 @@ async def run_watcher_cli():
     Performs initial scan, saves manifest, and optionally starts watching.
     """
     import argparse
+    import sys
     
     parser = argparse.ArgumentParser(description="BIZRA Data Lake Watcher")
     parser.add_argument("--scan", action="store_true", help="Perform initial scan")
@@ -965,7 +1005,9 @@ async def run_watcher_cli():
     watcher = create_default_watcher(manifest_dir=manifest_dir)
     
     # Load existing manifest if present
-    watcher.load_manifest()
+    loaded = watcher.load_manifest()
+    if not loaded:
+        print("Manifest not loaded (missing or invalid).", file=sys.stderr)
     
     if args.scan:
         print("Scanning all watched paths...")
@@ -977,8 +1019,12 @@ async def run_watcher_cli():
         print(f"SNR Distribution: {distribution}")
         
         # Save manifest
-        manifest_path = watcher.save_manifest()
-        print(f"Manifest saved: {manifest_path}")
+        try:
+            manifest_path = watcher.save_manifest()
+            print(f"Manifest saved: {manifest_path}")
+        except OSError as e:
+            print(f"Failed to save manifest: {e}", file=sys.stderr)
+            return
     
     if args.verify:
         print("Verifying against manifest...")
