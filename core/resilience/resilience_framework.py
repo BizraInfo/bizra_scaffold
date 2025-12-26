@@ -62,6 +62,13 @@ from typing import (
 logger = logging.getLogger("bizra.resilience")
 
 # ============================================================================
+# TIMEOUT CONSTANTS
+# ============================================================================
+
+HEALTH_CHECK_TIMEOUT_SECONDS = 10.0  # Max time for individual health check
+ALL_HEALTH_CHECKS_TIMEOUT_SECONDS = 30.0  # Max time for all health checks
+
+# ============================================================================
 # TYPE DEFINITIONS
 # ============================================================================
 
@@ -203,7 +210,8 @@ class CircuitBreaker:
         self._total_failures = 0
         self._total_rejections = 0
         self._ihsan_failures = 0
-        self._state_changes: List[Tuple[datetime, CircuitState, CircuitState]] = []
+        # Bounded state change history to prevent memory growth
+        self._state_changes: Deque[Tuple[datetime, CircuitState, CircuitState]] = deque(maxlen=1000)
     
     @property
     def state(self) -> CircuitState:
@@ -948,8 +956,13 @@ class HealthChecker:
         """Register a health check."""
         self._checks[name] = check
     
-    async def check(self, name: str) -> HealthStatus:
-        """Run a specific health check."""
+    async def check(self, name: str, timeout: Optional[float] = None) -> HealthStatus:
+        """Run a specific health check with timeout.
+        
+        Args:
+            name: Health check name
+            timeout: Max seconds for check. Defaults to HEALTH_CHECK_TIMEOUT_SECONDS.
+        """
         if name not in self._checks:
             return HealthStatus(
                 name=name,
@@ -960,10 +973,23 @@ class HealthChecker:
                 details={},
             )
         
+        effective_timeout = timeout or HEALTH_CHECK_TIMEOUT_SECONDS
         start = time.perf_counter()
         try:
-            result = await self._checks[name]()
+            result = await asyncio.wait_for(
+                self._checks[name](),
+                timeout=effective_timeout
+            )
             result.latency_ms = (time.perf_counter() - start) * 1000
+        except asyncio.TimeoutError:
+            result = HealthStatus(
+                name=name,
+                healthy=False,
+                message=f"Health check timed out after {effective_timeout}s",
+                timestamp=datetime.now(timezone.utc),
+                latency_ms=(time.perf_counter() - start) * 1000,
+                details={"error": "timeout"},
+            )
         except Exception as e:
             result = HealthStatus(
                 name=name,
@@ -979,11 +1005,38 @@ class HealthChecker:
         
         return result
     
-    async def check_all(self) -> Dict[str, HealthStatus]:
-        """Run all health checks."""
-        results = await asyncio.gather(*[
-            self.check(name) for name in self._checks
-        ])
+    async def check_all(self, timeout: Optional[float] = None) -> Dict[str, HealthStatus]:
+        """Run all health checks with overall timeout.
+        
+        Args:
+            timeout: Max seconds for all checks. Defaults to ALL_HEALTH_CHECKS_TIMEOUT_SECONDS.
+        """
+        effective_timeout = timeout or ALL_HEALTH_CHECKS_TIMEOUT_SECONDS
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*[
+                    self.check(name) for name in self._checks
+                ]),
+                timeout=effective_timeout
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"check_all timed out after {effective_timeout}s"
+            )
+            # Return partial results from cache + timeout status for missing
+            results = []
+            for name in self._checks:
+                if name in self._results:
+                    results.append(self._results[name])
+                else:
+                    results.append(HealthStatus(
+                        name=name,
+                        healthy=False,
+                        message="Check timed out",
+                        timestamp=datetime.now(timezone.utc),
+                        latency_ms=effective_timeout * 1000,
+                        details={"error": "batch_timeout"},
+                    ))
         return {r.name: r for r in results}
     
     async def is_healthy(self) -> bool:

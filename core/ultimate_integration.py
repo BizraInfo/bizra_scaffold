@@ -20,10 +20,11 @@ import asyncio
 import hashlib
 import json
 import time
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Deque, Dict, List, Optional, Tuple
 import math
 
 # Core imports from BIZRA modules
@@ -403,11 +404,11 @@ class BIZRAVCCNode0Ultimate:
         # Health monitoring
         self.health_monitor = HealthMonitor()
         
-        # Singularity detection
-        self._singularity_events: List[Dict[str, Any]] = []
+        # Singularity detection (bounded to prevent memory growth)
+        self._singularity_events: Deque[Dict[str, Any]] = deque(maxlen=1000)
         
-        # Processing history
-        self._processing_history: List[UltimateResult] = []
+        # Processing history (bounded)
+        self._processing_history: Deque[UltimateResult] = deque(maxlen=10000)
     
     async def process(
         self, 

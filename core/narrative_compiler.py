@@ -10,10 +10,11 @@ Gap Addressed: Human Interpretability Gap (1%)
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional, Tuple
 import hashlib
 import json
 
@@ -796,7 +797,8 @@ class NarrativeCompiler:
             NarrativeStyle.AUDIT: AuditNarrativeTemplate(),
         }
         
-        self._compilation_history: List[CompiledNarrative] = []
+        # Bounded to prevent memory growth in long-running services
+        self._compilation_history: Deque[CompiledNarrative] = deque(maxlen=1000)
     
     def compile(
         self, 

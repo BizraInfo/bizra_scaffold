@@ -317,10 +317,11 @@ class BatchResult(Generic[T]):
 async def gather_with_concurrency(
     coros: List[Coroutine[Any, Any, T]],
     max_concurrent: int = 10,
-    return_exceptions: bool = False
+    return_exceptions: bool = False,
+    timeout: Optional[float] = None
 ) -> List[Union[T, Exception]]:
     """
-    Execute coroutines with concurrency limit.
+    Execute coroutines with concurrency limit and optional timeout.
     
     Prevents overwhelming resources with too many concurrent operations.
     
@@ -328,6 +329,7 @@ async def gather_with_concurrency(
         coros: List of coroutines to execute
         max_concurrent: Maximum simultaneous executions
         return_exceptions: If True, exceptions are returned instead of raised
+        timeout: Optional overall timeout in seconds
     
     Returns:
         List of results (or exceptions if return_exceptions=True)
@@ -338,10 +340,14 @@ async def gather_with_concurrency(
         async with semaphore:
             return await coro
     
-    return await asyncio.gather(
+    gather_coro = asyncio.gather(
         *[limited_coro(c) for c in coros],
         return_exceptions=return_exceptions
     )
+    
+    if timeout is not None:
+        return await asyncio.wait_for(gather_coro, timeout=timeout)
+    return await gather_coro
 
 
 async def batch_process(

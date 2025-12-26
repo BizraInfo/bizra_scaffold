@@ -127,10 +127,13 @@ class QuantumSecurityV2:
         self.key_storage_path = Path(key_storage_path)
         self.algorithm = "Dilithium5" if QUANTUM_AVAILABLE else "Ed25519"
         
-        # Temporal chain storage
+        # Temporal chain storage (bounded to prevent memory growth)
+        # 100K operations is ~8MB at 80 bytes/hash+proof - reasonable for long-running service
+        self._max_chain_length = 100_000
         self.temporal_chain: List[bytes] = []
         self.temporal_proofs: List[TemporalProof] = []
         self.chain_entropy: float = 0.0
+        self._chain_eviction_count: int = 0  # Track evictions for audit
         
         # Lock for thread-safe chain updates
         self._chain_lock = asyncio.Lock()
@@ -283,6 +286,14 @@ class QuantumSecurityV2:
             )
             
             # Update chain atomically (under lock)
+            # Evict oldest entries if at capacity to prevent unbounded growth
+            if len(self.temporal_chain) >= self._max_chain_length:
+                evict_count = len(self.temporal_chain) // 10  # Evict 10% at a time
+                self.temporal_chain = self.temporal_chain[evict_count:]
+                self.temporal_proofs = self.temporal_proofs[evict_count:]
+                self._chain_eviction_count += evict_count
+                logger.info(f"Evicted {evict_count} entries from temporal chain (total evictions: {self._chain_eviction_count})")
+            
             self.temporal_chain.append(temporal_hash)
             self.temporal_proofs.append(proof)
             self.chain_entropy += self._calculate_entropy(temporal_hash)
@@ -358,6 +369,8 @@ class QuantumSecurityV2:
         """Get detailed chain statistics for monitoring."""
         return {
             "chain_length": len(self.temporal_chain),
+            "max_chain_length": self._max_chain_length,
+            "eviction_count": self._chain_eviction_count,
             "total_entropy": self.chain_entropy,
             "avg_entropy_per_op": self.chain_entropy / max(1, len(self.temporal_chain)),
             "algorithm": self.algorithm,

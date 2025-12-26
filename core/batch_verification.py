@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -24,6 +25,14 @@ from collections import deque
 import secrets
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
+
+# Validation constants
+MAX_ACTION_ID_LENGTH = 256
+MAX_PAYLOAD_SIZE = 1024 * 1024  # 1MB
+MIN_PRIORITY = 0.0
+MAX_PRIORITY = 1.0
 
 
 class BatchStatus(Enum):
@@ -181,14 +190,39 @@ class BatchVerificationEngine:
         Submit action for batch verification.
         
         Args:
-            action_id: Unique action identifier
-            payload: Action payload bytes
+            action_id: Unique action identifier (max 256 chars)
+            payload: Action payload bytes (max 1MB)
             priority: Priority (0.0-1.0, higher = process sooner)
             callback: Optional callback when verification completes
             
         Returns:
             Submission ID for tracking
+            
+        Raises:
+            ValueError: If inputs fail validation
         """
+        # Input validation
+        if not isinstance(action_id, str):
+            raise ValueError(f"action_id must be str, got {type(action_id).__name__}")
+        if len(action_id) == 0:
+            raise ValueError("action_id cannot be empty")
+        if len(action_id) > MAX_ACTION_ID_LENGTH:
+            raise ValueError(
+                f"action_id length {len(action_id)} exceeds max {MAX_ACTION_ID_LENGTH}"
+            )
+        
+        if not isinstance(payload, bytes):
+            raise ValueError(f"payload must be bytes, got {type(payload).__name__}")
+        if len(payload) > MAX_PAYLOAD_SIZE:
+            raise ValueError(
+                f"payload size {len(payload)} exceeds max {MAX_PAYLOAD_SIZE}"
+            )
+        
+        if not isinstance(priority, (int, float)):
+            raise ValueError(f"priority must be numeric, got {type(priority).__name__}")
+        # Clamp priority to valid range
+        priority = max(MIN_PRIORITY, min(MAX_PRIORITY, float(priority)))
+        
         action = BatchedAction(
             id=action_id,
             payload=payload,

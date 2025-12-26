@@ -15,15 +15,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import struct
 import threading
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Callable, Deque, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from core.zk.bridge import IhsanReceipt
+
+logger = logging.getLogger(__name__)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # CONSTANTS
@@ -723,7 +727,11 @@ class AccumulatorManager:
         self._batch_size = batch_size
         
         self._current: Optional[ZKAccumulator] = None
-        self._sealed: List[ZKAccumulator] = []
+        # Bounded to prevent unbounded memory growth
+        # 1000 batches @ 1024 receipts = 1M receipts max retention
+        self._max_sealed = 1000
+        self._sealed: Deque[ZKAccumulator] = deque(maxlen=self._max_sealed)
+        self._evicted_count: int = 0  # Track evictions for monitoring
         self._lock = threading.Lock()
     
     def _ensure_current(self):

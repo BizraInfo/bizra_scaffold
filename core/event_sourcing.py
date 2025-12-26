@@ -59,6 +59,14 @@ from typing import (
 logger = logging.getLogger("bizra.eventsourcing")
 
 # ============================================================================
+# VALIDATION CONSTANTS
+# ============================================================================
+
+MAX_AGGREGATE_ID_LENGTH = 256
+MAX_EVENTS_PER_APPEND = 1000
+MAX_EVENT_PAYLOAD_SIZE = 1024 * 1024  # 1MB
+
+# ============================================================================
 # TYPE VARIABLES
 # ============================================================================
 
@@ -414,8 +422,8 @@ class EventStore:
         Append events with optimistic concurrency control.
         
         Args:
-            aggregate_id: The aggregate ID
-            events: Events to append
+            aggregate_id: The aggregate ID (max 256 chars)
+            events: Events to append (max 1000 per call)
             expected_version: Expected current version (for conflict detection)
         
         Returns:
@@ -423,7 +431,36 @@ class EventStore:
         
         Raises:
             ConcurrencyConflict: If expected_version doesn't match
+            ValueError: If inputs fail validation
         """
+        # Input validation
+        if not isinstance(aggregate_id, str):
+            raise ValueError(
+                f"aggregate_id must be str, got {type(aggregate_id).__name__}"
+            )
+        if len(aggregate_id) == 0:
+            raise ValueError("aggregate_id cannot be empty")
+        if len(aggregate_id) > MAX_AGGREGATE_ID_LENGTH:
+            raise ValueError(
+                f"aggregate_id length {len(aggregate_id)} exceeds max {MAX_AGGREGATE_ID_LENGTH}"
+            )
+        
+        if not isinstance(events, list):
+            raise ValueError(f"events must be list, got {type(events).__name__}")
+        if len(events) == 0:
+            raise ValueError("events list cannot be empty")
+        if len(events) > MAX_EVENTS_PER_APPEND:
+            raise ValueError(
+                f"events count {len(events)} exceeds max {MAX_EVENTS_PER_APPEND} per append"
+            )
+        
+        if not isinstance(expected_version, int):
+            raise ValueError(
+                f"expected_version must be int, got {type(expected_version).__name__}"
+            )
+        if expected_version < 0:
+            raise ValueError(f"expected_version must be >= 0, got {expected_version}")
+        
         async with self._lock:
             current_version = self._version_cache.get(aggregate_id, 0)
             

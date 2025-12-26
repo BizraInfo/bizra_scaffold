@@ -20,6 +20,7 @@ import asyncio
 import functools
 import hashlib
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -208,6 +209,9 @@ class AttestationRateLimiter:
         # Violation history (bounded)
         self._violations = BoundedList[Dict[str, Any]](max_size=1000)
         
+        # Lock for thread-safe counter access
+        self._lock = threading.Lock()
+        
         # Metrics
         self._total_allowed = 0
         self._total_denied = 0
@@ -267,7 +271,8 @@ class AttestationRateLimiter:
         
         # Check if node is trusted (bypass limits)
         if node_id in self.config.trusted_nodes:
-            self._total_allowed += 1
+            with self._lock:
+                self._total_allowed += 1
             return RateLimitResult(
                 allowed=True,
                 remaining=999999,
@@ -289,7 +294,8 @@ class AttestationRateLimiter:
         
         if not op_result.allowed:
             self._record_violation(node_id, operation, "operation_limit", metadata)
-            self._total_denied += 1
+            with self._lock:
+                self._total_denied += 1
             return op_result
         
         # Check global limit
@@ -299,11 +305,13 @@ class AttestationRateLimiter:
         
         if not global_result.allowed:
             self._record_violation(node_id, operation, "global_limit", metadata)
-            self._total_denied += 1
+            with self._lock:
+                self._total_denied += 1
             return global_result
         
         # Allowed
-        self._total_allowed += 1
+        with self._lock:
+            self._total_allowed += 1
         if self._reputation:
             self._reputation.record_success(node_id)
         

@@ -19,8 +19,15 @@ from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Tuple
 from collections import deque
 import secrets
+import logging
 
 from core.architecture.modular_components import ConvergenceResult, ConvergenceQuality
+
+logger = logging.getLogger(__name__)
+
+# Timeout constants for async operations
+VERIFICATION_TIMEOUT_SECONDS = 30.0  # Max time for single verification
+BATCH_GATHER_TIMEOUT_SECONDS = 60.0  # Max time for awaiting all pending verifications
 
 
 class UrgencyLevel(Enum):
@@ -377,10 +384,33 @@ class TieredVerificationEngine:
         else:
             execution_result = execute_callback(action)
         
-        # 2. Fire-and-forget full verification
-        verification_task = asyncio.create_task(
-            self._async_verify_with_rollback(action)
-        )
+        # 2. Fire-and-forget full verification with timeout
+        async def _verify_with_timeout() -> VerificationResult:
+            """Wrap verification with timeout to prevent hung tasks."""
+            try:
+                return await asyncio.wait_for(
+                    self._async_verify_with_rollback(action),
+                    timeout=VERIFICATION_TIMEOUT_SECONDS
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"Verification timeout for action {action.id} "
+                    f"after {VERIFICATION_TIMEOUT_SECONDS}s"
+                )
+                # Create timeout result - treat as verification failure requiring rollback
+                timeout_result = VerificationResult(
+                    tier=VerificationTier.FULL_ZK,
+                    confidence=0.0,
+                    latency_ms=VERIFICATION_TIMEOUT_SECONDS * 1000,
+                    proof_hash=None,
+                    valid=False,
+                    rollback_required=True,
+                    metadata={"error": "verification_timeout"}
+                )
+                await self._trigger_rollback(action, timeout_result)
+                return timeout_result
+        
+        verification_task = asyncio.create_task(_verify_with_timeout())
         self._pending_verifications[action.id] = verification_task
         
         return execution_result, verification_task
@@ -429,15 +459,47 @@ class TieredVerificationEngine:
         current_avg = self._metrics["avg_latency_ms"]
         self._metrics["avg_latency_ms"] = (current_avg * (n - 1) + latency_ms) / n
     
-    async def await_pending_verifications(self) -> Dict[str, VerificationResult]:
-        """Wait for all pending verifications to complete."""
+    async def await_pending_verifications(
+        self,
+        timeout: Optional[float] = None
+    ) -> Dict[str, VerificationResult]:
+        """Wait for all pending verifications to complete with timeout.
+        
+        Args:
+            timeout: Max seconds to wait. Defaults to BATCH_GATHER_TIMEOUT_SECONDS.
+        """
         if not self._pending_verifications:
             return {}
         
-        results = await asyncio.gather(
-            *self._pending_verifications.values(),
-            return_exceptions=True
-        )
+        effective_timeout = timeout or BATCH_GATHER_TIMEOUT_SECONDS
+        
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(
+                    *self._pending_verifications.values(),
+                    return_exceptions=True
+                ),
+                timeout=effective_timeout
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"await_pending_verifications timeout after {effective_timeout}s, "
+                f"{len(self._pending_verifications)} verifications still pending"
+            )
+            # Cancel remaining tasks
+            for task in self._pending_verifications.values():
+                if not task.done():
+                    task.cancel()
+            # Return what we have
+            results = []
+            for task in self._pending_verifications.values():
+                try:
+                    if task.done():
+                        results.append(task.result())
+                    else:
+                        results.append(asyncio.CancelledError())
+                except Exception as e:
+                    results.append(e)
         
         return {
             action_id: r for action_id, r in zip(

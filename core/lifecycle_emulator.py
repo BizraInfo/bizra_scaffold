@@ -32,10 +32,11 @@ import random
 import secrets
 import time
 from abc import ABC, abstractmethod
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
-from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, TypeVar
+from typing import Any, Callable, Deque, Dict, Generic, List, Optional, Set, Tuple, TypeVar
 
 # Internal imports
 try:
@@ -235,7 +236,7 @@ class LifecycleEmulator:
         
         # Agent pool for simulation
         self._agents: Dict[str, Dict[str, Any]] = {}
-        self._operations: List[Dict[str, Any]] = []
+        self._operations: Deque[Dict[str, Any]] = deque(maxlen=10000)  # Bounded to prevent memory growth
         
         # Metrics
         self._total_sessions = 0

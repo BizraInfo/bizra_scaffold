@@ -574,12 +574,17 @@ class BIZRAThermodynamicEngine:
         # State tracking
         self._current_fluid: Optional[WorkingFluid] = None
         self._state = ThermodynamicState.EQUILIBRIUM
+        
+        # Lock for thread-safe cycle ID generation
+        self._lock = asyncio.Lock()
     
-    def _generate_cycle_id(self) -> str:
-        """Generate unique cycle identifier."""
-        self._cycle_counter += 1
+    async def _generate_cycle_id(self) -> str:
+        """Generate unique cycle identifier (thread-safe)."""
+        async with self._lock:
+            self._cycle_counter += 1
+            counter = self._cycle_counter
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-        return f"cycle-{self.cycle_type.name.lower()}-{timestamp}-{self._cycle_counter:04d}"
+        return f"cycle-{self.cycle_type.name.lower()}-{timestamp}-{counter:04d}"
     
     def create_working_fluid(
         self,
@@ -661,7 +666,7 @@ class BIZRAThermodynamicEngine:
         4. Adiabatic compression (heat to T_hot)
         """
         start_time = time.time()
-        cycle_id = self._generate_cycle_id()
+        cycle_id = await self._generate_cycle_id()
         
         v1 = fluid.volume
         v2 = v1 * compression_ratio
@@ -761,7 +766,7 @@ class BIZRAThermodynamicEngine:
         4. Isochoric heat rejection (reset for next cycle)
         """
         start_time = time.time()
-        cycle_id = self._generate_cycle_id()
+        cycle_id = await self._generate_cycle_id()
         
         v1 = fluid.volume
         v2 = v1 / compression_ratio
@@ -872,7 +877,7 @@ class BIZRAThermodynamicEngine:
         4. Isochoric cooling (regeneration)
         """
         start_time = time.time()
-        cycle_id = self._generate_cycle_id()
+        cycle_id = await self._generate_cycle_id()
         
         v1 = fluid.volume
         v2 = v1 / compression_ratio

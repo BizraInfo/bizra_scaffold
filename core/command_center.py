@@ -78,6 +78,14 @@ from typing import (
 
 logger = logging.getLogger(__name__)
 
+# Timeout constants for command execution
+COMMAND_TIMEOUT_SECONDS = 30.0  # Max time for single command
+BATCH_COMMAND_TIMEOUT_SECONDS = 120.0  # Max time for parallel batch execution
+
+# Validation constants
+MAX_COMMAND_PAYLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_BATCH_SIZE = 1000
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ENUMERATIONS
@@ -764,12 +772,36 @@ class NodeZeroCommandCenter:
         Execute a command through the Command Center.
         
         Pipeline:
-        1. Ihsan compliance check
-        2. SNR-weighted routing
-        3. Subsystem execution
-        4. Event emission
-        5. Audit logging
+        1. Input validation
+        2. Ihsan compliance check
+        3. SNR-weighted routing
+        4. Subsystem execution
+        5. Event emission
+        6. Audit logging
+        
+        Raises:
+            ValueError: If command fails validation
         """
+        # Input validation
+        if not isinstance(command, Command):
+            raise ValueError(f"command must be Command, got {type(command).__name__}")
+        
+        # Validate payload size (approximate via JSON serialization)
+        try:
+            payload_size = len(json.dumps(command.payload).encode('utf-8'))
+            if payload_size > MAX_COMMAND_PAYLOAD_SIZE:
+                return CommandResult(
+                    command_id=command.id,
+                    success=False,
+                    error=f"Command payload size {payload_size} exceeds max {MAX_COMMAND_PAYLOAD_SIZE}",
+                )
+        except (TypeError, ValueError) as e:
+            return CommandResult(
+                command_id=command.id,
+                success=False,
+                error=f"Command payload not JSON serializable: {e}",
+            )
+        
         self._command_count += 1
         start_time = time.time()
         
@@ -819,16 +851,49 @@ class NodeZeroCommandCenter:
         self,
         commands: List[Command],
         parallel: bool = False,
+        timeout: Optional[float] = None,
     ) -> List[CommandResult]:
         """
-        Execute multiple commands.
+        Execute multiple commands with timeout protection.
         
         Args:
-            commands: List of commands to execute
+            commands: List of commands to execute (max 1000)
             parallel: Whether to execute in parallel
+            timeout: Max seconds for batch execution. Defaults to BATCH_COMMAND_TIMEOUT_SECONDS for parallel.
+            
+        Raises:
+            ValueError: If inputs fail validation
         """
+        # Input validation
+        if not isinstance(commands, list):
+            raise ValueError(f"commands must be list, got {type(commands).__name__}")
+        if len(commands) > MAX_BATCH_SIZE:
+            raise ValueError(
+                f"batch size {len(commands)} exceeds max {MAX_BATCH_SIZE}"
+            )
+        
         if parallel:
-            return await asyncio.gather(*[self.execute(cmd) for cmd in commands])
+            effective_timeout = timeout or BATCH_COMMAND_TIMEOUT_SECONDS
+            try:
+                return await asyncio.wait_for(
+                    asyncio.gather(*[self.execute(cmd) for cmd in commands]),
+                    timeout=effective_timeout
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"Batch execution timeout after {effective_timeout}s, "
+                    f"{len(commands)} commands"
+                )
+                # Return timeout results for incomplete commands
+                return [
+                    CommandResult(
+                        command_id=cmd.id,
+                        success=False,
+                        error="batch_execution_timeout",
+                        execution_time_ms=effective_timeout * 1000
+                    )
+                    for cmd in commands
+                ]
         else:
             results = []
             for cmd in commands:

@@ -1219,7 +1219,7 @@ class IhsanComplianceMonitor:
         
         # Tracking
         self._scores: Deque[Tuple[datetime, float, str]] = deque(maxlen=10000)
-        self._violations: List[Tuple[datetime, float, str]] = []
+        self._violations: Deque[Tuple[datetime, float, str]] = deque(maxlen=1000)  # Bounded to prevent memory growth
     
     def record_score(
         self,
