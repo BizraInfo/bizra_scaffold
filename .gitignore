@@ -133,6 +133,7 @@ logs/
 # Neo4j local data
 neo4j_data/
 data/neo4j/
+data/manifests/
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # OS-specific
