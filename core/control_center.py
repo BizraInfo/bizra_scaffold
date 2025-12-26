@@ -51,7 +51,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -66,15 +66,17 @@ logger = logging.getLogger(__name__)
 
 class SubsystemStatus(Enum):
     """Health status for subsystems."""
-    HEALTHY = auto()        # All checks pass
-    DEGRADED = auto()       # Partial functionality
-    UNHEALTHY = auto()      # Critical failure
-    UNKNOWN = auto()        # Not yet checked
-    DISABLED = auto()       # Intentionally off
+
+    HEALTHY = auto()  # All checks pass
+    DEGRADED = auto()  # Partial functionality
+    UNHEALTHY = auto()  # Critical failure
+    UNKNOWN = auto()  # Not yet checked
+    DISABLED = auto()  # Intentionally off
 
 
 class HealthCheckSeverity(Enum):
     """Severity levels for health issues."""
+
     INFO = auto()
     WARNING = auto()
     ERROR = auto()
@@ -89,7 +91,7 @@ class HealthCheckSeverity(Enum):
 @dataclass
 class HealthCheckResult:
     """Result of a single health check."""
-    
+
     name: str
     status: SubsystemStatus
     message: str
@@ -97,7 +99,7 @@ class HealthCheckResult:
     details: Dict[str, Any] = field(default_factory=dict)
     duration_ms: float = 0.0
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
@@ -113,22 +115,22 @@ class HealthCheckResult:
 @dataclass
 class SubsystemHealth:
     """Health summary for a subsystem."""
-    
+
     name: str
     status: SubsystemStatus
     checks: List[HealthCheckResult] = field(default_factory=list)
     last_check: Optional[datetime] = None
     uptime_seconds: float = 0.0
     metrics: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def healthy(self) -> bool:
         return self.status == SubsystemStatus.HEALTHY
-    
+
     def add_check(self, result: HealthCheckResult) -> None:
         self.checks.append(result)
         self.last_check = result.timestamp
-        
+
         # Determine overall status from checks
         statuses = [c.status for c in self.checks]
         if SubsystemStatus.UNHEALTHY in statuses:
@@ -144,25 +146,25 @@ class SubsystemHealth:
 @dataclass
 class SystemHealth:
     """Overall system health summary."""
-    
+
     status: SubsystemStatus = SubsystemStatus.UNKNOWN
     subsystems: Dict[str, SubsystemHealth] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     version: str = "1.0.0"
     ihsan_compliant: bool = False
-    
+
     @property
     def healthy(self) -> bool:
         return self.status == SubsystemStatus.HEALTHY
-    
+
     def compute_status(self) -> None:
         """Compute overall status from subsystems."""
         if not self.subsystems:
             self.status = SubsystemStatus.UNKNOWN
             return
-        
+
         statuses = [s.status for s in self.subsystems.values()]
-        
+
         if SubsystemStatus.UNHEALTHY in statuses:
             self.status = SubsystemStatus.UNHEALTHY
         elif SubsystemStatus.DEGRADED in statuses:
@@ -172,7 +174,7 @@ class SystemHealth:
             self.ihsan_compliant = True
         else:
             self.status = SubsystemStatus.UNKNOWN
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "status": self.status.name,
@@ -198,7 +200,7 @@ class SystemHealth:
 class TelemetryHub:
     """
     Central telemetry collection point for all BIZRA subsystems.
-    
+
     Collects metrics, events, and health data from:
     - Data Lake Watcher
     - Event Sourcing Engine
@@ -206,21 +208,23 @@ class TelemetryHub:
     - Graph of Thoughts
     - APEX Orchestrator
     """
-    
+
     def __init__(self):
         self.metrics: Dict[str, Dict[str, Any]] = defaultdict(dict)
         self.events: List[Dict[str, Any]] = []
         self.max_events = 1000
         self._start_time = time.time()
-    
+
     def record_metric(self, subsystem: str, name: str, value: Any) -> None:
         """Record a metric value."""
         self.metrics[subsystem][name] = {
             "value": value,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-    
-    def record_event(self, subsystem: str, event_type: str, data: Dict[str, Any]) -> None:
+
+    def record_event(
+        self, subsystem: str, event_type: str, data: Dict[str, Any]
+    ) -> None:
         """Record an event."""
         event = {
             "subsystem": subsystem,
@@ -229,17 +233,17 @@ class TelemetryHub:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self.events.append(event)
-        
+
         # Trim old events
         if len(self.events) > self.max_events:
-            self.events = self.events[-self.max_events:]
-    
+            self.events = self.events[-self.max_events :]
+
     def get_metrics(self, subsystem: Optional[str] = None) -> Dict[str, Any]:
         """Get metrics, optionally filtered by subsystem."""
         if subsystem:
             return dict(self.metrics.get(subsystem, {}))
         return dict(self.metrics)
-    
+
     def get_uptime(self) -> float:
         """Get system uptime in seconds."""
         return time.time() - self._start_time
@@ -253,36 +257,36 @@ class TelemetryHub:
 class BIZRAControlCenter:
     """
     Unified Control Center for BIZRA System.
-    
+
     Orchestrates health checks, telemetry, and coordination across
     all subsystems with fail-closed Ihsān enforcement.
-    
+
     Usage:
         center = BIZRAControlCenter()
-        
+
         # Run all health checks
         health = await center.check_health()
-        
+
         # Get formatted status
         center.print_status()
-        
+
         # Start background monitoring
         await center.start_monitoring(interval_seconds=60)
     """
-    
+
     # Ihsān threshold (SOT Section 3)
     IHSAN_THRESHOLD = 0.95
-    
+
     def __init__(self, workspace_path: Optional[Path] = None):
         self.workspace_path = workspace_path or Path(".")
         self.telemetry = TelemetryHub()
         self._health: Optional[SystemHealth] = None
         self._monitoring_task: Optional[asyncio.Task] = None
         self._health_checks: List[Callable] = []
-        
+
         # Register default health checks
         self._register_default_checks()
-    
+
     def _register_default_checks(self) -> None:
         """Register built-in health checks."""
         self._health_checks = [
@@ -293,15 +297,15 @@ class BIZRAControlCenter:
             self._check_secret_keys,
             self._check_manifest_integrity,
         ]
-    
+
     # ═══════════════════════════════════════════════════════════════════════════
     # HEALTH CHECKS
     # ═══════════════════════════════════════════════════════════════════════════
-    
+
     async def _check_sot_compliance(self) -> HealthCheckResult:
         """Check SOT Ihsān threshold consistency."""
         start = time.time()
-        
+
         try:
             sot_path = self.workspace_path / "BIZRA_SOT.md"
             if not sot_path.exists():
@@ -311,20 +315,20 @@ class BIZRAControlCenter:
                     message="BIZRA_SOT.md not found",
                     severity=HealthCheckSeverity.CRITICAL,
                 )
-            
+
             content = sot_path.read_text(encoding="utf-8")
-            
+
             # Check Section 3 and Section 4 consistency
             has_section3 = "## 3. Invariants" in content
             has_section4 = "## 4. PoI Parameters" in content
-            
+
             if has_section3 and has_section4:
                 section3 = content.split("## 3. Invariants")[1].split("## 4.")[0]
                 section4 = content.split("## 4. PoI Parameters")[1].split("## 5.")[0]
-                
+
                 s3_has_095 = "0.95" in section3
                 s4_has_095 = "0.95" in section4
-                
+
                 if s3_has_095 and s4_has_095:
                     return HealthCheckResult(
                         name="sot_compliance",
@@ -342,7 +346,7 @@ class BIZRAControlCenter:
                         details={"section3": s3_has_095, "section4": s4_has_095},
                         duration_ms=(time.time() - start) * 1000,
                     )
-            
+
             return HealthCheckResult(
                 name="sot_compliance",
                 status=SubsystemStatus.DEGRADED,
@@ -350,7 +354,7 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.WARNING,
                 duration_ms=(time.time() - start) * 1000,
             )
-            
+
         except Exception as e:
             return HealthCheckResult(
                 name="sot_compliance",
@@ -359,22 +363,22 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     async def _check_data_lake_watcher(self) -> HealthCheckResult:
         """Check Data Lake Watcher status."""
         start = time.time()
-        
+
         try:
             # Check watched paths exist
             paths = [
                 ("data_lake", Path("C:/BIZRA-DATA-LAKE")),
                 ("node0_knowledge", Path("C:/BIZRA-NODE0/knowledge")),
             ]
-            
+
             existing = []
             missing = []
             total_files = 0
-            
+
             for alias, path in paths:
                 if path.exists():
                     existing.append(alias)
@@ -385,11 +389,13 @@ class BIZRAControlCenter:
                         pass
                 else:
                     missing.append(alias)
-            
+
             # Check manifest
-            manifest_path = self.workspace_path / "data/manifests/data_lake_manifest.json"
+            manifest_path = (
+                self.workspace_path / "data/manifests/data_lake_manifest.json"
+            )
             has_manifest = manifest_path.exists()
-            
+
             if len(existing) == 2 and has_manifest:
                 return HealthCheckResult(
                     name="data_lake_watcher",
@@ -419,7 +425,7 @@ class BIZRAControlCenter:
                     severity=HealthCheckSeverity.ERROR,
                     duration_ms=(time.time() - start) * 1000,
                 )
-                
+
         except Exception as e:
             return HealthCheckResult(
                 name="data_lake_watcher",
@@ -428,14 +434,14 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     async def _check_claim_registry(self) -> HealthCheckResult:
         """Check Claim Registry integrity."""
         start = time.time()
-        
+
         try:
             import yaml
-            
+
             registry_path = self.workspace_path / "evidence/CLAIM_REGISTRY.yaml"
             if not registry_path.exists():
                 return HealthCheckResult(
@@ -445,17 +451,14 @@ class BIZRAControlCenter:
                     severity=HealthCheckSeverity.CRITICAL,
                     duration_ms=(time.time() - start) * 1000,
                 )
-            
+
             with open(registry_path, encoding="utf-8") as f:
                 registry = yaml.safe_load(f)
-            
+
             claims = registry.get("claims", [])
             verified = [c for c in claims if c.get("status") == "VERIFIED"]
-            null_evidence = [
-                c for c in verified 
-                if not c.get("evidence_artifact_path")
-            ]
-            
+            null_evidence = [c for c in verified if not c.get("evidence_artifact_path")]
+
             if len(null_evidence) == 0:
                 return HealthCheckResult(
                     name="claim_registry",
@@ -477,7 +480,7 @@ class BIZRAControlCenter:
                     details={"missing_evidence": [c.get("id") for c in null_evidence]},
                     duration_ms=(time.time() - start) * 1000,
                 )
-                
+
         except Exception as e:
             return HealthCheckResult(
                 name="claim_registry",
@@ -486,11 +489,11 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     async def _check_evidence_artifacts(self) -> HealthCheckResult:
         """Check evidence artifacts exist."""
         start = time.time()
-        
+
         try:
             evidence_dir = self.workspace_path / "evidence/architecture"
             if not evidence_dir.exists():
@@ -501,9 +504,9 @@ class BIZRAControlCenter:
                     severity=HealthCheckSeverity.WARNING,
                     duration_ms=(time.time() - start) * 1000,
                 )
-            
+
             artifacts = list(evidence_dir.glob("*.log"))
-            
+
             if len(artifacts) >= 2:
                 return HealthCheckResult(
                     name="evidence_artifacts",
@@ -520,7 +523,7 @@ class BIZRAControlCenter:
                     severity=HealthCheckSeverity.WARNING,
                     duration_ms=(time.time() - start) * 1000,
                 )
-                
+
         except Exception as e:
             return HealthCheckResult(
                 name="evidence_artifacts",
@@ -529,11 +532,11 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     async def _check_secret_keys(self) -> HealthCheckResult:
         """Check no secret keys in repository."""
         start = time.time()
-        
+
         try:
             keys_dir = self.workspace_path / "keys"
             if not keys_dir.exists():
@@ -543,14 +546,15 @@ class BIZRAControlCenter:
                     message="No keys directory",
                     duration_ms=(time.time() - start) * 1000,
                 )
-            
+
             secret_files = [
-                f for f in keys_dir.iterdir()
+                f
+                for f in keys_dir.iterdir()
                 if "secret" in f.name.lower()
                 and not f.name.endswith(".example")
                 and f.name != "README.md"
             ]
-            
+
             if len(secret_files) == 0:
                 return HealthCheckResult(
                     name="secret_keys",
@@ -568,7 +572,7 @@ class BIZRAControlCenter:
                     details={"secret_count": len(secret_files)},
                     duration_ms=(time.time() - start) * 1000,
                 )
-                
+
         except Exception as e:
             return HealthCheckResult(
                 name="secret_keys",
@@ -577,14 +581,16 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     async def _check_manifest_integrity(self) -> HealthCheckResult:
         """Check data lake manifest integrity."""
         start = time.time()
-        
+
         try:
-            manifest_path = self.workspace_path / "data/manifests/data_lake_manifest.json"
-            
+            manifest_path = (
+                self.workspace_path / "data/manifests/data_lake_manifest.json"
+            )
+
             if not manifest_path.exists():
                 return HealthCheckResult(
                     name="manifest_integrity",
@@ -593,13 +599,13 @@ class BIZRAControlCenter:
                     severity=HealthCheckSeverity.WARNING,
                     duration_ms=(time.time() - start) * 1000,
                 )
-            
+
             with open(manifest_path, encoding="utf-8") as f:
                 manifest = json.load(f)
-            
+
             metadata = manifest.get("metadata", {})
             assets = manifest.get("assets", [])
-            
+
             return HealthCheckResult(
                 name="manifest_integrity",
                 status=SubsystemStatus.HEALTHY,
@@ -612,7 +618,7 @@ class BIZRAControlCenter:
                 },
                 duration_ms=(time.time() - start) * 1000,
             )
-            
+
         except json.JSONDecodeError as e:
             return HealthCheckResult(
                 name="manifest_integrity",
@@ -629,20 +635,20 @@ class BIZRAControlCenter:
                 severity=HealthCheckSeverity.ERROR,
                 duration_ms=(time.time() - start) * 1000,
             )
-    
+
     # ═══════════════════════════════════════════════════════════════════════════
     # PUBLIC API
     # ═══════════════════════════════════════════════════════════════════════════
-    
+
     async def check_health(self) -> SystemHealth:
         """
         Run all health checks and return system health.
-        
+
         Returns:
             SystemHealth with status for all subsystems
         """
         health = SystemHealth(timestamp=datetime.now(timezone.utc))
-        
+
         # Group checks by subsystem
         subsystem_checks = {
             "compliance": [
@@ -656,38 +662,38 @@ class BIZRAControlCenter:
                 self._check_manifest_integrity,
             ],
         }
-        
+
         for subsystem_name, checks in subsystem_checks.items():
             sub_health = SubsystemHealth(
                 name=subsystem_name,
                 status=SubsystemStatus.UNKNOWN,
             )
-            
+
             for check in checks:
                 result = await check()
                 sub_health.add_check(result)
-                
+
                 # Record telemetry
                 self.telemetry.record_metric(
                     subsystem_name,
                     result.name,
                     result.status.name,
                 )
-            
+
             health.subsystems[subsystem_name] = sub_health
-        
+
         health.compute_status()
         self._health = health
-        
+
         return health
-    
+
     def print_status(self, health: Optional[SystemHealth] = None) -> None:
         """Print formatted system status to console."""
         h = health or self._health
         if not h:
             print("No health data available. Run check_health() first.")
             return
-        
+
         # Header
         print()
         print("═" * 70)
@@ -697,7 +703,7 @@ class BIZRAControlCenter:
         print(f" Version: {h.version}")
         print("═" * 70)
         print()
-        
+
         # Overall status
         status_icons = {
             SubsystemStatus.HEALTHY: "✅",
@@ -706,21 +712,21 @@ class BIZRAControlCenter:
             SubsystemStatus.UNKNOWN: "❓",
             SubsystemStatus.DISABLED: "⏸️",
         }
-        
+
         icon = status_icons.get(h.status, "?")
         print(f" System Status: {icon} {h.status.name}")
         print(f" Ihsān Compliant: {'✅ YES' if h.ihsan_compliant else '❌ NO'}")
         print()
-        
+
         # Subsystems
         for name, sub in h.subsystems.items():
             icon = status_icons.get(sub.status, "?")
             print(f" ┌─ {name.upper()}: {icon} {sub.status.name}")
-            
+
             for check in sub.checks:
                 c_icon = status_icons.get(check.status, "?")
                 print(f" │  {c_icon} {check.name}: {check.message}")
-                
+
                 if check.details:
                     for key, value in check.details.items():
                         if isinstance(value, (int, float)):
@@ -728,41 +734,42 @@ class BIZRAControlCenter:
                                 print(f" │     {key}: {value:,}")
                             else:
                                 print(f" │     {key}: {value}")
-            
+
             print(" │")
-        
+
         print("═" * 70)
-        
+
         # Summary
         healthy_count = sum(
-            1 for s in h.subsystems.values() 
-            if s.status == SubsystemStatus.HEALTHY
+            1 for s in h.subsystems.values() if s.status == SubsystemStatus.HEALTHY
         )
         total_count = len(h.subsystems)
-        
+
         print(f" Subsystems: {healthy_count}/{total_count} healthy")
         print(f" Uptime: {self.telemetry.get_uptime():.1f}s")
         print("═" * 70)
-    
+
     async def start_monitoring(self, interval_seconds: float = 60.0) -> None:
         """Start background health monitoring."""
         if self._monitoring_task:
             logger.warning("Monitoring already running")
             return
-        
+
         async def monitor_loop():
             logger.info(f"Starting health monitoring (interval: {interval_seconds}s)")
             while True:
                 try:
                     await self.check_health()
-                    logger.debug(f"Health check complete: {self._health.status.name if self._health else 'N/A'}")
+                    logger.debug(
+                        f"Health check complete: {self._health.status.name if self._health else 'N/A'}"
+                    )
                 except Exception as e:
                     logger.error(f"Health check error: {e}")
-                
+
                 await asyncio.sleep(interval_seconds)
-        
+
         self._monitoring_task = asyncio.create_task(monitor_loop())
-    
+
     async def stop_monitoring(self) -> None:
         """Stop background monitoring."""
         if self._monitoring_task:
@@ -773,7 +780,7 @@ class BIZRAControlCenter:
                 pass
             self._monitoring_task = None
             logger.info("Monitoring stopped")
-    
+
     def get_health_json(self) -> str:
         """Get health status as JSON string."""
         if self._health:
@@ -789,30 +796,32 @@ class BIZRAControlCenter:
 async def main():
     """CLI entry point for Control Center."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="BIZRA Control Center")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     parser.add_argument("--monitor", action="store_true", help="Continuous monitoring")
-    parser.add_argument("--interval", type=int, default=60, help="Monitor interval (seconds)")
-    
+    parser.add_argument(
+        "--interval", type=int, default=60, help="Monitor interval (seconds)"
+    )
+
     args = parser.parse_args()
-    
+
     center = BIZRAControlCenter(workspace_path=Path("."))
-    
+
     # Run health check
     health = await center.check_health()
-    
+
     if args.json:
         print(center.get_health_json())
     else:
         center.print_status(health)
-    
+
     if args.monitor:
         print(f"\nStarting continuous monitoring (interval: {args.interval}s)...")
         print("Press Ctrl+C to stop\n")
-        
+
         await center.start_monitoring(interval_seconds=args.interval)
-        
+
         try:
             while True:
                 await asyncio.sleep(args.interval)
@@ -821,11 +830,12 @@ async def main():
         except KeyboardInterrupt:
             await center.stop_monitoring()
             print("\nMonitoring stopped.")
-    
+
     # Return exit code based on health
     return 0 if health.healthy else 1
 
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(asyncio.run(main()))

@@ -9,24 +9,23 @@ This package contains the layer implementations:
 """
 
 from core.layers.blockchain_substrate import (
+    Block,
     BlockchainSubstrate,
     BlockType,
-    Transaction,
-    Block,
-    MerkleTree,
-    WorldState,
     IhsanEnforcer,
+    MerkleTree,
+    Transaction,
+    WorldState,
 )
-
 from core.layers.governance_hypervisor import (
-    GovernanceHypervisor,
-    ProposalType,
-    ProposalStatus,
-    VoteChoice,
-    Proposal,
     FATEMetrics,
-    IhsanMetrics,
+    GovernanceHypervisor,
     IhsanCircuitBreaker,
+    IhsanMetrics,
+    Proposal,
+    ProposalStatus,
+    ProposalType,
+    VoteChoice,
 )
 
 __all__ = [
@@ -38,7 +37,6 @@ __all__ = [
     "MerkleTree",
     "WorldState",
     "IhsanEnforcer",
-    
     # Governance Hypervisor
     "GovernanceHypervisor",
     "ProposalType",

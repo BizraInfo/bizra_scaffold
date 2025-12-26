@@ -8,32 +8,31 @@ This module provides zero-knowledge proof infrastructure:
   - RecursiveProofInput: Batch aggregation for recursive proofs
 """
 
-from core.zk.bridge import (
-    ZKBridge,
-    ZKBridgeError,
-    ConversionError,
-    SerializationError,
-    ValidationError,
-    IhsanReceipt,
-    ProofInput,
-    BatchConverter,
-    FIXED_POINT_SCALE,
-)
-
 from core.zk.accumulator import (
-    ZKAccumulator,
+    HASH_BYTES,
+    MAX_BATCH_SIZE,
+    AccumulatorError,
     AccumulatorManager,
     AccumulatorState,
     AccumulatorStatus,
-    AccumulatorError,
-    MerkleProofError,
     BatchOverflowError,
-    StateError,
     MerkleProof,
+    MerkleProofError,
     ProofDirection,
     RecursiveProofInput,
-    MAX_BATCH_SIZE,
-    HASH_BYTES,
+    StateError,
+    ZKAccumulator,
+)
+from core.zk.bridge import (
+    FIXED_POINT_SCALE,
+    BatchConverter,
+    ConversionError,
+    IhsanReceipt,
+    ProofInput,
+    SerializationError,
+    ValidationError,
+    ZKBridge,
+    ZKBridgeError,
 )
 
 __all__ = [

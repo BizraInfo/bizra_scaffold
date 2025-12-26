@@ -28,15 +28,19 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
+# Agent imports
+from core.agents.pat import IHSAN_THRESHOLD, PATAgent, create_pat_agent
+from core.agents.sat import (
+    CommitReceipt,
+    SATAgent,
+    VerificationResult,
+    create_sat_agent,
+)
+
 # PCI imports
-from core.pci.envelope import PCIEnvelope, Sender, Payload, Metadata, Signature
+from core.pci.envelope import Metadata, Payload, PCIEnvelope, Sender, Signature
 from core.pci.reject_codes import RejectCode, RejectionResponse
 from core.pci.replay_guard import ReplayGuard, get_replay_guard
-
-# Agent imports
-from core.agents.pat import PATAgent, create_pat_agent, IHSAN_THRESHOLD
-from core.agents.sat import SATAgent, create_sat_agent, VerificationResult, CommitReceipt
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +48,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GateResult:
     """Result of PCI gate verification."""
-    
+
     allowed: bool
     envelope: Optional[PCIEnvelope] = None
     receipt: Optional[CommitReceipt] = None
     rejection: Optional[RejectionResponse] = None
     latency_ms: float = 0.0
-    
+
     @property
     def reject_code(self) -> Optional[RejectCode]:
         """Get reject code if rejected."""
@@ -60,13 +64,13 @@ class GateResult:
 class PCIGate:
     """
     PCI verification gate for action execution boundary.
-    
+
     Implements fail-closed semantics:
     - Every action MUST be wrapped in signed PCIEnvelope
     - SAT agent verifies before execution
     - Success → CommitReceipt issued
     - Failure → Action blocked with RejectCode
-    
+
     Usage:
         gate = PCIGate.create(policy_hash_provider=get_current_policy)
         result = await gate.check(
@@ -80,7 +84,7 @@ class PCIGate:
         else:
             log_rejection(result.rejection)
     """
-    
+
     def __init__(
         self,
         pat_agent: PATAgent,
@@ -89,7 +93,7 @@ class PCIGate:
     ):
         """
         Initialize PCI gate.
-        
+
         Args:
             pat_agent: Agent for creating proposals
             sat_agent: Agent for verifying proposals
@@ -98,24 +102,24 @@ class PCIGate:
         self._pat = pat_agent
         self._sat = sat_agent
         self._fail_open = fail_open
-        
+
         # Statistics
         self._total_checks = 0
         self._allowed = 0
         self._rejected = 0
         self._errors = 0
-        
+
         if fail_open:
             logger.warning(
                 "PCI Gate initialized with fail_open=True. "
                 "This is INSECURE and should only be used for testing!"
             )
-        
+
         logger.info(
             f"PCI Gate initialized: pat={pat_agent.agent_id}, "
             f"sat={sat_agent.agent_id}, fail_open={fail_open}"
         )
-    
+
     async def check(
         self,
         action: str,
@@ -129,9 +133,9 @@ class PCIGate:
     ) -> GateResult:
         """
         Check if action is allowed through PCI verification.
-        
+
         This is the main entry point for action verification.
-        
+
         Args:
             action: Action identifier (e.g., "state.mutate", "token.transfer")
             data: Action payload
@@ -141,7 +145,7 @@ class PCIGate:
             snr_score: Optional signal-to-noise score
             trace_id: Optional trace ID for correlation
             timeout_ms: Maximum time for verification
-            
+
         Returns:
             GateResult with allowed=True and receipt, or allowed=False and rejection
         """
@@ -149,10 +153,11 @@ class PCIGate:
         deadline = None
         if timeout_ms and timeout_ms > 0:
             deadline = start_time + (timeout_ms / 1000.0)
-        
+
         self._total_checks += 1
-        
+
         try:
+
             def remaining_timeout() -> Optional[float]:
                 if deadline is None:
                     return None
@@ -175,7 +180,7 @@ class PCIGate:
                 ),
                 timeout=remaining_timeout(),
             )
-            
+
             if not proposal.success:
                 self._rejected += 1
                 latency = (time.perf_counter() - start_time) * 1000
@@ -188,15 +193,15 @@ class PCIGate:
                     rejection=proposal.rejection,
                     latency_ms=latency,
                 )
-            
+
             # 2. SAT verifies envelope
             verification = await asyncio.wait_for(
                 asyncio.to_thread(self._sat.verify, proposal.envelope),
                 timeout=remaining_timeout(),
             )
-            
+
             latency = (time.perf_counter() - start_time) * 1000
-            
+
             if verification.success:
                 self._allowed += 1
                 logger.debug(
@@ -221,7 +226,7 @@ class PCIGate:
                     rejection=verification.rejection,
                     latency_ms=latency,
                 )
-                
+
         except asyncio.TimeoutError:
             self._errors += 1
             latency = (time.perf_counter() - start_time) * 1000
@@ -240,13 +245,13 @@ class PCIGate:
                     rejection=rejection,
                     latency_ms=latency,
                 )
-            
+
             return GateResult(
                 allowed=False,
                 rejection=rejection,
                 latency_ms=latency,
             )
-            
+
         except Exception as e:
             self._errors += 1
             latency = (time.perf_counter() - start_time) * 1000
@@ -265,13 +270,13 @@ class PCIGate:
                     rejection=rejection,
                     latency_ms=latency,
                 )
-            
+
             return GateResult(
                 allowed=False,
                 rejection=rejection,
                 latency_ms=latency,
             )
-    
+
     def stats(self) -> Dict[str, Any]:
         """Get gate statistics."""
         return {
@@ -279,11 +284,13 @@ class PCIGate:
             "allowed": self._allowed,
             "rejected": self._rejected,
             "errors": self._errors,
-            "allow_rate": self._allowed / self._total_checks if self._total_checks > 0 else 0.0,
+            "allow_rate": (
+                self._allowed / self._total_checks if self._total_checks > 0 else 0.0
+            ),
             "pat_stats": self._pat.stats(),
             "sat_stats": self._sat.stats(),
         }
-    
+
     @classmethod
     def create(
         cls,
@@ -295,14 +302,14 @@ class PCIGate:
     ) -> "PCIGate":
         """
         Factory method to create a PCI gate with default agents.
-        
+
         Args:
             policy_hash_provider: Callback to get current policy hash
             pat_agent_id: Optional PAT agent ID
             sat_agent_id: Optional SAT agent ID
             ihsan_threshold: Minimum Ihsān score
             fail_open: If True, allows on gate failure (DANGEROUS)
-            
+
         Returns:
             Configured PCIGate instance
         """
@@ -310,13 +317,13 @@ class PCIGate:
             agent_id=pat_agent_id,
             ihsan_threshold=ihsan_threshold,
         )
-        
+
         sat = create_sat_agent(
             agent_id=sat_agent_id,
             ihsan_threshold=ihsan_threshold,
             policy_hash_provider=policy_hash_provider,
         )
-        
+
         return cls(pat_agent=pat, sat_agent=sat, fail_open=fail_open)
 
 
@@ -329,22 +336,20 @@ def get_pci_gate(
 ) -> PCIGate:
     """
     Get or create the global PCI gate instance.
-    
+
     Args:
         policy_hash_provider: Required on first call to initialize
-        
+
     Returns:
         Global PCIGate instance
     """
     global _global_pci_gate
-    
+
     if _global_pci_gate is None:
         if policy_hash_provider is None:
-            raise RuntimeError(
-                "policy_hash_provider required for first initialization"
-            )
+            raise RuntimeError("policy_hash_provider required for first initialization")
         _global_pci_gate = PCIGate.create(policy_hash_provider=policy_hash_provider)
-    
+
     return _global_pci_gate
 
 
@@ -358,26 +363,28 @@ def reset_pci_gate() -> None:
 # Decorator for PCI-protected functions
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def pci_protected(
     action: Optional[str] = None,
     require_ihsan: float = IHSAN_THRESHOLD,
 ):
     """
     Decorator to wrap functions with PCI verification.
-    
+
     Usage:
         @pci_protected(action="state.update", require_ihsan=0.95)
         async def update_state(data: dict, ihsan_score: float, policy_hash: str):
             # Only executed if PCI gate allows
             ...
-    
+
     Args:
         action: Action identifier (defaults to function name)
         require_ihsan: Minimum Ihsān score required
-        
+
     Returns:
         Decorator function
     """
+
     def decorator(func: Callable) -> Callable:
         import functools
 
@@ -399,6 +406,7 @@ def pci_protected(
             )
 
         if asyncio.iscoroutinefunction(func):
+
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
                 result = await _run_gate(kwargs)
@@ -438,12 +446,13 @@ def pci_protected(
             return func(*args, **kwargs)
 
         return sync_wrapper
+
     return decorator
 
 
 class PCIRejectionError(Exception):
     """Raised when PCI gate rejects an action."""
-    
+
     def __init__(self, rejection: RejectionResponse):
         self.rejection = rejection
         super().__init__(

@@ -7,7 +7,7 @@ from .tokens import DualTokenLedger, ImpactAttribution, verify_ledger_integrity
 
 __all__ = [
     "DualTokenLedger",
-    "ImpactAttribution", 
+    "ImpactAttribution",
     "verify_ledger_integrity",
 ]
 

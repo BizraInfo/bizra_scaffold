@@ -30,17 +30,17 @@ License: MIT
 from __future__ import annotations
 
 import asyncio
+import functools
 import hashlib
+import json
+import logging
 import secrets
 import time
-import logging
-import json
-import functools
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum, auto
 from typing import (
     Any,
@@ -79,32 +79,32 @@ AsyncPredicateFunc = Callable[..., Awaitable[bool]]
 
 class InvariantSeverity(Enum):
     """Severity of invariant violations."""
-    
-    CRITICAL = auto()   # System must halt (Ihsan violations)
-    MAJOR = auto()      # Operation must fail
-    MINOR = auto()      # Log and continue
-    WARNING = auto()    # Advisory only
+
+    CRITICAL = auto()  # System must halt (Ihsan violations)
+    MAJOR = auto()  # Operation must fail
+    MINOR = auto()  # Log and continue
+    WARNING = auto()  # Advisory only
 
 
 class InvariantType(Enum):
     """Types of invariants."""
-    
-    IHSAN = auto()          # Ihsan protocol constraints
-    CONSERVATION = auto()   # Conservation laws (tokens, energy)
-    ORDERING = auto()       # Temporal/causal ordering
-    BOUNDS = auto()         # Value within bounds
-    RELATIONSHIP = auto()   # Cross-entity relationships
-    STATE = auto()          # State machine invariants
-    STRUCTURAL = auto()     # Data structure invariants
+
+    IHSAN = auto()  # Ihsan protocol constraints
+    CONSERVATION = auto()  # Conservation laws (tokens, energy)
+    ORDERING = auto()  # Temporal/causal ordering
+    BOUNDS = auto()  # Value within bounds
+    RELATIONSHIP = auto()  # Cross-entity relationships
+    STATE = auto()  # State machine invariants
+    STRUCTURAL = auto()  # Data structure invariants
 
 
 class ProofStatus(Enum):
     """Status of a proof."""
-    
-    VERIFIED = auto()      # Invariant holds, proof generated
-    VIOLATED = auto()      # Invariant broken
+
+    VERIFIED = auto()  # Invariant holds, proof generated
+    VIOLATED = auto()  # Invariant broken
     INCONCLUSIVE = auto()  # Could not determine
-    TIMEOUT = auto()       # Verification timed out
+    TIMEOUT = auto()  # Verification timed out
 
 
 # ============================================================================
@@ -116,11 +116,11 @@ class ProofStatus(Enum):
 class InvariantSpec:
     """
     Specification of a single invariant.
-    
+
     Invariants are named predicates that must hold at
     specific points in program execution.
     """
-    
+
     name: str
     description: str
     invariant_type: InvariantType
@@ -128,7 +128,7 @@ class InvariantSpec:
     predicate: PredicateFunc
     error_message: str
     tags: Tuple[str, ...] = ()
-    
+
     def check(self, *args: Any, **kwargs: Any) -> bool:
         """Check if invariant holds."""
         try:
@@ -141,7 +141,7 @@ class InvariantSpec:
 @dataclass(frozen=True)
 class AsyncInvariantSpec:
     """Async version of invariant specification."""
-    
+
     name: str
     description: str
     invariant_type: InvariantType
@@ -149,7 +149,7 @@ class AsyncInvariantSpec:
     predicate: AsyncPredicateFunc
     error_message: str
     tags: Tuple[str, ...] = ()
-    
+
     async def check(self, *args: Any, **kwargs: Any) -> bool:
         """Check if invariant holds."""
         try:
@@ -168,18 +168,18 @@ class AsyncInvariantSpec:
 class Witness:
     """
     A witness to an invariant check.
-    
+
     Witnesses provide cryptographic proof that an invariant
     was checked at a specific point in time.
     """
-    
+
     witness_id: str
     invariant_name: str
     timestamp: datetime
     result: bool
     context_hash: str
     arguments_hash: str
-    
+
     @staticmethod
     def create(
         invariant_name: str,
@@ -190,7 +190,7 @@ class Witness:
         """Create a witness for an invariant check."""
         context_str = json.dumps(context, sort_keys=True, default=str)
         args_str = json.dumps(arguments, sort_keys=True, default=str)
-        
+
         return Witness(
             witness_id=f"wit_{secrets.token_hex(16)}",
             invariant_name=invariant_name,
@@ -199,7 +199,7 @@ class Witness:
             context_hash=hashlib.sha256(context_str.encode()).hexdigest()[:16],
             arguments_hash=hashlib.sha256(args_str.encode()).hexdigest()[:16],
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "witness_id": self.witness_id,
@@ -215,11 +215,11 @@ class Witness:
 class Proof:
     """
     A proof of invariant verification.
-    
+
     Proofs aggregate multiple witnesses into a
     verifiable audit trail.
     """
-    
+
     proof_id: str
     invariant_name: str
     status: ProofStatus
@@ -228,7 +228,7 @@ class Proof:
     verified_at: Optional[datetime]
     ihsan_score: float
     metadata: Dict[str, Any]
-    
+
     @staticmethod
     def create(
         invariant_name: str,
@@ -248,19 +248,22 @@ class Proof:
             ihsan_score=ihsan_score,
             metadata=dict(metadata or {}),
         )
-    
+
     @property
     def content_hash(self) -> str:
         """Compute hash of proof content."""
-        content = json.dumps({
-            "proof_id": self.proof_id,
-            "invariant_name": self.invariant_name,
-            "status": self.status.name,
-            "witness_ids": [w.witness_id for w in self.witnesses],
-            "created_at": self.created_at.isoformat(),
-        }, sort_keys=True)
+        content = json.dumps(
+            {
+                "proof_id": self.proof_id,
+                "invariant_name": self.invariant_name,
+                "status": self.status.name,
+                "witness_ids": [w.witness_id for w in self.witnesses],
+                "created_at": self.created_at.isoformat(),
+            },
+            sort_keys=True,
+        )
         return hashlib.sha256(content.encode()).hexdigest()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "proof_id": self.proof_id,
@@ -283,11 +286,11 @@ class Proof:
 class InvariantViolation:
     """
     Record of an invariant violation.
-    
+
     Violations are recorded for auditing and may
     trigger circuit breakers.
     """
-    
+
     violation_id: str
     invariant_name: str
     invariant_type: InvariantType
@@ -297,7 +300,7 @@ class InvariantViolation:
     context: Dict[str, Any]
     stack_trace: Optional[str]
     ihsan_impact: float
-    
+
     @staticmethod
     def create(
         invariant: InvariantSpec,
@@ -305,7 +308,7 @@ class InvariantViolation:
         ihsan_impact: float = 0.01,
     ) -> InvariantViolation:
         import traceback
-        
+
         return InvariantViolation(
             violation_id=f"viol_{secrets.token_hex(8)}",
             invariant_name=invariant.name,
@@ -314,10 +317,14 @@ class InvariantViolation:
             message=invariant.error_message,
             timestamp=datetime.now(timezone.utc),
             context=dict(context),
-            stack_trace=traceback.format_stack()[-5:] if invariant.severity == InvariantSeverity.CRITICAL else None,
+            stack_trace=(
+                traceback.format_stack()[-5:]
+                if invariant.severity == InvariantSeverity.CRITICAL
+                else None
+            ),
             ihsan_impact=ihsan_impact,
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "violation_id": self.violation_id,
@@ -332,7 +339,7 @@ class InvariantViolation:
 
 class InvariantError(Exception):
     """Exception raised when critical invariant is violated."""
-    
+
     def __init__(self, violation: InvariantViolation):
         self.violation = violation
         super().__init__(violation.message)
@@ -346,18 +353,18 @@ class InvariantError(Exception):
 class IhsanInvariants:
     """
     Built-in invariants for the Ihsan Protocol.
-    
+
     These are the core invariants that must never be violated:
     1. Ihsan score >= 0.95 (threshold)
     2. Ihsan score <= 1.0 (upper bound)
     3. Governance requires Ihsan >= 0.98
     4. SAT minting requires Ihsan >= 0.99
     """
-    
+
     THRESHOLD = 0.95
     GOVERNANCE_THRESHOLD = 0.98
     SAT_THRESHOLD = 0.99
-    
+
     @staticmethod
     def ihsan_threshold(score: float) -> InvariantSpec:
         """Ihsan score must meet threshold."""
@@ -370,7 +377,7 @@ class IhsanInvariants:
             error_message=f"Ihsan score {score:.4f} below threshold {IhsanInvariants.THRESHOLD}",
             tags=("ihsan", "threshold", "critical"),
         )
-    
+
     @staticmethod
     def ihsan_bounds(score: float) -> InvariantSpec:
         """Ihsan score must be in [0, 1]."""
@@ -383,7 +390,7 @@ class IhsanInvariants:
             error_message=f"Ihsan score {score:.4f} out of bounds [0, 1]",
             tags=("ihsan", "bounds"),
         )
-    
+
     @staticmethod
     def governance_ihsan(score: float) -> InvariantSpec:
         """Governance actions require elevated Ihsan."""
@@ -396,7 +403,7 @@ class IhsanInvariants:
             error_message=f"Governance requires Ihsan >= {IhsanInvariants.GOVERNANCE_THRESHOLD}, got {score:.4f}",
             tags=("ihsan", "governance"),
         )
-    
+
     @staticmethod
     def sat_minting_ihsan(score: float) -> InvariantSpec:
         """SAT minting requires highest Ihsan."""
@@ -419,11 +426,11 @@ class IhsanInvariants:
 class ConservationInvariants:
     """
     Invariants for conservation laws.
-    
+
     These ensure that quantities are conserved across
     operations (e.g., token transfers).
     """
-    
+
     @staticmethod
     def token_conservation(
         total_before: float,
@@ -433,7 +440,7 @@ class ConservationInvariants:
     ) -> InvariantSpec:
         """Token supply must be conserved."""
         expected = total_before + minted - burned
-        
+
         return InvariantSpec(
             name="conservation.tokens",
             description="Token supply must be conserved",
@@ -443,7 +450,7 @@ class ConservationInvariants:
             error_message=f"Token conservation violated: {total_after} != {expected}",
             tags=("conservation", "tokens"),
         )
-    
+
     @staticmethod
     def energy_conservation(
         cognitive_in: float,
@@ -457,7 +464,8 @@ class ConservationInvariants:
             description="Cognitive energy conservation",
             invariant_type=InvariantType.CONSERVATION,
             severity=InvariantSeverity.MAJOR,
-            predicate=lambda: abs(cognitive_in - cognitive_out - dissipated) < tolerance,
+            predicate=lambda: abs(cognitive_in - cognitive_out - dissipated)
+            < tolerance,
             error_message=f"Energy conservation violated: in={cognitive_in}, out={cognitive_out}, dissipated={dissipated}",
             tags=("conservation", "energy", "cognitive"),
         )
@@ -471,10 +479,10 @@ class ConservationInvariants:
 class OrderingInvariants:
     """
     Invariants for temporal and causal ordering.
-    
+
     These ensure events occur in proper sequence.
     """
-    
+
     @staticmethod
     def temporal_ordering(
         event_time: datetime,
@@ -488,7 +496,7 @@ class OrderingInvariants:
         else:
             predicate = lambda: event_time < reference_time
             msg = f"Event at {event_time} must be before {reference_time}"
-        
+
         return InvariantSpec(
             name="ordering.temporal",
             description="Temporal ordering constraint",
@@ -498,7 +506,7 @@ class OrderingInvariants:
             error_message=msg,
             tags=("ordering", "temporal"),
         )
-    
+
     @staticmethod
     def sequence_monotonic(
         current_seq: int,
@@ -523,7 +531,7 @@ class OrderingInvariants:
 
 class BoundsInvariants:
     """Invariants for value bounds."""
-    
+
     @staticmethod
     def cognitive_load_bounds(load: float) -> InvariantSpec:
         """Cognitive load must be in [0, 1]."""
@@ -536,7 +544,7 @@ class BoundsInvariants:
             error_message=f"Cognitive load {load} out of bounds [0, 1]",
             tags=("bounds", "cognitive"),
         )
-    
+
     @staticmethod
     def percentage_bounds(value: float, name: str = "value") -> InvariantSpec:
         """Percentage must be in [0, 100]."""
@@ -559,14 +567,14 @@ class BoundsInvariants:
 class InvariantVerifier:
     """
     Runtime invariant verification engine.
-    
+
     Features:
     - Register and check invariants
     - Generate proofs for verified invariants
     - Track violations for auditing
     - Integration with Ihsan protocol
     """
-    
+
     def __init__(
         self,
         fail_on_critical: bool = True,
@@ -578,34 +586,34 @@ class InvariantVerifier:
         self._violations: Deque[InvariantViolation] = deque(maxlen=max_violations)
         self._proofs: Dict[str, Proof] = {}
         self._witnesses: Deque[Witness] = deque(maxlen=max_violations)
-        
+
         self._fail_on_critical = fail_on_critical
         self._collect_witnesses = collect_witnesses
-        
+
         # Statistics
         self._checks_total = 0
         self._checks_passed = 0
         self._checks_failed = 0
         self._by_type: Dict[InvariantType, int] = defaultdict(int)
-        
+
         self._lock = asyncio.Lock()
-        
+
         # Register built-in Ihsan invariants
         self._register_builtins()
-    
+
     def _register_builtins(self) -> None:
         """Register built-in invariants."""
         # These are templates, actual checks use dynamic values
         pass
-    
+
     def register(self, invariant: InvariantSpec) -> None:
         """Register an invariant."""
         self._invariants[invariant.name] = invariant
-    
+
     def register_async(self, invariant: AsyncInvariantSpec) -> None:
         """Register an async invariant."""
         self._async_invariants[invariant.name] = invariant
-    
+
     def check(
         self,
         invariant: InvariantSpec,
@@ -615,15 +623,15 @@ class InvariantVerifier:
     ) -> Tuple[bool, Optional[Proof]]:
         """
         Check an invariant synchronously.
-        
+
         Returns (passed, proof).
         """
         self._checks_total += 1
         self._by_type[invariant.invariant_type] += 1
-        
+
         ctx = context or {}
         result = invariant.check(*args, **kwargs)
-        
+
         # Generate witness
         witness = None
         if self._collect_witnesses:
@@ -634,10 +642,10 @@ class InvariantVerifier:
                 arguments={"args": str(args), "kwargs": str(kwargs)},
             )
             self._witnesses.append(witness)
-        
+
         if result:
             self._checks_passed += 1
-            
+
             # Generate proof
             proof = Proof.create(
                 invariant_name=invariant.name,
@@ -646,15 +654,15 @@ class InvariantVerifier:
                 ihsan_score=0.95,
             )
             self._proofs[proof.proof_id] = proof
-            
+
             return (True, proof)
         else:
             self._checks_failed += 1
-            
+
             # Record violation
             violation = InvariantViolation.create(invariant, ctx)
             self._violations.append(violation)
-            
+
             # Generate failed proof
             proof = Proof.create(
                 invariant_name=invariant.name,
@@ -664,13 +672,16 @@ class InvariantVerifier:
                 metadata={"violation_id": violation.violation_id},
             )
             self._proofs[proof.proof_id] = proof
-            
+
             # Fail on critical
-            if self._fail_on_critical and invariant.severity == InvariantSeverity.CRITICAL:
+            if (
+                self._fail_on_critical
+                and invariant.severity == InvariantSeverity.CRITICAL
+            ):
                 raise InvariantError(violation)
-            
+
             return (False, proof)
-    
+
     async def check_async(
         self,
         invariant: AsyncInvariantSpec,
@@ -682,10 +693,10 @@ class InvariantVerifier:
         async with self._lock:
             self._checks_total += 1
             self._by_type[invariant.invariant_type] += 1
-        
+
         ctx = context or {}
         result = await invariant.check(*args, **kwargs)
-        
+
         # Generate witness
         witness = None
         if self._collect_witnesses:
@@ -697,11 +708,11 @@ class InvariantVerifier:
             )
             async with self._lock:
                 self._witnesses.append(witness)
-        
+
         if result:
             async with self._lock:
                 self._checks_passed += 1
-            
+
             proof = Proof.create(
                 invariant_name=invariant.name,
                 status=ProofStatus.VERIFIED,
@@ -711,7 +722,7 @@ class InvariantVerifier:
         else:
             async with self._lock:
                 self._checks_failed += 1
-            
+
             # Create violation record
             sync_spec = InvariantSpec(
                 name=invariant.name,
@@ -722,22 +733,25 @@ class InvariantVerifier:
                 error_message=invariant.error_message,
             )
             violation = InvariantViolation.create(sync_spec, ctx)
-            
+
             async with self._lock:
                 self._violations.append(violation)
-            
+
             proof = Proof.create(
                 invariant_name=invariant.name,
                 status=ProofStatus.VIOLATED,
                 witnesses=[witness] if witness else [],
                 metadata={"violation_id": violation.violation_id},
             )
-            
-            if self._fail_on_critical and invariant.severity == InvariantSeverity.CRITICAL:
+
+            if (
+                self._fail_on_critical
+                and invariant.severity == InvariantSeverity.CRITICAL
+            ):
                 raise InvariantError(violation)
-            
+
             return (False, proof)
-    
+
     def check_ihsan(
         self,
         score: float,
@@ -745,7 +759,7 @@ class InvariantVerifier:
     ) -> Tuple[bool, Optional[Proof]]:
         """
         Check Ihsan score against appropriate threshold.
-        
+
         Different operations have different thresholds:
         - standard: 0.95
         - governance: 0.98
@@ -757,9 +771,9 @@ class InvariantVerifier:
             invariant = IhsanInvariants.sat_minting_ihsan(score)
         else:
             invariant = IhsanInvariants.ihsan_threshold(score)
-        
+
         return self.check(invariant, score, context={"operation": operation_type})
-    
+
     def verify_conservation(
         self,
         before: float,
@@ -773,9 +787,14 @@ class InvariantVerifier:
         )
         return self.check(
             invariant,
-            context={"before": before, "after": after, "minted": minted, "burned": burned},
+            context={
+                "before": before,
+                "after": after,
+                "minted": minted,
+                "burned": burned,
+            },
         )
-    
+
     def get_violations(
         self,
         severity: Optional[InvariantSeverity] = None,
@@ -784,19 +803,19 @@ class InvariantVerifier:
     ) -> List[InvariantViolation]:
         """Get recorded violations."""
         violations = list(self._violations)
-        
+
         if severity:
             violations = [v for v in violations if v.severity == severity]
-        
+
         if since:
             violations = [v for v in violations if v.timestamp >= since]
-        
+
         return violations[-limit:]
-    
+
     def get_proof(self, proof_id: str) -> Optional[Proof]:
         """Get a specific proof."""
         return self._proofs.get(proof_id)
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get verification metrics."""
         return {
@@ -809,12 +828,14 @@ class InvariantVerifier:
             "witnesses_collected": len(self._witnesses),
             "by_type": {t.name: c for t, c in self._by_type.items()},
         }
-    
+
     def generate_report(self) -> Dict[str, Any]:
         """Generate a verification report."""
-        critical = [v for v in self._violations if v.severity == InvariantSeverity.CRITICAL]
+        critical = [
+            v for v in self._violations if v.severity == InvariantSeverity.CRITICAL
+        ]
         major = [v for v in self._violations if v.severity == InvariantSeverity.MAJOR]
-        
+
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "metrics": self.get_metrics(),
@@ -822,9 +843,7 @@ class InvariantVerifier:
             "major_violations": len(major),
             "ihsan_checks": self._by_type.get(InvariantType.IHSAN, 0),
             "conservation_checks": self._by_type.get(InvariantType.CONSERVATION, 0),
-            "recent_violations": [
-                v.to_dict() for v in self.get_violations(limit=10)
-            ],
+            "recent_violations": [v.to_dict() for v in self.get_violations(limit=10)],
             "status": "HEALTHY" if len(critical) == 0 else "CRITICAL",
         }
 
@@ -840,23 +859,25 @@ def requires_ihsan(
 ):
     """
     Decorator that requires Ihsan score above threshold.
-    
+
     Usage:
         @requires_ihsan(0.98)
         async def governance_action(self, ihsan_score: float, ...):
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         verifier = InvariantVerifier()
-        
+
         if asyncio.iscoroutinefunction(func):
+
             @functools.wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> T:
                 if score_extractor:
                     score = score_extractor(*args, **kwargs)
                 else:
                     score = kwargs.get("ihsan_score", 0.95)
-                
+
                 invariant = InvariantSpec(
                     name=f"ihsan.{func.__name__}",
                     description=f"Ihsan >= {threshold} for {func.__name__}",
@@ -865,21 +886,23 @@ def requires_ihsan(
                     predicate=lambda s: s >= threshold,
                     error_message=f"Ihsan {score:.4f} < {threshold} for {func.__name__}",
                 )
-                
+
                 passed, _ = verifier.check(invariant, score)
                 if not passed:
                     raise ValueError(invariant.error_message)
-                
+
                 return await func(*args, **kwargs)
+
             return async_wrapper  # type: ignore
         else:
+
             @functools.wraps(func)
             def sync_wrapper(*args: Any, **kwargs: Any) -> T:
                 if score_extractor:
                     score = score_extractor(*args, **kwargs)
                 else:
                     score = kwargs.get("ihsan_score", 0.95)
-                
+
                 invariant = InvariantSpec(
                     name=f"ihsan.{func.__name__}",
                     description=f"Ihsan >= {threshold} for {func.__name__}",
@@ -888,14 +911,15 @@ def requires_ihsan(
                     predicate=lambda s: s >= threshold,
                     error_message=f"Ihsan {score:.4f} < {threshold} for {func.__name__}",
                 )
-                
+
                 passed, _ = verifier.check(invariant, score)
                 if not passed:
                     raise ValueError(invariant.error_message)
-                
+
                 return func(*args, **kwargs)
+
             return sync_wrapper  # type: ignore
-    
+
     return decorator
 
 
@@ -906,20 +930,21 @@ def invariant(
 ):
     """
     General-purpose invariant decorator.
-    
+
     Usage:
         @invariant(lambda result: result >= 0, "non_negative_result")
         def compute_value():
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         verifier = InvariantVerifier()
         inv_name = name or f"invariant.{func.__name__}"
-        
+
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
             result = func(*args, **kwargs)
-            
+
             spec = InvariantSpec(
                 name=inv_name,
                 description=f"Post-condition for {func.__name__}",
@@ -928,15 +953,17 @@ def invariant(
                 predicate=predicate,
                 error_message=f"Invariant {inv_name} violated",
             )
-            
+
             passed, _ = verifier.check(spec, result)
             if not passed:
-                raise InvariantError(InvariantViolation.create(spec, {"result": str(result)}))
-            
+                raise InvariantError(
+                    InvariantViolation.create(spec, {"result": str(result)})
+                )
+
             return result
-        
+
         return wrapper  # type: ignore
-    
+
     return decorator
 
 
@@ -948,57 +975,61 @@ def invariant(
 class Contract:
     """
     Design by Contract implementation.
-    
+
     Allows specifying:
     - Preconditions (require)
     - Postconditions (ensure)
     - Class invariants
     """
-    
+
     def __init__(self, verifier: Optional[InvariantVerifier] = None):
         self._verifier = verifier or InvariantVerifier()
         self._preconditions: List[InvariantSpec] = []
         self._postconditions: List[InvariantSpec] = []
-    
+
     def require(
         self,
         predicate: PredicateFunc,
         message: str = "Precondition failed",
     ) -> Contract:
         """Add a precondition."""
-        self._preconditions.append(InvariantSpec(
-            name=f"precondition.{len(self._preconditions)}",
-            description=message,
-            invariant_type=InvariantType.STATE,
-            severity=InvariantSeverity.MAJOR,
-            predicate=predicate,
-            error_message=message,
-        ))
+        self._preconditions.append(
+            InvariantSpec(
+                name=f"precondition.{len(self._preconditions)}",
+                description=message,
+                invariant_type=InvariantType.STATE,
+                severity=InvariantSeverity.MAJOR,
+                predicate=predicate,
+                error_message=message,
+            )
+        )
         return self
-    
+
     def ensure(
         self,
         predicate: PredicateFunc,
         message: str = "Postcondition failed",
     ) -> Contract:
         """Add a postcondition."""
-        self._postconditions.append(InvariantSpec(
-            name=f"postcondition.{len(self._postconditions)}",
-            description=message,
-            invariant_type=InvariantType.STATE,
-            severity=InvariantSeverity.MAJOR,
-            predicate=predicate,
-            error_message=message,
-        ))
+        self._postconditions.append(
+            InvariantSpec(
+                name=f"postcondition.{len(self._postconditions)}",
+                description=message,
+                invariant_type=InvariantType.STATE,
+                severity=InvariantSeverity.MAJOR,
+                predicate=predicate,
+                error_message=message,
+            )
+        )
         return self
-    
+
     def check_preconditions(self, *args: Any, **kwargs: Any) -> None:
         """Check all preconditions."""
         for pre in self._preconditions:
             passed, _ = self._verifier.check(pre, *args, **kwargs)
             if not passed:
                 raise ValueError(pre.error_message)
-    
+
     def check_postconditions(self, result: Any) -> None:
         """Check all postconditions."""
         for post in self._postconditions:
@@ -1017,22 +1048,22 @@ async def demo_invariant_verifier():
     print("=" * 70)
     print("BIZRA FORMAL INVARIANT VERIFIER DEMO")
     print("=" * 70)
-    
+
     verifier = InvariantVerifier(fail_on_critical=False)
-    
+
     # 1. Ihsan Invariants
     print("\n1. Ihsan Protocol Invariants")
     print("-" * 40)
-    
+
     for score in [0.99, 0.96, 0.93]:
         passed, proof = verifier.check_ihsan(score)
         status = "✓ PASS" if passed else "✗ FAIL"
         print(f"  Ihsan {score:.2f}: {status}")
-    
+
     # 2. Conservation Invariants
     print("\n2. Conservation Invariants")
     print("-" * 40)
-    
+
     passed, _ = verifier.verify_conservation(
         before=1000.0,
         after=1000.0,
@@ -1040,7 +1071,7 @@ async def demo_invariant_verifier():
         burned=0.0,
     )
     print(f"  Token conservation (balanced): {'✓ PASS' if passed else '✗ FAIL'}")
-    
+
     passed, _ = verifier.verify_conservation(
         before=1000.0,
         after=1050.0,  # Incorrect!
@@ -1048,20 +1079,20 @@ async def demo_invariant_verifier():
         burned=0.0,
     )
     print(f"  Token conservation (violated): {'✓ PASS' if passed else '✗ FAIL'}")
-    
+
     # 3. Bounds Invariants
     print("\n3. Bounds Invariants")
     print("-" * 40)
-    
+
     for load in [0.5, 1.0, 1.5]:
         inv = BoundsInvariants.cognitive_load_bounds(load)
         passed, _ = verifier.check(inv, load)
         print(f"  Cognitive load {load}: {'✓ PASS' if passed else '✗ FAIL'}")
-    
+
     # 4. Custom Invariant
     print("\n4. Custom Invariants")
     print("-" * 40)
-    
+
     custom = InvariantSpec(
         name="custom.positive_balance",
         description="Balance must be positive",
@@ -1070,38 +1101,38 @@ async def demo_invariant_verifier():
         predicate=lambda b: b >= 0,
         error_message="Balance cannot be negative",
     )
-    
+
     for balance in [100.0, 0.0, -50.0]:
         passed, _ = verifier.check(custom, balance)
         print(f"  Balance {balance}: {'✓ PASS' if passed else '✗ FAIL'}")
-    
+
     # 5. Metrics
     print("\n5. Verification Metrics")
     print("-" * 40)
-    
+
     metrics = verifier.get_metrics()
     print(f"  Total checks: {metrics['checks_total']}")
     print(f"  Passed: {metrics['checks_passed']}")
     print(f"  Failed: {metrics['checks_failed']}")
     print(f"  Pass rate: {metrics['pass_rate']:.1%}")
-    
+
     # 6. Violations
     print("\n6. Recent Violations")
     print("-" * 40)
-    
+
     violations = verifier.get_violations(limit=5)
     for v in violations:
         print(f"  [{v.severity.name}] {v.invariant_name}: {v.message}")
-    
+
     # 7. Report
     print("\n7. Verification Report")
     print("-" * 40)
-    
+
     report = verifier.generate_report()
     print(f"  Status: {report['status']}")
     print(f"  Critical violations: {report['critical_violations']}")
     print(f"  Major violations: {report['major_violations']}")
-    
+
     print("\n" + "=" * 70)
     print("INVARIANT VERIFIER DEMO COMPLETE")
     print("=" * 70)

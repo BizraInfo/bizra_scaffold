@@ -44,7 +44,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.control_center import BIZRAControlCenter
 
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # LOGGING CONFIGURATION
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -91,20 +90,20 @@ async def cmd_status(args: argparse.Namespace) -> int:
     """Display system health status."""
     center = BIZRAControlCenter(workspace_path=Path("."))
     health = await center.check_health()
-    
+
     if args.json:
         print(center.get_health_json())
     else:
         if not args.quiet:
             print(BANNER)
         center.print_status(health)
-    
+
     if args.monitor:
         print(f"\nStarting continuous monitoring (interval: {args.interval}s)...")
         print("Press Ctrl+C to stop\n")
-        
+
         await center.start_monitoring(interval_seconds=args.interval)
-        
+
         try:
             while True:
                 await asyncio.sleep(args.interval)
@@ -116,7 +115,7 @@ async def cmd_status(args: argparse.Namespace) -> int:
         except KeyboardInterrupt:
             await center.stop_monitoring()
             print("\nMonitoring stopped.")
-    
+
     return 0 if health.healthy else 1
 
 
@@ -124,16 +123,16 @@ def cmd_scan(args: argparse.Namespace) -> int:
     """Scan data lake and update manifest."""
     if not args.quiet:
         print(BANNER)
-    
+
     script = Path("scripts/run_watcher.py")
     if not script.exists():
         print("Error: run_watcher.py not found")
         return 1
-    
+
     cmd = [sys.executable, str(script), "--scan"]
     if args.verbose:
         cmd.append("--verbose")
-    
+
     result = subprocess.run(cmd)
     return result.returncode
 
@@ -142,12 +141,12 @@ def cmd_verify(args: argparse.Namespace) -> int:
     """Run compliance verification."""
     if not args.quiet:
         print(BANNER)
-    
+
     script = Path("scripts/verify_compliance.py")
     if not script.exists():
         print("Error: verify_compliance.py not found")
         return 1
-    
+
     result = subprocess.run([sys.executable, str(script)])
     return result.returncode
 
@@ -156,21 +155,22 @@ def cmd_watch(args: argparse.Namespace) -> int:
     """Start file system monitoring."""
     if not args.quiet:
         print(BANNER)
-    
+
     script = Path("scripts/run_watcher.py")
     if not script.exists():
         print("Error: run_watcher.py not found")
         return 1
-    
+
     cmd = [
-        sys.executable, 
-        str(script), 
+        sys.executable,
+        str(script),
         "--watch",
-        "--interval", str(args.interval),
+        "--interval",
+        str(args.interval),
     ]
     if args.verbose:
         cmd.append("--verbose")
-    
+
     try:
         result = subprocess.run(cmd)
         return result.returncode
@@ -183,20 +183,21 @@ def cmd_score(args: argparse.Namespace) -> int:
     """Score a file or path for SNR quality."""
     if not args.quiet:
         print(BANNER)
-    
+
     script = Path("scripts/run_watcher.py")
     if not script.exists():
         print("Error: run_watcher.py not found")
         return 1
-    
+
     cmd = [
         sys.executable,
         str(script),
-        "--score", args.path,
+        "--score",
+        args.path,
     ]
     if args.verbose:
         cmd.append("--verbose")
-    
+
     result = subprocess.run(cmd)
     return result.returncode
 
@@ -204,7 +205,8 @@ def cmd_score(args: argparse.Namespace) -> int:
 def cmd_help(args: argparse.Namespace) -> int:
     """Show help information."""
     print(BANNER)
-    print("""
+    print(
+        """
 BIZRA CLI Commands:
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -243,7 +245,8 @@ Examples:
 ═══════════════════════════════════════════════════════════════════════════════
 BIZRA AEON OMEGA | Ihsān Threshold: 0.95 | Fail-Closed Architecture
 ═══════════════════════════════════════════════════════════════════════════════
-""")
+"""
+    )
     return 0
 
 
@@ -267,48 +270,56 @@ Examples:
   bizra score FILE         Score file quality
         """,
     )
-    
+
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose output",
     )
     parser.add_argument(
-        "-q", "--quiet",
+        "-q",
+        "--quiet",
         action="store_true",
         help="Suppress banner",
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
+
     # status command
     status_parser = subparsers.add_parser("status", help="Display system health")
     status_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    status_parser.add_argument("--monitor", action="store_true", help="Continuous monitoring")
-    status_parser.add_argument("--interval", type=int, default=60, help="Monitor interval (seconds)")
-    
+    status_parser.add_argument(
+        "--monitor", action="store_true", help="Continuous monitoring"
+    )
+    status_parser.add_argument(
+        "--interval", type=int, default=60, help="Monitor interval (seconds)"
+    )
+
     # scan command
     scan_parser = subparsers.add_parser("scan", help="Scan data lake")
-    
+
     # verify command
     verify_parser = subparsers.add_parser("verify", help="Run compliance verification")
-    
+
     # watch command
     watch_parser = subparsers.add_parser("watch", help="Start file monitoring")
-    watch_parser.add_argument("--interval", type=int, default=10, help="Poll interval (seconds)")
-    
+    watch_parser.add_argument(
+        "--interval", type=int, default=10, help="Poll interval (seconds)"
+    )
+
     # score command
     score_parser = subparsers.add_parser("score", help="Score file quality")
     score_parser.add_argument("path", help="File or directory to score")
-    
+
     # help command
     help_parser = subparsers.add_parser("help", help="Show help")
-    
+
     args = parser.parse_args(argv)
-    
+
     # Setup logging
     setup_logging(args.verbose)
-    
+
     # Route to command handler
     if args.command == "status":
         return asyncio.run(cmd_status(args))

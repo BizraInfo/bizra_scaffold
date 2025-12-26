@@ -8,39 +8,42 @@ SAPE Framework: 99.8% Completion | SNR: 1.089 | Graph Complexity: 48M states
 
 import asyncio
 import hashlib
-import struct
-import secrets
 import json
 import logging
+import secrets
+import struct
 import time
-from typing import Dict, List, Optional, Any, Callable, TypeVar, Generic
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+
+import networkx as nx
 
 # Mathematical and ML Libraries
 import numpy as np
 import torch
 import torch.nn as nn
-import networkx as nx
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 # Configure Logging for Professional Auditability
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s"
+)
 logger = logging.getLogger("BIZRA_SOVEREIGN")
 
 # ============================================================================
 # I. IHSAN ETHICAL FOUNDATION (Non-Negotiable Core)
 # ============================================================================
 
+
 @dataclass(frozen=True)
 class IhsanPrinciples:
     """
     Immutable ethical gradients - absolute constraints.
     These weights are FINAL - modification requires full system audit.
-    
+
     BILINGUAL VOCABULARY ALIGNMENT (Arabic ↔ English):
     ══════════════════════════════════════════════════
     Arabic Term   │ English Term    │ Rust Field      │ SOT Weight
@@ -51,20 +54,21 @@ class IhsanPrinciples:
     KAMAL/ITQAN   │ Excellence      │ excellence      │ 0.20
     ISTIDAMA      │ Sustainability  │ sustainability  │ 0.10
     ══════════════════════════════════════════════════
-    
+
     CANONICAL THRESHOLD: IM ≥ 0.95 (from BIZRA_SOT.md Section 3.1)
     """
+
     # SOT-aligned weights (Section 3.1 Ihsan Metric Definition)
-    IKHLAS: float = 0.30       # Truthfulness - ratio of VERIFIED claims
-    KARAMA: float = 0.20       # Dignity - inverse of dark pattern markers
-    ADL: float = 0.20          # Fairness - 1.0 - (Gini / max_gini)
-    KAMAL: float = 0.20        # Excellence - (coverage * 0.5) + lint_clean
-    ISTIDAMA: float = 0.10     # Sustainability - min(1.0, target/actual energy)
-    
+    IKHLAS: float = 0.30  # Truthfulness - ratio of VERIFIED claims
+    KARAMA: float = 0.20  # Dignity - inverse of dark pattern markers
+    ADL: float = 0.20  # Fairness - 1.0 - (Gini / max_gini)
+    KAMAL: float = 0.20  # Excellence - (coverage * 0.5) + lint_clean
+    ISTIDAMA: float = 0.10  # Sustainability - min(1.0, target/actual energy)
+
     # Legacy aliases for backward compatibility
-    TAQWA: float = 0.20        # → Maps to ADL (Fairness/Mindfulness)
-    RAHMA: float = 0.20        # → Maps to KARAMA (Compassion/Dignity)
-    
+    TAQWA: float = 0.20  # → Maps to ADL (Fairness/Mindfulness)
+    RAHMA: float = 0.20  # → Maps to KARAMA (Compassion/Dignity)
+
     # Threshold from SOT
     IHSAN_THRESHOLD: float = 0.95
 
@@ -74,14 +78,14 @@ class IhsanPrinciples:
         Returns value in [0.0, 1.0]. Pass threshold: >= 0.95.
         """
         score = (
-            dimensions.get("truthfulness", 0.0) * self.IKHLAS +
-            dimensions.get("dignity", 0.0) * self.KARAMA +
-            dimensions.get("fairness", 0.0) * self.ADL +
-            dimensions.get("excellence", 0.0) * self.KAMAL +
-            dimensions.get("sustainability", 0.0) * self.ISTIDAMA
+            dimensions.get("truthfulness", 0.0) * self.IKHLAS
+            + dimensions.get("dignity", 0.0) * self.KARAMA
+            + dimensions.get("fairness", 0.0) * self.ADL
+            + dimensions.get("excellence", 0.0) * self.KAMAL
+            + dimensions.get("sustainability", 0.0) * self.ISTIDAMA
         )
         return max(0.0, min(1.0, score))
-    
+
     def verify(self, dimensions: Dict[str, float]) -> tuple[bool, float]:
         """
         Verify Ihsān compliance. Returns (passed, score).
@@ -90,25 +94,26 @@ class IhsanPrinciples:
         for key, val in dimensions.items():
             if not isinstance(val, (int, float)) or not (0.0 <= val <= 1.0):
                 return (False, 0.0)  # Fail-closed on invalid input
-        
+
         score = self.compute_score(dimensions)
         return (score >= self.IHSAN_THRESHOLD, score)
 
-    def compute_gradients(self, task_grad: torch.Tensor,
-                          ethical_losses: Dict[str, torch.Tensor]) -> torch.Tensor:
+    def compute_gradients(
+        self, task_grad: torch.Tensor, ethical_losses: Dict[str, torch.Tensor]
+    ) -> torch.Tensor:
         """
         Apply ethical multipliers - gradients flow through ethics first.
         Modulation factors tuned for optimal ethical convergence.
         """
         total_grad = task_grad.clone()
-        
+
         # Unified modulation mapping (Arabic → modulation factor)
         modulation_factors = {
-            "ikhlas": 1.15,      # Truthfulness: strong amplification
-            "karama": 1.10,      # Dignity: moderate boost
-            "adl": 1.05,         # Fairness: balanced
-            "kamal": 1.20,       # Excellence: maximum drive
-            "istidama": 0.95,    # Sustainability: slight dampening (long-term)
+            "ikhlas": 1.15,  # Truthfulness: strong amplification
+            "karama": 1.10,  # Dignity: moderate boost
+            "adl": 1.05,  # Fairness: balanced
+            "kamal": 1.20,  # Excellence: maximum drive
+            "istidama": 0.95,  # Sustainability: slight dampening (long-term)
             # Legacy mappings
             "taqwa": 1.05,
             "rahma": 1.10,
@@ -122,9 +127,11 @@ class IhsanPrinciples:
 
         return torch.clamp(total_grad, -1.0, 1.0)  # Prevent gradient explosion
 
+
 # ============================================================================
 # II. QUANTUM-TEMPORAL SECURITY (Post-Quantum Attack Immunity)
 # ============================================================================
+
 
 class QuantumTemporalSecurity:
     """
@@ -138,8 +145,7 @@ class QuantumTemporalSecurity:
         self.chain_entropy = 0.0
         self._signing_key = ed25519.Ed25519PrivateKey.generate()
         self._public_key = self._signing_key.public_key().public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
     def _generate_quantum_nonce(self) -> bytes:
@@ -155,11 +161,15 @@ class QuantumTemporalSecurity:
         timestamp = struct.pack(">Q", int(datetime.now(timezone.utc).timestamp() * 1e9))
 
         # Deterministic serialization
-        op_bytes = json.dumps(operation, sort_keys=True, separators=(",", ":"), default=str).encode()
+        op_bytes = json.dumps(
+            operation, sort_keys=True, separators=(",", ":"), default=str
+        ).encode()
         op_hash = hashlib.sha3_512(op_bytes).digest()
 
         prev_hash = self.temporal_chain[-1] if self.temporal_chain else b""
-        temporal_hash = hashlib.sha3_512(nonce + timestamp + op_hash + prev_hash).digest()
+        temporal_hash = hashlib.sha3_512(
+            nonce + timestamp + op_hash + prev_hash
+        ).digest()
 
         signature = self._signing_key.sign(temporal_hash)
 
@@ -170,17 +180,14 @@ class QuantumTemporalSecurity:
             "temporal_hash": temporal_hash.hex(),
             "signature": signature.hex(),
             "public_key": self._public_key.hex(),
-            "chain_index": len(self.temporal_chain)
+            "chain_index": len(self.temporal_chain),
         }
 
         self.temporal_chain.append(temporal_hash)
         self.temporal_proofs.append(proof)
         self.chain_entropy += self._calculate_entropy(temporal_hash)
 
-        return {
-            "operation": operation,
-            "temporal_proof": proof
-        }
+        return {"operation": operation, "temporal_proof": proof}
 
     def _calculate_entropy(self, data: bytes) -> float:
         """Calculate Shannon entropy of temporal proof."""
@@ -205,7 +212,9 @@ class QuantumTemporalSecurity:
             nonce = bytes.fromhex(proof["nonce"])
             timestamp = bytes.fromhex(proof["timestamp"])
             op_hash = bytes.fromhex(proof["op_hash"])
-            expected = hashlib.sha3_512(nonce + timestamp + op_hash + prev_hash).digest()
+            expected = hashlib.sha3_512(
+                nonce + timestamp + op_hash + prev_hash
+            ).digest()
 
             if expected.hex() != proof["temporal_hash"]:
                 return False
@@ -229,11 +238,13 @@ class QuantumTemporalSecurity:
 
         return True
 
+
 # ============================================================================
 # III. FIVE-LAYER MEMORY HIERARCHY
 # ============================================================================
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class L1PerceptualBuffer(Generic[T]):
     """
@@ -241,6 +252,7 @@ class L1PerceptualBuffer(Generic[T]):
     Miller's Law: 7+/-2 chunks capacity.
     Golden ratio compression: phi ~ 0.618 logic applied during overflow.
     """
+
     def __init__(self, capacity: int = 9):
         self.buffer: List[Dict[str, Any]] = []
         self.capacity = capacity
@@ -272,8 +284,10 @@ class L1PerceptualBuffer(Generic[T]):
         top_indices = np.argsort(self.attention_mask)[-k:]
         return [self.buffer[i]["item"] for i in sorted(top_indices)]
 
+
 class L2WorkingMemory:
     """L2: Compressed summaries with priority decay."""
+
     def __init__(self, decay_rate: float = 0.95):
         self.summaries: List[Dict[str, Any]] = []
         self.decay_rate = decay_rate
@@ -288,12 +302,14 @@ class L2WorkingMemory:
 
         priority = self._calculate_novelty(consolidated)
 
-        self.summaries.append({
-            "content": consolidated,
-            "priority": priority,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "compression_ratio": len(consolidated) / (len(raw_text) + 1)
-        })
+        self.summaries.append(
+            {
+                "content": consolidated,
+                "priority": priority,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "compression_ratio": len(consolidated) / (len(raw_text) + 1),
+            }
+        )
 
         return consolidated
 
@@ -310,23 +326,27 @@ class L2WorkingMemory:
         union_len = len(set_a | set_b)
         return len(set_a & set_b) / union_len if union_len > 0 else 0.0
 
+
 class L3EpisodicMemory:
     """L3: Cryptographically secured episode storage (Merkle chain)."""
+
     def __init__(self):
         self.episodes: Dict[str, Dict[str, Any]] = {}
         self._episode_order: List[str] = []
-        self.merkle_root: bytes = b'\x00' * 64
+        self.merkle_root: bytes = b"\x00" * 64
 
     def store_episode(self, episode_id: str, content: Dict[str, Any]) -> bytes:
         """Store with Merkle chain integrity."""
-        content_bytes = json.dumps(content, sort_keys=True, separators=(",", ":"), default=str).encode()
+        content_bytes = json.dumps(
+            content, sort_keys=True, separators=(",", ":"), default=str
+        ).encode()
         content_hash = hashlib.sha3_512(content_bytes).digest()
 
         self.episodes[episode_id] = {
             "content": content,
             "hash": content_hash.hex(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "previous_root": self.merkle_root.hex()
+            "previous_root": self.merkle_root.hex(),
         }
         self._episode_order.append(episode_id)
 
@@ -335,7 +355,7 @@ class L3EpisodicMemory:
 
     def verify_integrity(self) -> bool:
         """Verify chain consistency against stored episodes."""
-        root = b'\x00' * 64
+        root = b"\x00" * 64
         for episode_id in self._episode_order:
             entry = self.episodes.get(episode_id)
             if not entry:
@@ -355,23 +375,33 @@ class L3EpisodicMemory:
 
         return root == self.merkle_root
 
+
 class L4SemanticHyperGraph:
     """
     L4: Rich-club HyperGraph with small-world topology.
     Simulating Neo4j behavior for this portable kernel.
     """
+
     def __init__(self):
         self.graph = nx.DiGraph()
 
-    async def create_hyperedge(self, nodes: List[str], relation: str,
-                               weights: Optional[List[float]] = None) -> None:
+    async def create_hyperedge(
+        self, nodes: List[str], relation: str, weights: Optional[List[float]] = None
+    ) -> None:
         """
         Create multi-way semantic relationship.
         Hyperedges are modeled as nodes connected to entity nodes.
         """
-        edge_id = f"edge_{hashlib.sha256(f'{nodes}_{relation}'.encode()).hexdigest()[:16]}"
+        edge_id = (
+            f"edge_{hashlib.sha256(f'{nodes}_{relation}'.encode()).hexdigest()[:16]}"
+        )
 
-        self.graph.add_node(edge_id, type="HyperEdge", relation=relation, timestamp=datetime.now(timezone.utc))
+        self.graph.add_node(
+            edge_id,
+            type="HyperEdge",
+            relation=relation,
+            timestamp=datetime.now(timezone.utc),
+        )
 
         w = weights if weights else [1.0] * len(nodes)
         for i, node in enumerate(nodes):
@@ -390,7 +420,7 @@ class L4SemanticHyperGraph:
         undir = self.graph.to_undirected()
         return {
             "clustering_coefficient": nx.average_clustering(undir),
-            "rich_club_coefficient": self._calculate_rich_club(undir)
+            "rich_club_coefficient": self._calculate_rich_club(undir),
         }
 
     def _calculate_rich_club(self, graph, k: int = 5) -> float:
@@ -406,11 +436,13 @@ class L4SemanticHyperGraph:
         possible_edges = len(rich_nodes) * (len(rich_nodes) - 1) / 2
         return subgraph.number_of_edges() / possible_edges
 
+
 class L5DeterministicTools:
     """
     L5: Crystallized procedural memory with temporal security.
     The muscle memory of the system.
     """
+
     def __init__(self, security: QuantumTemporalSecurity):
         self.tools: Dict[str, Dict[str, Any]] = {}
         self.security = security
@@ -422,16 +454,13 @@ class L5DeterministicTools:
             tool_meta = {
                 "name": name,
                 "crystallized_at": datetime.now(timezone.utc).isoformat(),
-                "type": "deterministic_bridge"
+                "type": "deterministic_bridge",
             }
 
             secured = self.security.secure_cognitive_operation(tool_meta)
 
             tool_id = hashlib.sha256(name.encode()).hexdigest()[:16]
-            self.tools[tool_id] = {
-                "function": function,
-                "metadata": secured
-            }
+            self.tools[tool_id] = {"function": function, "metadata": secured}
             logger.info("L5: Crystallized tool '%s' [%s]", name, tool_id)
             return True
         except Exception as exc:
@@ -461,17 +490,20 @@ class L5DeterministicTools:
             "result": result,
             "success": success,
             "duration": duration,
-            "temporal_proof": tool["metadata"]["temporal_proof"]["temporal_hash"]
+            "temporal_proof": tool["metadata"]["temporal_proof"]["temporal_hash"],
         }
+
 
 # ============================================================================
 # IV. RETROGRADE SIGNALING (L5 -> L1)
 # ============================================================================
 
+
 class RetrogradeSignalingPathway:
     """
     Retrograde signaling: L5 expectations modulate L1 attention.
     """
+
     def __init__(self, l5: L5DeterministicTools, l1: L1PerceptualBuffer[Any]):
         self.l5 = l5
         self.l1 = l1
@@ -498,23 +530,28 @@ class RetrogradeSignalingPathway:
 
         for i, weight in enumerate(attention_mask):
             if i < len(self.l1.buffer):
-                self.l1.buffer[i]["weight"] *= (1.0 + weight * 0.5)
+                self.l1.buffer[i]["weight"] *= 1.0 + weight * 0.5
 
-    def calculate_prediction_error(self, actual_input: Any, predictions: np.ndarray) -> float:
+    def calculate_prediction_error(
+        self, actual_input: Any, predictions: np.ndarray
+    ) -> float:
         """Calculate error for meta-learning."""
         error = np.random.random() * 0.1
         self.prediction_error_buffer.append(error)
         return error
 
+
 # ============================================================================
 # V. NEURO-SYMBOLIC BRIDGE (Higher-Order)
 # ============================================================================
+
 
 class HigherOrderLogicBridge(nn.Module):
     """
     Differentiable logic bridge with ethical projection.
     Supports dependent-type theory emulation via neural constraints.
     """
+
     def __init__(self, input_dim: int = 768, hidden_dim: int = 1024):
         super().__init__()
         self.ihsan = IhsanPrinciples()
@@ -524,13 +561,15 @@ class HigherOrderLogicBridge(nn.Module):
             nn.LayerNorm(hidden_dim),
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(hidden_dim, hidden_dim)
+            nn.Linear(hidden_dim, hidden_dim),
         )
 
-        self.symbolic_layers = nn.ModuleList([
-            nn.MultiheadAttention(hidden_dim, num_heads=8, dropout=0.1)
-            for _ in range(4)
-        ])
+        self.symbolic_layers = nn.ModuleList(
+            [
+                nn.MultiheadAttention(hidden_dim, num_heads=8, dropout=0.1)
+                for _ in range(4)
+            ]
+        )
 
         self.type_constraints = nn.Linear(hidden_dim, hidden_dim)
         self.ethical_projector = nn.Linear(hidden_dim, hidden_dim, bias=False)
@@ -538,11 +577,14 @@ class HigherOrderLogicBridge(nn.Module):
         self.neural_decoder = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, input_dim)
+            nn.Linear(hidden_dim, input_dim),
         )
 
-    def forward(self, neural_input: torch.Tensor,
-                ethical_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def forward(
+        self,
+        neural_input: torch.Tensor,
+        ethical_context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
 
         encoded = self.neural_encoder(neural_input)
 
@@ -568,28 +610,34 @@ class HigherOrderLogicBridge(nn.Module):
 
         return {
             "neural_output": decoded,
-            "confidence": torch.cosine_similarity(neural_input, decoded, dim=-1).mean().item(),
+            "confidence": torch.cosine_similarity(neural_input, decoded, dim=-1)
+            .mean()
+            .item(),
             "ethical_certificate": {
                 "score": max(0.0, min(1.0, score)),
-                "violations": len([v for v in violations if v > 0.1])
-            }
+                "violations": len([v for v in violations if v > 0.1]),
+            },
         }
 
-    def _enforce_ethics(self, state: torch.Tensor, context: Dict[str, Any]) -> torch.Tensor:
+    def _enforce_ethics(
+        self, state: torch.Tensor, context: Dict[str, Any]
+    ) -> torch.Tensor:
         """Project onto Ihsan subspace."""
         projected = self.ethical_projector(state)
         if context.get("sensitivity", 0) > 0.7:
             projected = torch.tanh(projected)
         return projected
 
+
 # ============================================================================
 # VI. META-COGNITIVE ORCHESTRATOR
 # ============================================================================
 
+
 class MetaCognitiveOrchestrator:
     """
     Learns optimal cognitive strategies via 47-dimensional task feature extraction.
-    
+
     FEATURE DIMENSIONS (47 total):
     ══════════════════════════════════════════════════════════════════════
     Category          │ Features (count) │ Description
@@ -602,7 +650,7 @@ class MetaCognitiveOrchestrator:
     Historical        │ 7                │ success_rate, strategy_entropy, drift
     ══════════════════════════════════════════════════════════════════════
     """
-    
+
     STRATEGY_THRESHOLDS = {
         "explore": {"novelty": 0.7, "complexity": 0.6},
         "exploit": {"urgency": 0.8, "confidence": 0.85},
@@ -610,21 +658,27 @@ class MetaCognitiveOrchestrator:
         "prune": {"entropy": 0.8, "decay_pressure": 0.6},
         "transfer": {"similarity": 0.75, "domain_distance": 0.3},
     }
-    
+
     def __init__(self):
         self.strategies = ["explore", "exploit", "consolidate", "prune", "transfer"]
         self.history: List[Dict[str, Any]] = []
-        self._strategy_success: Dict[str, List[float]] = {s: [] for s in self.strategies}
+        self._strategy_success: Dict[str, List[float]] = {
+            s: [] for s in self.strategies
+        }
         self._feature_weights: np.ndarray = np.ones(47) / 47  # Uniform initial
 
-    def extract_features(self, task: Dict[str, Any], context: Dict[str, Any], 
-                         memory_state: Optional[Dict[str, float]] = None) -> np.ndarray:
+    def extract_features(
+        self,
+        task: Dict[str, Any],
+        context: Dict[str, Any],
+        memory_state: Optional[Dict[str, float]] = None,
+    ) -> np.ndarray:
         """
         Extract 47-dimensional feature vector from task, context, and memory state.
         Returns normalized feature vector suitable for strategy selection.
         """
         features = np.zeros(47)
-        
+
         # ═══ Task Properties (0-7) ═══
         features[0] = self._compute_novelty(task)
         features[1] = task.get("complexity", 0.5)
@@ -634,7 +688,7 @@ class MetaCognitiveOrchestrator:
         features[5] = task.get("creativity_required", 0.5)
         features[6] = len(task.get("dependencies", [])) / 10.0
         features[7] = task.get("reversibility", 0.5)
-        
+
         # ═══ Context Signals (8-17) ═══
         features[8] = context.get("ethical_sensitivity", 0.5)
         features[9] = context.get("resource_availability", 0.8)
@@ -646,7 +700,7 @@ class MetaCognitiveOrchestrator:
         features[15] = context.get("time_pressure", 0.5)
         features[16] = context.get("quality_threshold", 0.8)
         features[17] = context.get("innovation_reward", 0.5)
-        
+
         # ═══ Memory State (18-26) ═══
         mem = memory_state or {}
         features[18] = mem.get("l1_utilization", 0.5)
@@ -658,7 +712,7 @@ class MetaCognitiveOrchestrator:
         features[24] = mem.get("attention_variance", 0.3)
         features[25] = mem.get("coherence_score", 0.7)
         features[26] = mem.get("consolidation_pending", 0.0)
-        
+
         # ═══ Temporal (27-32) ═══
         features[27] = task.get("deadline_proximity", 0.5)
         features[28] = task.get("decay_rate", 0.1)
@@ -666,7 +720,7 @@ class MetaCognitiveOrchestrator:
         features[30] = len(self.history) / 1000.0  # Session progress
         features[31] = task.get("epoch_position", 0.5)
         features[32] = task.get("cycle_phase", 0.5)
-        
+
         # ═══ Graph Topology (33-39) ═══
         features[33] = mem.get("clustering_coefficient", 0.3)
         features[34] = mem.get("avg_centrality", 0.2)
@@ -675,7 +729,7 @@ class MetaCognitiveOrchestrator:
         features[37] = mem.get("connected_components", 1) / 10.0
         features[38] = mem.get("avg_path_length", 3.0) / 10.0
         features[39] = mem.get("modularity", 0.5)
-        
+
         # ═══ Historical (40-46) ═══
         features[40] = self._compute_success_rate()
         features[41] = self._compute_strategy_entropy()
@@ -684,19 +738,18 @@ class MetaCognitiveOrchestrator:
         features[44] = self._compute_recent_quality()
         features[45] = self._compute_adaptation_rate()
         features[46] = self._compute_stability_score()
-        
+
         # Normalize to [0, 1]
         return np.clip(features, 0.0, 1.0)
-    
+
     def _compute_novelty(self, task: Dict[str, Any]) -> float:
         """Compute novelty score based on task similarity to history."""
         if not self.history:
             return 1.0
         task_type = task.get("type", "unknown")
-        similar = sum(1 for h in self.history[-20:] 
-                      if h.get("task_type") == task_type)
+        similar = sum(1 for h in self.history[-20:] if h.get("task_type") == task_type)
         return 1.0 - (similar / 20.0)
-    
+
     def _compute_success_rate(self) -> float:
         """Compute rolling success rate from history."""
         if not self.history:
@@ -704,7 +757,7 @@ class MetaCognitiveOrchestrator:
         recent = self.history[-50:]
         successes = sum(1 for h in recent if h.get("quality", 0) > 0.7)
         return successes / len(recent)
-    
+
     def _compute_strategy_entropy(self) -> float:
         """Compute entropy of strategy distribution."""
         if len(self.history) < 5:
@@ -714,7 +767,7 @@ class MetaCognitiveOrchestrator:
         probs = counts / (counts.sum() + 1e-9)
         probs = probs[probs > 0]
         return -np.sum(probs * np.log2(probs + 1e-9)) / np.log2(len(self.strategies))
-    
+
     def _compute_performance_drift(self) -> float:
         """Detect performance drift over time."""
         if len(self.history) < 20:
@@ -722,21 +775,24 @@ class MetaCognitiveOrchestrator:
         old_quality = np.mean([h.get("quality", 0.5) for h in self.history[-40:-20]])
         new_quality = np.mean([h.get("quality", 0.5) for h in self.history[-20:]])
         return abs(new_quality - old_quality)
-    
+
     def _compute_recent_quality(self) -> float:
         """Average quality of recent executions."""
         if not self.history:
             return 0.5
         return np.mean([h.get("quality", 0.5) for h in self.history[-10:]])
-    
+
     def _compute_adaptation_rate(self) -> float:
         """Measure how quickly strategy changes in response to feedback."""
         if len(self.history) < 10:
             return 0.5
-        changes = sum(1 for i in range(1, min(20, len(self.history)))
-                      if self.history[-i].get("strategy") != self.history[-i-1].get("strategy"))
+        changes = sum(
+            1
+            for i in range(1, min(20, len(self.history)))
+            if self.history[-i].get("strategy") != self.history[-i - 1].get("strategy")
+        )
         return changes / 20.0
-    
+
     def _compute_stability_score(self) -> float:
         """Measure execution stability (inverse of variance)."""
         if len(self.history) < 5:
@@ -744,17 +800,21 @@ class MetaCognitiveOrchestrator:
         qualities = [h.get("quality", 0.5) for h in self.history[-20:]]
         return 1.0 - min(1.0, np.std(qualities) * 2)
 
-    async def select_and_execute(self, task: Dict[str, Any], context: Dict[str, Any],
-                                  memory_state: Optional[Dict[str, float]] = None) -> Dict[str, Any]:
+    async def select_and_execute(
+        self,
+        task: Dict[str, Any],
+        context: Dict[str, Any],
+        memory_state: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, Any]:
         """
         Meta-learn and execute using 47-dimensional feature space.
         Implements adaptive strategy selection with Ihsān-weighted decision making.
         """
         features = self.extract_features(task, context, memory_state)
-        
+
         # Weighted feature aggregation for strategy selection
         weighted_features = features * self._feature_weights
-        
+
         # Strategy scoring based on feature alignment
         strategy_scores = {}
         for strategy, thresholds in self.STRATEGY_THRESHOLDS.items():
@@ -764,27 +824,33 @@ class MetaCognitiveOrchestrator:
             elif strategy == "exploit":
                 score = features[2] * 0.5 + context.get("confidence", 0.5) * 0.5
             elif strategy == "consolidate":
-                score = features[18] * 0.3 + features[25] * 0.4 + (1 - features[23]) * 0.3
+                score = (
+                    features[18] * 0.3 + features[25] * 0.4 + (1 - features[23]) * 0.3
+                )
             elif strategy == "prune":
-                score = features[23] * 0.5 + features[28] * 0.3 + (1 - features[40]) * 0.2
+                score = (
+                    features[23] * 0.5 + features[28] * 0.3 + (1 - features[40]) * 0.2
+                )
             elif strategy == "transfer":
-                score = features[14] * 0.4 + (1 - features[0]) * 0.3 + features[33] * 0.3
+                score = (
+                    features[14] * 0.4 + (1 - features[0]) * 0.3 + features[33] * 0.3
+                )
             strategy_scores[strategy] = score
-        
+
         # Select best strategy with ethical weighting
         ethical_weight = features[8]  # ethical_sensitivity
         for s in strategy_scores:
             if s in ["consolidate", "prune"]:  # More conservative strategies
-                strategy_scores[s] *= (1 + ethical_weight * 0.2)
-        
+                strategy_scores[s] *= 1 + ethical_weight * 0.2
+
         strategy = max(strategy_scores, key=strategy_scores.get)
-        
+
         # Execute with quality estimation
         await asyncio.sleep(0.01)  # Simulate execution
         base_quality = 0.7 + (features[40] * 0.2)  # Base on success rate
         noise = (np.random.random() - 0.5) * 0.1
         quality = np.clip(base_quality + noise, 0.0, 1.0)
-        
+
         result = {
             "strategy": strategy,
             "quality": float(quality),
@@ -799,15 +865,16 @@ class MetaCognitiveOrchestrator:
             "strategy_scores": {k: float(v) for k, v in strategy_scores.items()},
             "task_type": task.get("type", "unknown"),
         }
-        
+
         # Update history and adaptive weights
         self.history.append(result)
         self._update_feature_weights(features, quality)
-        
+
         return result
-    
-    def _update_feature_weights(self, features: np.ndarray, quality: float, 
-                                 learning_rate: float = 0.01) -> None:
+
+    def _update_feature_weights(
+        self, features: np.ndarray, quality: float, learning_rate: float = 0.01
+    ) -> None:
         """Adapt feature weights based on execution quality (online learning)."""
         # Reinforce features correlated with high quality
         quality_signal = quality - 0.7  # Center around expected quality
@@ -817,14 +884,17 @@ class MetaCognitiveOrchestrator:
         self._feature_weights = np.clip(self._feature_weights, 0.01, 1.0)
         self._feature_weights /= self._feature_weights.sum()
 
+
 # ============================================================================
 # VII. COGNITIVE SOVEREIGN (The Unified System)
 # ============================================================================
+
 
 class CognitiveSovereign:
     """
     The unified system. Integrates all layers, security, and ethics.
     """
+
     def __init__(self):
         self.l1 = L1PerceptualBuffer()
         self.l2 = L2WorkingMemory()
@@ -861,28 +931,32 @@ class CognitiveSovereign:
         self.l2.consolidate([input_data])
 
         episode_id = f"run_{time.time_ns()}"
-        self.l3.store_episode(episode_id, {
-            "input": input_data,
-            "strategy": meta_res["strategy"],
-            "ethical_score": bridge_out["ethical_certificate"]["score"]
-        })
+        self.l3.store_episode(
+            episode_id,
+            {
+                "input": input_data,
+                "strategy": meta_res["strategy"],
+                "ethical_score": bridge_out["ethical_certificate"]["score"],
+            },
+        )
 
         logger.info("Phase 4: Optimization")
         await self.l4.create_hyperedge(
-            nodes=["Task", meta_res["strategy"], "Result"],
-            relation="YIELDS"
+            nodes=["Task", meta_res["strategy"], "Result"], relation="YIELDS"
         )
 
         return {
             "status": "SUCCESS",
             "snr": 1.089,
             "ethical_score": bridge_out["ethical_certificate"]["score"],
-            "temporal_proof": secured_input["temporal_proof"]["temporal_hash"]
+            "temporal_proof": secured_input["temporal_proof"]["temporal_hash"],
         }
+
 
 # ============================================================================
 # VIII. EXECUTION ENTRY POINT
 # ============================================================================
+
 
 async def main() -> None:
     print("=" * 60)
@@ -901,7 +975,7 @@ async def main() -> None:
         "type": "decision",
         "content": "optimize_resource_allocation",
         "urgency": 0.9,
-        "ethical_sensitivity": 0.8
+        "ethical_sensitivity": 0.8,
     }
 
     result = await sovereign.run_cycle(input_data)
@@ -910,9 +984,14 @@ async def main() -> None:
     print("DEPLOYMENT VERIFICATION")
     print(f"SNR Achieved: {result['snr']}")
     print(f"Ihsan Score: {result['ethical_score']:.4f}")
-    print(f"Temporal Integrity: {'SECURE' if sovereign.security.verify_chain_integrity() else 'FAIL'}")
-    print(f"L4 Rich Club Coeff: {sovereign.l4.analyze_topology()['rich_club_coefficient']:.2f}")
+    print(
+        f"Temporal Integrity: {'SECURE' if sovereign.security.verify_chain_integrity() else 'FAIL'}"
+    )
+    print(
+        f"L4 Rich Club Coeff: {sovereign.l4.analyze_topology()['rich_club_coefficient']:.2f}"
+    )
     print("=" * 60)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

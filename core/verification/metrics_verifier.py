@@ -9,7 +9,7 @@ Implements Ihsān principles: صدق (Truthfulness) + أمانة (Trustworthines
 
 Usage:
     from core.verification import MetricsVerifier
-    
+
     verifier = MetricsVerifier(repo_root=".")
     receipt = verifier.verify(mode="metrics", profile="ci")
     receipt.save("evidence/metrics/latest.json")
@@ -19,18 +19,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import platform
 import subprocess
 import sys
 import uuid
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import logging
 
 logger = logging.getLogger("bizra.verification")
 
@@ -38,6 +38,7 @@ logger = logging.getLogger("bizra.verification")
 # =============================================================================
 # ENUMS
 # =============================================================================
+
 
 class VerificationMode(str, Enum):
     METRICS = "metrics"
@@ -70,6 +71,7 @@ class ClaimTag(str, Enum):
 # =============================================================================
 # DATA CLASSES
 # =============================================================================
+
 
 @dataclass
 class ReceiptMeta:
@@ -229,7 +231,7 @@ class MetricsReceipt:
     claims: List[ClaimVerification]
     state: VerificationState
     integrity: IntegrityBinding
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -239,39 +241,64 @@ class MetricsReceipt:
                 "loc": asdict(self.metrics.loc),
                 "tests": {
                     **asdict(self.metrics.tests),
-                    "rust_tests": asdict(self.metrics.tests.rust_tests) if self.metrics.tests.rust_tests else None,
-                    "python_tests": asdict(self.metrics.tests.python_tests) if self.metrics.tests.python_tests else None,
-                    "node_tests": asdict(self.metrics.tests.node_tests) if self.metrics.tests.node_tests else None,
+                    "rust_tests": (
+                        asdict(self.metrics.tests.rust_tests)
+                        if self.metrics.tests.rust_tests
+                        else None
+                    ),
+                    "python_tests": (
+                        asdict(self.metrics.tests.python_tests)
+                        if self.metrics.tests.python_tests
+                        else None
+                    ),
+                    "node_tests": (
+                        asdict(self.metrics.tests.node_tests)
+                        if self.metrics.tests.node_tests
+                        else None
+                    ),
                 },
                 "coverage": asdict(self.metrics.coverage),
-                "performance": asdict(self.metrics.performance) if self.metrics.performance else None,
+                "performance": (
+                    asdict(self.metrics.performance)
+                    if self.metrics.performance
+                    else None
+                ),
                 "graph": asdict(self.metrics.graph) if self.metrics.graph else None,
                 "scorecard": {
                     "excellence": {
                         **asdict(self.metrics.scorecard.excellence),
-                        "metrics": [asdict(m) for m in self.metrics.scorecard.excellence.metrics]
+                        "metrics": [
+                            asdict(m) for m in self.metrics.scorecard.excellence.metrics
+                        ],
                     },
                     "benevolence": {
                         **asdict(self.metrics.scorecard.benevolence),
-                        "metrics": [asdict(m) for m in self.metrics.scorecard.benevolence.metrics]
+                        "metrics": [
+                            asdict(m)
+                            for m in self.metrics.scorecard.benevolence.metrics
+                        ],
                     },
                     "justice": {
                         **asdict(self.metrics.scorecard.justice),
-                        "metrics": [asdict(m) for m in self.metrics.scorecard.justice.metrics]
+                        "metrics": [
+                            asdict(m) for m in self.metrics.scorecard.justice.metrics
+                        ],
                     },
                     "trust": {
                         **asdict(self.metrics.scorecard.trust),
-                        "metrics": [asdict(m) for m in self.metrics.scorecard.trust.metrics]
+                        "metrics": [
+                            asdict(m) for m in self.metrics.scorecard.trust.metrics
+                        ],
                     },
                     "overall_grade": self.metrics.scorecard.overall_grade,
                     "overall_score": self.metrics.scorecard.overall_score,
-                }
+                },
             },
             "claims": [asdict(c) for c in self.claims],
             "state": self.state.value,
             "integrity": asdict(self.integrity),
         }
-    
+
     def save(self, path: str) -> None:
         """Save receipt to JSON file."""
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -284,19 +311,20 @@ class MetricsReceipt:
 # VERIFICATION ENGINE
 # =============================================================================
 
+
 class MetricsVerifier:
     """
     BIZRA Metrics Verification Engine.
-    
+
     Collects metrics from the repository and generates cryptographically
     bound receipts for audit purposes.
     """
-    
+
     VERSION = "1.0.0"
-    
+
     def __init__(self, repo_root: str = "."):
         self.repo_root = Path(repo_root).resolve()
-        
+
     def verify(
         self,
         mode: VerificationMode = VerificationMode.METRICS,
@@ -304,36 +332,38 @@ class MetricsVerifier:
     ) -> MetricsReceipt:
         """
         Run verification and generate receipt.
-        
+
         Args:
             mode: Verification mode (metrics, full, perf, determinism)
             profile: Execution profile (ci, dev, prod, benchmark)
-            
+
         Returns:
             MetricsReceipt with cryptographic binding
         """
-        logger.info(f"Starting verification: mode={mode.value}, profile={profile.value}")
-        
+        logger.info(
+            f"Starting verification: mode={mode.value}, profile={profile.value}"
+        )
+
         # Collect all metrics
         environment = self._collect_environment()
         loc = self._measure_loc()
         tests = self._run_tests()
         coverage = self._measure_coverage()
-        
+
         # Performance metrics only in full/perf mode
         performance = None
         if mode in (VerificationMode.FULL, VerificationMode.PERF):
             performance = self._run_benchmarks(profile)
-        
+
         # Graph metrics
         graph = self._measure_graph()
-        
+
         # Compute scorecard
         scorecard = self._compute_scorecard(loc, tests, coverage, performance)
-        
+
         # Verify claims
         claims = self._verify_claims()
-        
+
         # Build metrics
         metrics = MeasuredMetrics(
             loc=loc,
@@ -343,10 +373,10 @@ class MetricsVerifier:
             graph=graph,
             scorecard=scorecard,
         )
-        
+
         # Determine overall state
         state = self._compute_state(claims, metrics)
-        
+
         # Create receipt
         receipt = MetricsReceipt(
             meta=ReceiptMeta(
@@ -367,12 +397,12 @@ class MetricsVerifier:
                 hash_algorithm="SHA-256",
             ),
         )
-        
+
         # Compute content hash
         receipt.integrity.content_hash = self._compute_hash(receipt)
-        
+
         return receipt
-    
+
     def _run_command(self, cmd: List[str]) -> Tuple[str, str, int]:
         """Run a command and return stdout, stderr, exit code."""
         try:
@@ -386,36 +416,38 @@ class MetricsVerifier:
             return result.stdout, result.stderr, result.returncode
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             return "", str(e), -1
-    
+
     def _collect_environment(self) -> EnvironmentFingerprint:
         """Collect environment fingerprint."""
         # Git info
         stdout, _, _ = self._run_command(["git", "rev-parse", "HEAD"])
         commit_sha = stdout.strip() or "unknown"
-        
+
         stdout, _, _ = self._run_command(["git", "branch", "--show-current"])
         branch = stdout.strip() or "unknown"
-        
+
         stdout, _, _ = self._run_command(["git", "status", "--porcelain"])
         repo_clean = len(stdout.strip()) == 0
-        
+
         # Toolchain versions
         stdout, _, _ = self._run_command(["rustc", "--version"])
         rust_version = stdout.strip() if stdout else None
-        
+
         python_version = f"Python {sys.version.split()[0]}"
-        
+
         stdout, _, _ = self._run_command(["node", "--version"])
         node_version = stdout.strip() if stdout else None
-        
+
         # System info
         import multiprocessing
+
         try:
             import psutil
-            ram_gb = psutil.virtual_memory().total / (1024 ** 3)
+
+            ram_gb = psutil.virtual_memory().total / (1024**3)
         except ImportError:
             ram_gb = 0.0
-        
+
         return EnvironmentFingerprint(
             commit_sha=commit_sha,
             branch=branch,
@@ -428,24 +460,31 @@ class MetricsVerifier:
             ram_gb=round(ram_gb, 2),
             cpu_count=multiprocessing.cpu_count(),
         )
-    
+
     def _measure_loc(self) -> LocMetrics:
         """Count lines of code."""
         excluded = [".git", "target", "node_modules", "__pycache__", ".venv", "htmlcov"]
-        
-        counts = {"rust": 0, "python": 0, "typescript": 0, "markdown": 0, "yaml": 0, "other": 0}
-        
+
+        counts = {
+            "rust": 0,
+            "python": 0,
+            "typescript": 0,
+            "markdown": 0,
+            "yaml": 0,
+            "other": 0,
+        }
+
         for root, dirs, files in os.walk(self.repo_root):
             # Skip excluded directories
             dirs[:] = [d for d in dirs if d not in excluded]
-            
+
             for fname in files:
                 fpath = Path(root) / fname
                 try:
                     lines = len(fpath.read_text(errors="ignore").splitlines())
                 except (IOError, OSError, UnicodeDecodeError):
                     continue  # Skip unreadable files
-                
+
                 ext = fpath.suffix.lower()
                 if ext == ".rs":
                     counts["rust"] += lines
@@ -459,7 +498,7 @@ class MetricsVerifier:
                     counts["yaml"] += lines
                 else:
                     counts["other"] += lines
-        
+
         return LocMetrics(
             total=sum(counts.values()),
             rust=counts["rust"],
@@ -471,38 +510,48 @@ class MetricsVerifier:
             excluded_patterns=excluded,
             method="python-os-walk",
         )
-    
+
     def _run_tests(self) -> TestMetrics:
         """Run test suites."""
         import time
+
         start = time.time()
-        
+
         # Run pytest
-        stdout, stderr, code = self._run_command([
-            sys.executable, "-m", "pytest", "tests/",
-            "-v", "--tb=short", "-q",
-            "--junitxml=test-results.xml"
-        ])
-        
+        stdout, stderr, code = self._run_command(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests/",
+                "-v",
+                "--tb=short",
+                "-q",
+                "--junitxml=test-results.xml",
+            ]
+        )
+
         duration = time.time() - start
-        
+
         # Parse results
         total, passed, failed, skipped = 0, 0, 0, 0
-        
+
         results_file = self.repo_root / "test-results.xml"
         if results_file.exists():
             try:
                 tree = ET.parse(results_file)
                 root = tree.getroot()
                 testsuite = root.find(".//testsuite") or root
-                
+
                 total = int(testsuite.get("tests", 0))
-                failed = int(testsuite.get("failures", 0)) + int(testsuite.get("errors", 0))
+                failed = int(testsuite.get("failures", 0)) + int(
+                    testsuite.get("errors", 0)
+                )
                 skipped = int(testsuite.get("skipped", 0))
                 passed = total - failed - skipped
             except Exception as e:
                 logger.warning(f"Failed to parse test results: {e}")
-        
+
         python_tests = TestSuiteResult(
             total=total,
             passed=passed,
@@ -512,7 +561,7 @@ class MetricsVerifier:
             command="python -m pytest tests/ -v --tb=short",
             exit_code=code,
         )
-        
+
         return TestMetrics(
             total=total,
             passed=passed,
@@ -521,25 +570,31 @@ class MetricsVerifier:
             duration_seconds=duration,
             python_tests=python_tests,
         )
-    
+
     def _measure_coverage(self) -> CoverageMetrics:
         """Measure code coverage."""
         coverage_file = self.repo_root / "coverage.xml"
-        
+
         if not coverage_file.exists():
             # Run coverage
-            self._run_command([
-                sys.executable, "-m", "pytest", "tests/",
-                "--cov=core", "--cov-report=xml"
-            ])
-        
+            self._run_command(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    "tests/",
+                    "--cov=core",
+                    "--cov-report=xml",
+                ]
+            )
+
         coverage_percent = 0.0
         artifact_hash = "missing"
-        
+
         if coverage_file.exists():
             content = coverage_file.read_bytes()
             artifact_hash = hashlib.sha256(content).hexdigest()[:16]
-            
+
             try:
                 tree = ET.parse(coverage_file)
                 root = tree.getroot()
@@ -547,7 +602,7 @@ class MetricsVerifier:
                 coverage_percent = round(line_rate * 100, 1)
             except Exception as e:
                 logger.warning(f"Failed to parse coverage: {e}")
-        
+
         target = 95.0
         if coverage_percent >= target:
             status = "Green"
@@ -555,7 +610,7 @@ class MetricsVerifier:
             status = "Yellow"
         else:
             status = "Red"
-        
+
         return CoverageMetrics(
             line_coverage_percent=coverage_percent,
             branch_coverage_percent=None,
@@ -564,11 +619,13 @@ class MetricsVerifier:
             artifact_hash=artifact_hash,
             method="pytest-cov",
         )
-    
-    def _run_benchmarks(self, profile: ExecutionProfile) -> Optional[PerformanceMetrics]:
+
+    def _run_benchmarks(
+        self, profile: ExecutionProfile
+    ) -> Optional[PerformanceMetrics]:
         """
         Run performance benchmarks.
-        
+
         Returns:
             PerformanceMetrics if benchmarks were run, None if benchmark infrastructure
             is not available. When returning placeholder data, estimated=True is set.
@@ -587,7 +644,7 @@ class MetricsVerifier:
                 profile=profile.value,
                 estimated=True,  # Mark as placeholder
             )
-        
+
         # TODO: Run actual benchmarks when infrastructure is ready
         return PerformanceMetrics(
             latency_p50_ms=125.0,
@@ -599,12 +656,12 @@ class MetricsVerifier:
             profile=profile.value,
             estimated=True,  # Mark as placeholder until real benchmarks run
         )
-    
+
     def _measure_graph(self) -> Optional[GraphMetrics]:
         """Measure graph/knowledge metrics."""
         # Would require dataset configuration
         return None
-    
+
     def _compute_scorecard(
         self,
         loc: LocMetrics,
@@ -615,7 +672,7 @@ class MetricsVerifier:
         """Compute health scorecard."""
         # Test pass rate
         pass_rate = (tests.passed / tests.total * 100) if tests.total > 0 else 0
-        
+
         # Excellence dimension
         excellence = ScorecardDimension(
             score=(pass_rate + coverage.line_coverage_percent) / 2,
@@ -641,11 +698,11 @@ class MetricsVerifier:
                 ),
             ],
         )
-        
+
         # Benevolence dimension
         latency_score = 100 - (perf.latency_p99_ms / 10 if perf else 50)
         latency_score = max(0, min(100, latency_score))
-        
+
         benevolence = ScorecardDimension(
             score=latency_score,
             weight=0.25,
@@ -661,17 +718,17 @@ class MetricsVerifier:
                 ),
             ],
         )
-        
+
         # Justice dimension
         justice = ScorecardDimension(
             score=85.0,
             weight=0.20,
             metrics=[],
         )
-        
+
         # Trust dimension
         reproducibility = perf.reproducibility_rate if perf else 99.0
-        
+
         trust = ScorecardDimension(
             score=reproducibility,
             weight=0.20,
@@ -687,15 +744,15 @@ class MetricsVerifier:
                 ),
             ],
         )
-        
+
         # Overall
         overall_score = (
-            excellence.score * excellence.weight +
-            benevolence.score * benevolence.weight +
-            justice.score * justice.weight +
-            trust.score * trust.weight
+            excellence.score * excellence.weight
+            + benevolence.score * benevolence.weight
+            + justice.score * justice.weight
+            + trust.score * trust.weight
         )
-        
+
         if overall_score >= 90:
             grade = "A"
         elif overall_score >= 80:
@@ -706,7 +763,7 @@ class MetricsVerifier:
             grade = "D"
         else:
             grade = "F"
-        
+
         return HealthScorecard(
             excellence=excellence,
             benevolence=benevolence,
@@ -715,22 +772,23 @@ class MetricsVerifier:
             overall_grade=grade,
             overall_score=round(overall_score, 1),
         )
-    
+
     def _verify_claims(self) -> List[ClaimVerification]:
         """Verify claims from registry."""
         registry_path = self.repo_root / "evidence" / "CLAIM_REGISTRY.yaml"
-        
+
         if not registry_path.exists():
             return []
-        
+
         try:
             import yaml
+
             with open(registry_path) as f:
                 registry = yaml.safe_load(f)
         except Exception as e:
             logger.warning(f"Failed to load claim registry: {e}")
             return []
-        
+
         claims = []
         for claim in registry.get("claims", []):
             status = VerificationState.HYPOTHESIS
@@ -742,31 +800,33 @@ class MetricsVerifier:
             elif claim.get("claim_tag") == "IMPLEMENTED":
                 if claim.get("status") == "VERIFIED":
                     status = VerificationState.VERIFIED
-            
-            claims.append(ClaimVerification(
-                claim_id=claim.get("claim_id", ""),
-                claim_text=claim.get("claim_text", ""),
-                claim_tag=claim.get("claim_tag", "HYPOTHESIS"),
-                verification_command=claim.get("verification_command"),
-                expected_threshold=claim.get("expected_threshold"),
-                measured_value=claim.get("current_value"),
-                status=status,
-                evidence_artifact=claim.get("evidence_artifact_path"),
-                last_verified=datetime.now(timezone.utc).isoformat(),
-            ))
-        
+
+            claims.append(
+                ClaimVerification(
+                    claim_id=claim.get("claim_id", ""),
+                    claim_text=claim.get("claim_text", ""),
+                    claim_tag=claim.get("claim_tag", "HYPOTHESIS"),
+                    verification_command=claim.get("verification_command"),
+                    expected_threshold=claim.get("expected_threshold"),
+                    measured_value=claim.get("current_value"),
+                    status=status,
+                    evidence_artifact=claim.get("evidence_artifact_path"),
+                    last_verified=datetime.now(timezone.utc).isoformat(),
+                )
+            )
+
         return claims
-    
+
     def _compute_state(
         self,
         claims: List[ClaimVerification],
         metrics: MeasuredMetrics,
     ) -> VerificationState:
         """Compute overall verification state.
-        
+
         FAIL-CLOSED semantics:
         - Any test failure → FAIL_CLOSED
-        - Non-zero exit code → FAIL_CLOSED  
+        - Non-zero exit code → FAIL_CLOSED
         - Missing JUnit results → FAIL_CLOSED
         - Unverified MEASURED claims → PENDING
         - Scorecard below threshold → PENDING
@@ -776,44 +836,48 @@ class MetricsVerifier:
         if metrics.tests.failed > 0:
             logger.warning(f"FAIL_CLOSED: {metrics.tests.failed} test(s) failed")
             return VerificationState.FAIL_CLOSED
-        
+
         # FAIL-CLOSED: Check for non-zero exit code (catches crashes, errors)
         if metrics.tests.python_tests and metrics.tests.python_tests.exit_code != 0:
-            logger.warning(f"FAIL_CLOSED: pytest exit code {metrics.tests.python_tests.exit_code}")
+            logger.warning(
+                f"FAIL_CLOSED: pytest exit code {metrics.tests.python_tests.exit_code}"
+            )
             return VerificationState.FAIL_CLOSED
-        
+
         # FAIL-CLOSED: Check for missing JUnit results (test didn't run or no tests found)
         # python_tests always exists, so check if total is 0 AND exit_code is 0 (silent skip)
         # OR if python_tests is None (should never happen, but fail-closed anyway)
         if metrics.tests.python_tests is None or (
-            metrics.tests.total == 0 and 
-            metrics.tests.python_tests.exit_code == 0
+            metrics.tests.total == 0 and metrics.tests.python_tests.exit_code == 0
         ):
-            logger.warning("FAIL_CLOSED: No test results found - test suite may not have run")
+            logger.warning(
+                "FAIL_CLOSED: No test results found - test suite may not have run"
+            )
             return VerificationState.FAIL_CLOSED
-        
+
         # Check for unverified MEASURED claims
         unverified = sum(
-            1 for c in claims
+            1
+            for c in claims
             if c.claim_tag == "MEASURED" and c.status != VerificationState.VERIFIED
         )
-        
+
         if unverified > 0:
             return VerificationState.PENDING
-        
+
         # Check scorecard
         if metrics.scorecard.overall_score < 70:
             return VerificationState.PENDING
-        
+
         return VerificationState.VERIFIED
-    
+
     def _compute_hash(self, receipt: MetricsReceipt) -> str:
         """Compute SHA-256 hash of receipt content."""
         # Clear hash field for computation
         receipt_dict = receipt.to_dict()
         receipt_dict["integrity"]["content_hash"] = ""
         receipt_dict["integrity"]["signature"] = None
-        
+
         content = json.dumps(receipt_dict, sort_keys=True, default=str)
         return hashlib.sha256(content.encode()).hexdigest()
 
@@ -822,10 +886,11 @@ class MetricsVerifier:
 # CLI INTERFACE
 # =============================================================================
 
+
 def main():
     """CLI entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
         description="BIZRA Metrics Verifier",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -834,56 +899,50 @@ Examples:
   %(prog)s verify --mode metrics --out evidence/metrics/latest.json
   %(prog)s verify --mode full --profile prod
   %(prog)s validate --receipt evidence/metrics/latest.json
-        """
+        """,
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     # Verify command
     verify_parser = subparsers.add_parser("verify", help="Run verification")
     verify_parser.add_argument(
-        "--mode", "-m",
+        "--mode",
+        "-m",
         choices=["metrics", "full", "perf", "determinism"],
         default="metrics",
-        help="Verification mode"
+        help="Verification mode",
     )
     verify_parser.add_argument(
-        "--profile", "-p",
+        "--profile",
+        "-p",
         choices=["ci", "dev", "prod", "benchmark"],
         default="ci",
-        help="Execution profile"
+        help="Execution profile",
     )
     verify_parser.add_argument(
-        "--out", "-o",
+        "--out",
+        "-o",
         default="evidence/metrics/latest.json",
-        help="Output path for receipt"
+        help="Output path for receipt",
     )
-    verify_parser.add_argument(
-        "--repo",
-        default=".",
-        help="Repository root path"
-    )
-    
+    verify_parser.add_argument("--repo", default=".", help="Repository root path")
+
     # Validate command
     validate_parser = subparsers.add_parser("validate", help="Validate receipt")
     validate_parser.add_argument(
-        "--receipt", "-r",
-        required=True,
-        help="Path to receipt JSON"
+        "--receipt", "-r", required=True, help="Path to receipt JSON"
     )
     validate_parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Fail if state is not VERIFIED"
+        "--strict", action="store_true", help="Fail if state is not VERIFIED"
     )
-    
+
     args = parser.parse_args()
-    
+
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s"
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
     )
-    
+
     if args.command == "verify":
         verifier = MetricsVerifier(args.repo)
         receipt = verifier.verify(
@@ -891,7 +950,7 @@ Examples:
             profile=ExecutionProfile(args.profile),
         )
         receipt.save(args.out)
-        
+
         print(f"\n{'═' * 60}")
         print(f"  BIZRA Metrics Verification Complete")
         print(f"{'═' * 60}")
@@ -902,10 +961,10 @@ Examples:
         print(f"  Receipt: {args.out}")
         print(f"  Hash: {receipt.integrity.content_hash[:32]}...")
         print(f"{'═' * 60}\n")
-        
+
         if receipt.state == VerificationState.FAIL_CLOSED:
             sys.exit(1)
-            
+
     elif args.command == "validate":
         try:
             with open(args.receipt) as f:
@@ -913,21 +972,21 @@ Examples:
         except (IOError, json.JSONDecodeError) as e:
             print(f"ERROR: Failed to read receipt: {e}")
             sys.exit(1)
-        
+
         print(f"Receipt ID: {data['meta']['receipt_id']}")
         print(f"Generated: {data['meta']['generated_at']}")
         print(f"State: {data['state']}")
-        
+
         # Verify integrity hash
-        stored_hash = data.get('integrity', {}).get('content_hash', '')
+        stored_hash = data.get("integrity", {}).get("content_hash", "")
         if stored_hash:
             # Recompute hash over content (excluding hash itself)
             data_copy = json.loads(json.dumps(data))
-            data_copy['integrity']['content_hash'] = ''
-            data_copy['integrity']['signature'] = None
+            data_copy["integrity"]["content_hash"] = ""
+            data_copy["integrity"]["signature"] = None
             content = json.dumps(data_copy, sort_keys=True, default=str)
             computed_hash = hashlib.sha256(content.encode()).hexdigest()
-            
+
             if computed_hash != stored_hash:
                 print(f"ERROR: Integrity check failed!")
                 print(f"  Expected: {stored_hash}")
@@ -937,8 +996,8 @@ Examples:
                 print("Integrity: VERIFIED (hash matches)")
         else:
             print("Integrity: SKIPPED (no hash in receipt)")
-        
-        if args.strict and data['state'] != "VERIFIED":
+
+        if args.strict and data["state"] != "VERIFIED":
             print("ERROR: Strict validation failed")
             sys.exit(1)
 

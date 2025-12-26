@@ -12,26 +12,27 @@ No mocks. Production-ready. Evidence-based.
 """
 
 import asyncio
-import lzma
 import hashlib
 import json
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime, timezone
-from dataclasses import dataclass
+import lzma
 from collections import deque
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
 import faiss
-from neo4j import AsyncGraphDatabase, AsyncDriver
-
+import numpy as np
+from neo4j import AsyncDriver, AsyncGraphDatabase
 
 # ============================================================================
 # L2 CONSOLIDATION - REAL LZMA COMPRESSION
 # ============================================================================
 
+
 @dataclass
 class ConsolidationMetrics:
     """Metrics for L2 consolidation performance."""
+
     original_size: int
     compressed_size: int
     compression_ratio: float
@@ -42,20 +43,22 @@ class ConsolidationMetrics:
 class L2WorkingMemoryV2:
     """
     L2: Working memory with real LZMA compression.
-    
+
     Targets:
     - Compression ratio: <= 45% (SOT specification)
     - Latency: < 10ms per consolidation
     - Novelty detection: Jaccard similarity
     """
-    
-    def __init__(self, 
-                 compression_preset: int = 6,
-                 decay_rate: float = 0.95,
-                 target_ratio: float = 0.45):
+
+    def __init__(
+        self,
+        compression_preset: int = 6,
+        decay_rate: float = 0.95,
+        target_ratio: float = 0.45,
+    ):
         """
         Initialize L2 with LZMA compression.
-        
+
         Args:
             compression_preset: LZMA preset (0-9, higher = better compression)
             decay_rate: Priority decay rate (0.8-0.99)
@@ -64,116 +67,116 @@ class L2WorkingMemoryV2:
         self.compression_preset = compression_preset
         self.decay_rate = decay_rate
         self.target_ratio = target_ratio
-        
+
         self.summaries: List[Dict[str, Any]] = []
         self.compression_history: List[float] = []
-    
-    async def consolidate(self, l1_items: List[Any]) -> Tuple[str, ConsolidationMetrics]:
+
+    async def consolidate(
+        self, l1_items: List[Any]
+    ) -> Tuple[str, ConsolidationMetrics]:
         """
         Consolidate L1 items with real LZMA compression.
-        
+
         Returns: (consolidated_summary, metrics)
         """
         start_time = datetime.now(timezone.utc)
-        
+
         # Serialize items
         raw_text = " ".join(str(item) for item in l1_items)
-        raw_bytes = raw_text.encode('utf-8')
+        raw_bytes = raw_text.encode("utf-8")
         original_size = len(raw_bytes)
-        
+
         # Compress with LZMA
         compressed = lzma.compress(
-            raw_bytes,
-            preset=self.compression_preset,
-            format=lzma.FORMAT_XZ
+            raw_bytes, preset=self.compression_preset, format=lzma.FORMAT_XZ
         )
         compressed_size = len(compressed)
-        
+
         # Calculate compression ratio
         ratio = compressed_size / max(1, original_size)
-        
+
         # Verify meets target
         if ratio > self.target_ratio:
             # Retry with higher preset if ratio exceeds target
             compressed = lzma.compress(
                 raw_bytes,
                 preset=min(9, self.compression_preset + 1),
-                format=lzma.FORMAT_XZ
+                format=lzma.FORMAT_XZ,
             )
             compressed_size = len(compressed)
             ratio = compressed_size / max(1, original_size)
-        
+
         # Create summary with hash
         content_hash = hashlib.sha256(raw_bytes).hexdigest()[:8]
         summary = f"SUMMARY[{content_hash}]: {raw_text[:100]}..."
-        
+
         # Calculate novelty
         novelty = self._calculate_novelty(summary)
-        
+
         # Calculate timing
         elapsed = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
-        
+
         # Store metrics
         metrics = ConsolidationMetrics(
             original_size=original_size,
             compressed_size=compressed_size,
             compression_ratio=ratio,
             compression_time_ms=elapsed,
-            novelty_score=novelty
+            novelty_score=novelty,
         )
-        
+
         # Store summary
-        self.summaries.append({
-            "content": summary,
-            "compressed_data": compressed,  # Store for potential retrieval
-            "priority": novelty,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "metrics": {
-                "original_size": original_size,
-                "compressed_size": compressed_size,
-                "ratio": ratio
+        self.summaries.append(
+            {
+                "content": summary,
+                "compressed_data": compressed,  # Store for potential retrieval
+                "priority": novelty,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "metrics": {
+                    "original_size": original_size,
+                    "compressed_size": compressed_size,
+                    "ratio": ratio,
+                },
             }
-        })
-        
+        )
+
         self.compression_history.append(ratio)
-        
+
         return summary, metrics
-    
+
     def _calculate_novelty(self, content: str) -> float:
         """Calculate novelty using Jaccard similarity with recent summaries."""
         if not self.summaries:
             return 1.0
-        
+
         recent = self.summaries[-5:]
-        similarities = [
-            self._jaccard_similarity(content, s["content"]) 
-            for s in recent
-        ]
-        
+        similarities = [self._jaccard_similarity(content, s["content"]) for s in recent]
+
         return 1.0 - max(similarities) if similarities else 1.0
-    
+
     def _jaccard_similarity(self, a: str, b: str) -> float:
         """Calculate Jaccard similarity between two strings."""
         set_a = set(a.split())
         set_b = set(b.split())
         union_len = len(set_a | set_b)
-        
+
         if union_len == 0:
             return 0.0
-        
+
         return len(set_a & set_b) / union_len
-    
+
     def get_compression_stats(self) -> Dict[str, float]:
         """Get compression performance statistics."""
         if not self.compression_history:
             return {"avg_ratio": 0.0, "min_ratio": 0.0, "max_ratio": 0.0}
-        
+
         return {
             "avg_ratio": float(np.mean(self.compression_history)),
             "min_ratio": float(np.min(self.compression_history)),
             "max_ratio": float(np.max(self.compression_history)),
             "target_ratio": self.target_ratio,
-            "meets_target": float(np.mean(self.compression_history)) <= self.target_ratio
+            "meets_target": float(np.mean(self.compression_history))
+            <= self.target_ratio,
         }
 
 
@@ -181,27 +184,28 @@ class L2WorkingMemoryV2:
 # L3 EPISODIC MEMORY - REAL FAISS VECTOR SEARCH
 # ============================================================================
 
+
 class L3EpisodicMemoryV2:
     """
     L3: Episodic memory with real FAISS vector similarity search.
-    
+
     Features:
     - FAISS IndexFlatL2 for exact similarity search
     - Merkle chain for integrity verification
     - Sub-5ms recall latency target
     """
-    
+
     def __init__(self, embedding_dim: int = 768, index_type: str = "Flat"):
         """
         Initialize L3 with FAISS index.
-        
+
         Args:
             embedding_dim: Dimensionality of embedding vectors
             index_type: FAISS index type ("Flat", "IVF", "HNSW")
         """
         self.embedding_dim = embedding_dim
         self.index_type = index_type
-        
+
         # Initialize FAISS index
         if index_type == "Flat":
             self.index = faiss.IndexFlatL2(embedding_dim)
@@ -219,65 +223,61 @@ class L3EpisodicMemoryV2:
             self._ivf_trained = True  # HNSW doesn't need training
         else:
             raise ValueError(f"Unknown index type: {index_type}")
-        
+
         # Episode storage
         self.episodes: Dict[str, Dict[str, Any]] = {}
         self._episode_order: List[str] = []
         self.embeddings: List[np.ndarray] = []
-        
+
         # Merkle chain
-        self.merkle_root: bytes = b'\x00' * 64
-    
+        self.merkle_root: bytes = b"\x00" * 64
+
     def _train_ivf_index(self) -> None:
         """Train IVF index with buffered samples."""
         if not self._training_buffer:
             return
-        
+
         training_data = np.array(self._training_buffer, dtype=np.float32)
         self.index.train(training_data)
-        
+
         # Add buffered embeddings to trained index
         self.index.add(training_data)
-        
+
         self._ivf_trained = True
         self._training_buffer = []  # Clear buffer
-    
-    async def store_episode(self, 
-                           episode_id: str, 
-                           content: Dict[str, Any],
-                           embedding: np.ndarray) -> bytes:
+
+    async def store_episode(
+        self, episode_id: str, content: Dict[str, Any], embedding: np.ndarray
+    ) -> bytes:
         """
         Store episode with FAISS indexing and Merkle chain integrity.
-        
+
         Args:
             episode_id: Unique episode identifier
             content: Episode content dictionary
             embedding: 768-dim embedding vector
-            
+
         Returns: Updated Merkle root
         """
         # Validate embedding
         if embedding.shape != (self.embedding_dim,):
             raise ValueError(f"Invalid embedding shape: {embedding.shape}")
-        
+
         # Compute content hash
         content_bytes = json.dumps(
-            content, 
-            sort_keys=True,
-            separators=(",", ":"),
-            default=str
-        ).encode('utf-8')
+            content, sort_keys=True, separators=(",", ":"), default=str
+        ).encode("utf-8")
         content_hash = hashlib.sha3_512(content_bytes).digest()
-        
+
         # Store episode
         self.episodes[episode_id] = {
             "content": content,
             "hash": content_hash.hex(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "previous_root": self.merkle_root.hex(),
-            "embedding_index": len(self.embeddings)
+            "embedding_index": len(self.embeddings),
         }
-        
+
         # Add to FAISS index (handle IVF training if needed)
         if self.index_type == "IVF" and not self._ivf_trained:
             # Buffer embeddings until we have enough to train
@@ -286,25 +286,25 @@ class L3EpisodicMemoryV2:
                 self._train_ivf_index()
         else:
             self.index.add(np.array([embedding], dtype=np.float32))
-        
+
         self.embeddings.append(embedding)
         self._episode_order.append(episode_id)
-        
+
         # Update Merkle root
         self.merkle_root = hashlib.sha3_512(self.merkle_root + content_hash).digest()
-        
+
         return self.merkle_root
-    
-    async def recall_similar(self, 
-                            query_embedding: np.ndarray, 
-                            k: int = 3) -> List[Dict[str, Any]]:
+
+    async def recall_similar(
+        self, query_embedding: np.ndarray, k: int = 3
+    ) -> List[Dict[str, Any]]:
         """
         Recall similar episodes using FAISS search.
-        
+
         Args:
             query_embedding: Query vector (768-dim)
             k: Number of nearest neighbors to return
-            
+
         Returns: List of similar episodes with distances
         """
         # Handle IVF index that's not yet trained (data still in buffer)
@@ -316,23 +316,25 @@ class L3EpisodicMemoryV2:
                 # Use fewer clusters for small datasets
                 quantizer = faiss.IndexFlatL2(self.embedding_dim)
                 nlist = min(len(self._training_buffer) // 2, 100)
-                self.index = faiss.IndexIVFFlat(quantizer, self.embedding_dim, max(nlist, 1))
+                self.index = faiss.IndexIVFFlat(
+                    quantizer, self.embedding_dim, max(nlist, 1)
+                )
                 self.index.nprobe = min(10, nlist)
                 self._train_ivf_index()
             else:
                 return []
-        
+
         if self.index.ntotal == 0:
             return []
-        
+
         # Validate query
         if query_embedding.shape != (self.embedding_dim,):
             raise ValueError(f"Invalid query shape: {query_embedding.shape}")
-        
+
         # Search FAISS index
         query = np.array([query_embedding], dtype=np.float32)
         distances, indices = self.index.search(query, min(k, self.index.ntotal))
-        
+
         # Retrieve episodes
         results = []
         for dist, idx in zip(distances[0], indices[0]):
@@ -342,42 +344,39 @@ class L3EpisodicMemoryV2:
                 episode["similarity_distance"] = float(dist)
                 episode["episode_id"] = episode_id
                 results.append(episode)
-        
+
         return results
-    
+
     def verify_integrity(self) -> bool:
         """Verify Merkle chain integrity."""
         if not self.episodes:
             return True
-        
-        root = b'\x00' * 64
+
+        root = b"\x00" * 64
         for episode_id in self._episode_order:
             entry = self.episodes.get(episode_id)
             if not entry:
                 return False
-            
+
             # Recompute content hash
             content_bytes = json.dumps(
-                entry["content"],
-                sort_keys=True,
-                separators=(",", ":"),
-                default=str
-            ).encode('utf-8')
+                entry["content"], sort_keys=True, separators=(",", ":"), default=str
+            ).encode("utf-8")
             content_hash = hashlib.sha3_512(content_bytes).digest()
-            
+
             # Verify hash matches
             if entry["hash"] != content_hash.hex():
                 return False
-            
+
             # Verify chain linkage
             if entry["previous_root"] != root.hex():
                 return False
-            
+
             # Update root
             root = hashlib.sha3_512(root + content_hash).digest()
-        
+
         return root == self.merkle_root
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get L3 statistics for monitoring."""
         return {
@@ -393,21 +392,22 @@ class L3EpisodicMemoryV2:
 # L4 SEMANTIC HYPERGRAPH - REAL NEO4J INTEGRATION
 # ============================================================================
 
+
 class L4SemanticHyperGraphV2:
     """
     L4: Semantic hypergraph with real Neo4j async driver.
-    
+
     Features:
     - Async Neo4j operations
     - Rich-club topology analysis
     - Sub-20ms query latency target
     - Hyperedge modeling
     """
-    
+
     def __init__(self, neo4j_uri: str, neo4j_auth: Tuple[str, str]):
         """
         Initialize L4 with Neo4j connection.
-        
+
         Args:
             neo4j_uri: Neo4j connection URI (e.g., "bolt://localhost:7687")
             neo4j_auth: (username, password) tuple
@@ -415,68 +415,68 @@ class L4SemanticHyperGraphV2:
         self.neo4j_uri = neo4j_uri
         self.driver: Optional[AsyncDriver] = None
         self.neo4j_auth = neo4j_auth
-        
+
         # Topology cache
         self._topology_cache: Optional[Dict[str, float]] = None
         self._cache_timestamp: Optional[datetime] = None
         self._cache_ttl_seconds = 300  # 5 minutes
-    
+
     async def initialize(self) -> None:
         """Initialize Neo4j connection and create indexes."""
         self.driver = AsyncGraphDatabase.driver(
             self.neo4j_uri,
             auth=self.neo4j_auth,
             max_connection_pool_size=50,
-            connection_timeout=30.0
+            connection_timeout=30.0,
         )
-        
+
         # Create indexes for performance
         async with self.driver.session() as session:
-            await session.run(
-                "CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.name)"
-            )
+            await session.run("CREATE INDEX IF NOT EXISTS FOR (n:Entity) ON (n.name)")
             await session.run(
                 "CREATE INDEX IF NOT EXISTS FOR (n:HyperEdge) ON (n.relation)"
             )
-    
+
     async def close(self) -> None:
         """Close Neo4j connection."""
         if self.driver:
             await self.driver.close()
-    
-    async def create_hyperedge(self,
-                               nodes: List[str],
-                               relation: str,
-                               weights: Optional[List[float]] = None,
-                               properties: Optional[Dict[str, Any]] = None,
-                               domain_tags: Optional[List[str]] = None) -> str:
+
+    async def create_hyperedge(
+        self,
+        nodes: List[str],
+        relation: str,
+        weights: Optional[List[float]] = None,
+        properties: Optional[Dict[str, Any]] = None,
+        domain_tags: Optional[List[str]] = None,
+    ) -> str:
         """
         Create hyperedge connecting multiple nodes with domain awareness.
-        
+
         Args:
             nodes: List of node names
             relation: Relationship type
             weights: Optional weights for each node
             properties: Optional additional properties
             domain_tags: Optional domain tags (math, physics, economics, ethics, etc.)
-            
+
         Returns: Hyperedge ID
         """
         if not self.driver:
             raise RuntimeError("Neo4j driver not initialized. Call initialize() first.")
-        
+
         # Generate hyperedge ID
         edge_data = f"{nodes}_{relation}"
         edge_id = f"edge_{hashlib.sha256(edge_data.encode()).hexdigest()[:16]}"
-        
+
         weights = weights if weights else [1.0] * len(nodes)
         properties = properties if properties else {}
         domain_tags = domain_tags if domain_tags else []
-        
+
         # Add domain tags to properties
         if domain_tags:
             properties["domains"] = domain_tags
-        
+
         async with self.driver.session() as session:
             # Create hyperedge node
             await session.run(
@@ -490,9 +490,9 @@ class L4SemanticHyperGraphV2:
                 edge_id=edge_id,
                 relation=relation,
                 domains=domain_tags,
-                properties=properties
+                properties=properties,
             )
-            
+
             # Connect entity nodes to hyperedge with domain awareness
             for i, node_name in enumerate(nodes):
                 await session.run(
@@ -511,9 +511,9 @@ class L4SemanticHyperGraphV2:
                     node_name=node_name,
                     edge_id=edge_id,
                     weight=weights[i],
-                    domains=domain_tags
+                    domains=domain_tags,
                 )
-            
+
             # Create implicit connections between entities
             for i in range(len(nodes)):
                 for j in range(i + 1, len(nodes)):
@@ -526,9 +526,9 @@ class L4SemanticHyperGraphV2:
                         """,
                         node_a=nodes[i],
                         node_b=nodes[j],
-                        edge_id=edge_id
+                        edge_id=edge_id,
                     )
-            
+
             # If cross-domain bridge detected, create DomainBridge edge
             if len(domain_tags) > 1:
                 await session.run(
@@ -539,38 +539,40 @@ class L4SemanticHyperGraphV2:
                         e.domain_count = $domain_count
                     """,
                     edge_id=edge_id,
-                    domain_count=len(domain_tags)
+                    domain_count=len(domain_tags),
                 )
-        
+
         # Invalidate topology cache
         self._topology_cache = None
-        
+
         return edge_id
-    
-    async def query(self, cypher: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+
+    async def query(
+        self, cypher: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Execute Cypher query and return results.
-        
+
         Args:
             cypher: Cypher query string
             parameters: Query parameters
-            
+
         Returns: List of result records as dictionaries
         """
         if not self.driver:
             raise RuntimeError("Neo4j driver not initialized")
-        
+
         parameters = parameters if parameters else {}
-        
+
         async with self.driver.session() as session:
             result = await session.run(cypher, parameters)
             records = await result.data()
             return records
-    
+
     async def analyze_topology(self) -> Dict[str, float]:
         """
         Analyze hypergraph topology with caching and domain metrics.
-        
+
         Returns: Topology metrics (clustering, rich-club, domain-crossing, etc.)
         """
         # Check cache
@@ -578,33 +580,29 @@ class L4SemanticHyperGraphV2:
             age = (datetime.now(timezone.utc) - self._cache_timestamp).total_seconds()
             if age < self._cache_ttl_seconds:
                 return self._topology_cache
-        
+
         if not self.driver:
             raise RuntimeError("Neo4j driver not initialized")
-        
+
         metrics = {}
-        
+
         async with self.driver.session() as session:
             # Count nodes and edges
-            node_count = await session.run(
-                "MATCH (n:Entity) RETURN count(n) as count"
-            )
+            node_count = await session.run("MATCH (n:Entity) RETURN count(n) as count")
             node_data = await node_count.single()
             metrics["node_count"] = node_data["count"] if node_data else 0
-            
-            edge_count = await session.run(
-                "MATCH ()-[r]->() RETURN count(r) as count"
-            )
+
+            edge_count = await session.run("MATCH ()-[r]->() RETURN count(r) as count")
             edge_data = await edge_count.single()
             metrics["edge_count"] = edge_data["count"] if edge_data else 0
-            
+
             # Count domain bridges
             bridge_count = await session.run(
                 "MATCH (e:DomainBridge) RETURN count(e) as count"
             )
             bridge_data = await bridge_count.single()
             metrics["domain_bridge_count"] = bridge_data["count"] if bridge_data else 0
-            
+
             # Domain diversity (number of unique domains)
             domain_diversity = await session.run(
                 """
@@ -615,8 +613,10 @@ class L4SemanticHyperGraphV2:
                 """
             )
             diversity_data = await domain_diversity.single()
-            metrics["unique_domains"] = diversity_data["unique_domains"] if diversity_data else 0
-            
+            metrics["unique_domains"] = (
+                diversity_data["unique_domains"] if diversity_data else 0
+            )
+
             # Calculate clustering coefficient (approximate)
             if metrics["node_count"] > 0:
                 clustering = await session.run(
@@ -631,31 +631,32 @@ class L4SemanticHyperGraphV2:
                 )
                 cluster_data = await clustering.single()
                 metrics["clustering_coefficient"] = (
-                    float(cluster_data["avg_clustering"]) 
-                    if cluster_data and cluster_data["avg_clustering"] 
+                    float(cluster_data["avg_clustering"])
+                    if cluster_data and cluster_data["avg_clustering"]
                     else 0.0
                 )
             else:
                 metrics["clustering_coefficient"] = 0.0
-            
+
             # Calculate rich-club coefficient
             metrics["rich_club_coefficient"] = await self._calculate_rich_club(session)
-            
+
             # Calculate interdisciplinary connectivity (domain-crossing ratio)
             if metrics["edge_count"] > 0:
                 metrics["interdisciplinary_ratio"] = (
                     float(metrics["domain_bridge_count"]) / metrics["edge_count"]
-                    if metrics["edge_count"] > 0 else 0.0
+                    if metrics["edge_count"] > 0
+                    else 0.0
                 )
             else:
                 metrics["interdisciplinary_ratio"] = 0.0
-        
+
         # Update cache
         self._topology_cache = metrics
         self._cache_timestamp = datetime.now(timezone.utc)
-        
+
         return metrics
-    
+
     async def _calculate_rich_club(self, session, k: int = 5) -> float:
         """Calculate rich-club coefficient for nodes with degree >= k."""
         result = await session.run(
@@ -670,54 +671,57 @@ class L4SemanticHyperGraphV2:
             MATCH path = (n1)-[]-(n2)
             RETURN count(path) as rich_edges, size(rich_nodes) as rich_count
             """,
-            k=k
+            k=k,
         )
-        
+
         data = await result.single()
         if not data or data["rich_count"] < 2:
             return 0.0
-        
+
         rich_edges = data["rich_edges"]
         rich_count = data["rich_count"]
         possible_edges = rich_count * (rich_count - 1) / 2
-        
+
         return float(rich_edges / possible_edges) if possible_edges > 0 else 0.0
-    
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get L4 statistics for monitoring."""
         topology = await self.analyze_topology()
         return {
-            "neo4j_uri": self.neo4j_uri.replace(self.neo4j_auth[1], "***"),  # Hide password
+            "neo4j_uri": self.neo4j_uri.replace(
+                self.neo4j_auth[1], "***"
+            ),  # Hide password
             "topology": topology,
             "cache_age_seconds": (
                 (datetime.now(timezone.utc) - self._cache_timestamp).total_seconds()
                 if self._cache_timestamp
                 else None
-            )
-        }    
+            ),
+        }
+
     async def find_interdisciplinary_paths(
         self,
         source_node: str,
         target_node: str,
         max_hops: int = 5,
-        min_domains: int = 2
+        min_domains: int = 2,
     ) -> List[Dict[str, Any]]:
         """
         Find paths between nodes that cross multiple knowledge domains.
-        
+
         Elite Pattern: Interdisciplinary Reasoning via Graph Traversal
-        
+
         Args:
             source_node: Starting entity name
             target_node: Destination entity name
             max_hops: Maximum path length
             min_domains: Minimum number of domains path must cross
-            
+
         Returns: List of paths with domain crossing information
         """
         if not self.driver:
             raise RuntimeError("Neo4j driver not initialized")
-        
+
         async with self.driver.session() as session:
             result = await session.run(
                 """
@@ -756,56 +760,58 @@ class L4SemanticHyperGraphV2:
                 source=source_node,
                 target=target_node,
                 max_hops=max_hops,
-                min_domains=min_domains
+                min_domains=min_domains,
             )
-            
+
             records = await result.data()
-            
+
             # Enrich with domain bridge annotations
             enriched_paths = []
             for record in records:
                 domains = record["domains_crossed"]
-                
+
                 # Identify domain transitions
                 domain_transitions = []
                 if len(domains) > 1:
                     for i in range(len(domains) - 1):
-                        domain_transitions.append({
-                            "from_domain": domains[i],
-                            "to_domain": domains[i + 1],
-                            "transition_type": "INTERDISCIPLINARY_BRIDGE"
-                        })
-                
-                enriched_paths.append({
-                    "node_sequence": record["node_sequence"],
-                    "domains_crossed": domains,
-                    "domain_diversity": record["domain_diversity"],
-                    "hop_count": record["hop_count"],
-                    "path_weight": record["path_weight"],
-                    "edge_types": record["edge_types"],
-                    "domain_transitions": domain_transitions,
-                    "is_cross_domain": record["domain_diversity"] >= min_domains
-                })
-            
+                        domain_transitions.append(
+                            {
+                                "from_domain": domains[i],
+                                "to_domain": domains[i + 1],
+                                "transition_type": "INTERDISCIPLINARY_BRIDGE",
+                            }
+                        )
+
+                enriched_paths.append(
+                    {
+                        "node_sequence": record["node_sequence"],
+                        "domains_crossed": domains,
+                        "domain_diversity": record["domain_diversity"],
+                        "hop_count": record["hop_count"],
+                        "path_weight": record["path_weight"],
+                        "edge_types": record["edge_types"],
+                        "domain_transitions": domain_transitions,
+                        "is_cross_domain": record["domain_diversity"] >= min_domains,
+                    }
+                )
+
             return enriched_paths
-    
+
     async def get_neighbors_with_domains(
-        self,
-        node_name: str,
-        max_neighbors: int = 20
+        self, node_name: str, max_neighbors: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Get neighbor nodes with domain information for graph-of-thoughts expansion.
-        
+
         Args:
             node_name: Entity name to get neighbors for
             max_neighbors: Maximum neighbors to return
-            
+
         Returns: List of neighbor info dicts with domains, weights, relations
         """
         if not self.driver:
             raise RuntimeError("Neo4j driver not initialized")
-        
+
         async with self.driver.session() as session:
             result = await session.run(
                 """
@@ -822,22 +828,24 @@ class L4SemanticHyperGraphV2:
                 LIMIT $max_neighbors
                 """,
                 node_name=node_name,
-                max_neighbors=max_neighbors
+                max_neighbors=max_neighbors,
             )
-            
+
             records = await result.data()
-            
+
             # Format for graph-of-thoughts engine
             neighbors = []
             for record in records:
-                neighbors.append({
-                    "id": record["id"],
-                    "domains": record["domains"] if record["domains"] else [],
-                    "relation_types": record["relation_types"],
-                    "weight": record["weight"],
-                    "consistency": 0.7,  # Could be computed from historical data
-                    "disagreement": 0.2,  # Could be computed from oracle variance
-                    "ihsan": 0.95  # Default ethical metric
-                })
-            
+                neighbors.append(
+                    {
+                        "id": record["id"],
+                        "domains": record["domains"] if record["domains"] else [],
+                        "relation_types": record["relation_types"],
+                        "weight": record["weight"],
+                        "consistency": 0.7,  # Could be computed from historical data
+                        "disagreement": 0.2,  # Could be computed from oracle variance
+                        "ihsan": 0.95,  # Default ethical metric
+                    }
+                )
+
             return neighbors

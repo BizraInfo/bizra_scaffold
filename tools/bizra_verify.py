@@ -18,7 +18,6 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-
 SKIP_DIRS = {
     ".git",
     "node_modules",
@@ -33,7 +32,9 @@ SKIP_DIRS = {
 }
 
 
-def run(cmd: List[str], cwd: Path | None = None, timeout: int = 1800) -> Tuple[int, str, str]:
+def run(
+    cmd: List[str], cwd: Path | None = None, timeout: int = 1800
+) -> Tuple[int, str, str]:
     proc = subprocess.Popen(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -83,7 +84,8 @@ def repo_tree_hash(root: Path) -> str:
 
 def detect_stack(root: Path) -> Dict[str, bool]:
     return {
-        "python": (root / "pyproject.toml").exists() or (root / "requirements.txt").exists(),
+        "python": (root / "pyproject.toml").exists()
+        or (root / "requirements.txt").exists(),
         "node": (root / "package.json").exists(),
         "rust": (root / "Cargo.toml").exists(),
     }
@@ -105,11 +107,19 @@ def ihsan_score(vec: Dict[str, float], weights: Dict[str, float]) -> float:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--out", default="evidence", help="Output directory for receipts/metrics")
+    parser.add_argument(
+        "--out", default="evidence", help="Output directory for receipts/metrics"
+    )
     parser.add_argument("--artifact-name", default="bizra", help="Artifact name")
     parser.add_argument("--artifact-version", default="dev", help="Artifact version")
-    parser.add_argument("--ihsan-config", default="config/ihsan_vector.json", help="Ihsan weights config")
-    parser.add_argument("--strict", action="store_true", help="Fail on any skipped critical check")
+    parser.add_argument(
+        "--ihsan-config",
+        default="config/ihsan_vector.json",
+        help="Ihsan weights config",
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Fail on any skipped critical check"
+    )
     args = parser.parse_args()
 
     root = Path(".").resolve()
@@ -144,7 +154,11 @@ def main() -> int:
                 {
                     "name": "python_unittest",
                     "status": "pass" if code == 0 else "fail",
-                    "details": {"code": code, "stdout": out[-4000:], "stderr": err[-4000:]},
+                    "details": {
+                        "code": code,
+                        "stdout": out[-4000:],
+                        "stderr": err[-4000:],
+                    },
                 }
             )
         else:
@@ -225,7 +239,11 @@ def main() -> int:
                 {
                     "name": "npm_audit",
                     "status": "skip",
-                    "details": {"reason": "npm audit produced no output", "code": code, "stderr": err[-2000:]},
+                    "details": {
+                        "reason": "npm audit produced no output",
+                        "code": code,
+                        "stderr": err[-2000:],
+                    },
                 }
             )
 
@@ -233,7 +251,13 @@ def main() -> int:
         code, out, err = run(["pip-audit", "-f", "json"], cwd=root, timeout=1800)
         if code == 0 and out.strip():
             (out_dir / "checks" / "pip_audit.json").write_text(out, encoding="utf-8")
-            checks.append({"name": "pip_audit", "status": "pass", "details": {"saved": "checks/pip_audit.json"}})
+            checks.append(
+                {
+                    "name": "pip_audit",
+                    "status": "pass",
+                    "details": {"saved": "checks/pip_audit.json"},
+                }
+            )
         else:
             checks.append(
                 {
@@ -254,7 +278,11 @@ def main() -> int:
     else:
         policy_hash = "unconfigured"
         policy_decision = "deny"
-    policy = {"decision": policy_decision, "engine": "placeholder", "ruleset_hash": policy_hash}
+    policy = {
+        "decision": policy_decision,
+        "engine": "placeholder",
+        "ruleset_hash": policy_hash,
+    }
 
     ihsan_cfg_path = root / args.ihsan_config
     if ihsan_cfg_path.exists():
@@ -263,9 +291,16 @@ def main() -> int:
         cfg = {"threshold": 0.9, "weights": {}}
 
     total = len([check for check in checks if check["name"] != "repo_tree_hash"])
-    passed = len([check for check in checks if check["status"] == "pass" and check["name"] != "repo_tree_hash"])
+    passed = len(
+        [
+            check
+            for check in checks
+            if check["status"] == "pass" and check["name"] != "repo_tree_hash"
+        ]
+    )
     strict_skip = args.strict and any(
-        check["status"] == "skip" and check["name"] != "repo_tree_hash" for check in checks
+        check["status"] == "skip" and check["name"] != "repo_tree_hash"
+        for check in checks
     )
     any_fail = any(check["status"] == "fail" for check in checks) or strict_skip
 
@@ -274,9 +309,13 @@ def main() -> int:
 
     safety = 0.5
     audit_checks = {"cargo_audit", "npm_audit", "pip_audit"}
-    if any(check["name"] in audit_checks and check["status"] != "skip" for check in checks):
+    if any(
+        check["name"] in audit_checks and check["status"] != "skip" for check in checks
+    ):
         safety = 0.7
-    if any(check["name"] in audit_checks and check["status"] == "fail" for check in checks):
+    if any(
+        check["name"] in audit_checks and check["status"] == "fail" for check in checks
+    ):
         safety = 0.3
 
     vec = {
@@ -343,9 +382,11 @@ def main() -> int:
         "hashes": {"repo_tree_sha256": tree_hash},
         "environment": env,
         "result": {
-            "overall": "pass"
-            if (not any_fail and score >= threshold and policy_decision == "allow")
-            else "fail",
+            "overall": (
+                "pass"
+                if (not any_fail and score >= threshold and policy_decision == "allow")
+                else "fail"
+            ),
             "confidence": 0.75 if not any_fail else 0.4,
             "notes": notes,
             "risks": [
@@ -356,11 +397,17 @@ def main() -> int:
         },
     }
 
-    (out_dir / "receipts" / f"{receipt_id}.json").write_text(json.dumps(receipt, indent=2), encoding="utf-8")
-    (out_dir / "metrics" / "latest.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    (out_dir / "receipts" / f"{receipt_id}.json").write_text(
+        json.dumps(receipt, indent=2), encoding="utf-8"
+    )
+    (out_dir / "metrics" / "latest.json").write_text(
+        json.dumps(metrics, indent=2), encoding="utf-8"
+    )
 
     print(f"[BIZRA] Receipt: {out_dir / 'receipts' / (receipt_id + '.json')}")
-    print(f"[BIZRA] Overall: {receipt['result']['overall']} | Ihsan: {score:.3f} (>= {threshold})")
+    print(
+        f"[BIZRA] Overall: {receipt['result']['overall']} | Ihsan: {score:.3f} (>= {threshold})"
+    )
     return 0 if receipt["result"]["overall"] == "pass" else 2
 
 
