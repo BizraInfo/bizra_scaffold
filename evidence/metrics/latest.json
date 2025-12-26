@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "receipt_id": "8ece7709-4e81-4c58-b3de-fd4d56636291",
+    "generated_at": "2025-12-26T22:07:15Z",
+    "generator_version": "1.0.0",
+    "mode": "metrics",
+    "profile": "ci"
+  },
+  "environment": {
+    "commit_sha": "9824aba3cef13aa87169996e0ff11a27c998a45b",
+    "branch": "main",
+    "repo_clean": true,
+    "python_version": "3.11",
+    "os": "ubuntu-latest",
+    "cpu_count": 4
+  },
+  "metrics": {
+    "loc": {
+      "total": 54648,
+      "python": 45475,
+      "rust": 1520
+    },
+    "tests": {
+      "total": 605,
+      "passed": 597,
+      "failed": 0,
+      "skipped": 8,
+      "pass_rate": 98.67
+    },
+    "coverage": {
+      "line_coverage_percent": 56.6200,
+      "status": "Red",
+      "target_percent": 55
+    },
+    "security": {
+      "secrets_found": false,
+      "vulnerabilities": 0
+    }
+  },
+  "state": "VERIFIED",
+  "integrity": {
+    "hash_algorithm": "SHA-256",
+    "content_hash": "31a78514448843813bcf3f9cb84e5f1c0921776aa80dc8cbf750150471edb354"
+  }
+}
