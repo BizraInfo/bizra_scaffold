@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bizra.io/schemas/commit_receipt.schema.json",
+  "title": "CommitReceipt",
+  "description": "BIZRA Commit Receipt - Immutable proof of verified commit",
+  "type": "object",
+  "required": ["version", "receipt_id", "timestamp", "envelope_digest", "commit_ref", "verification", "verifier_set", "quorum", "audit_digest", "policy_hash"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "SemVer version of the receipt format",
+      "examples": ["1.0.0"]
+    },
+    "receipt_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Globally unique receipt identifier (UUID v4)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 UTC timestamp of receipt creation"
+    },
+    "envelope_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "BLAKE3 hash of the verified PCIEnvelope"
+    },
+    "commit_ref": {
+      "type": "object",
+      "required": ["type", "offset"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["eventlog", "blockgraph"],
+          "description": "Type of commit target"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Monotonically increasing sequence number"
+        },
+        "block_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Block hash for blockgraph commits (optional)"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["tier", "latency_ms", "gates_passed", "ihsan_score"],
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": ["STATISTICAL", "INCREMENTAL", "OPTIMISTIC", "FULL_ZK", "FORMAL"],
+          "description": "Highest verification tier executed"
+        },
+        "latency_ms": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Total verification latency in milliseconds"
+        },
+        "gates_passed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["SCHEMA", "SIGNATURE", "TIMESTAMP", "REPLAY", "ROLE", "SNR", "IHSAN", "POLICY", "FATE", "FORMAL"]
+          },
+          "description": "List of verification gates that passed"
+        },
+        "ihsan_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Verified Ihsān score"
+        },
+        "snr_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Verified SNR score"
+        }
+      }
+    },
+    "verifier_set": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["sat_id", "public_key", "signature", "timestamp"],
+        "properties": {
+          "sat_id": {
+            "type": "string",
+            "description": "Identifier of the SAT verifier"
+          },
+          "public_key": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "32-byte hex-encoded Ed25519 public key"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^[0-9a-f]+$",
+            "minLength": 128,
+            "description": "Hex-encoded signature over receipt content"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO8601 UTC timestamp of this verifier's attestation"
+          }
+        }
+      },
+      "description": "Set of SAT verifiers who attested this receipt"
+    },
+    "quorum": {
+      "type": "object",
+      "required": ["required", "achieved"],
+      "properties": {
+        "required": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of verifier signatures required"
+        },
+        "achieved": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of verifier signatures achieved"
+        }
+      }
+    },
+    "audit_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "BLAKE3 hash of the full verification report"
+    },
+    "policy_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "BLAKE3 hash of the constitution at commit time"
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bizra.io/schemas/pci_envelope.schema.json",
+  "title": "PCIEnvelope",
+  "description": "BIZRA Proof-Carrying Inference Envelope - Wire format for dual-agent protocol",
+  "type": "object",
+  "required": ["version", "envelope_id", "timestamp", "nonce", "sender", "payload", "metadata", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "SemVer version of the envelope format",
+      "examples": ["1.0.0"]
+    },
+    "envelope_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Globally unique envelope identifier (UUID v4)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 UTC timestamp of envelope creation"
+    },
+    "nonce": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "32-byte hex-encoded cryptographic nonce (never reused)"
+    },
+    "sender": {
+      "type": "object",
+      "required": ["agent_type", "agent_id", "public_key"],
+      "additionalProperties": false,
+      "properties": {
+        "agent_type": {
+          "type": "string",
+          "enum": ["PAT", "SAT"],
+          "description": "Agent role: PAT (Prover/Builder) or SAT (Verifier/Governor)"
+        },
+        "agent_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Unique identifier for the sending agent"
+        },
+        "public_key": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "32-byte hex-encoded Ed25519 public key"
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["action", "data", "policy_hash"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Action type identifier"
+        },
+        "data": {
+          "type": "object",
+          "description": "Action-specific payload data"
+        },
+        "policy_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "BLAKE3 hash of the current constitution"
+        },
+        "state_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "BLAKE3 hash of the current state (optional)"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["ihsan_score"],
+      "properties": {
+        "ihsan_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Ihsān ethical alignment score (must be >= 0.95 for commit)"
+        },
+        "snr_score": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Signal-to-noise ratio score"
+        },
+        "urgency": {
+          "type": "string",
+          "enum": ["REAL_TIME", "NEAR_REAL_TIME", "BATCH", "DEFERRED"],
+          "default": "BATCH",
+          "description": "Processing urgency tier"
+        }
+      },
+      "additionalProperties": true
+    },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "value", "signed_fields"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["ed25519", "dilithium5"],
+          "default": "ed25519",
+          "description": "Signature algorithm (ed25519 current, dilithium5 future PQ)"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[0-9a-f]+$",
+          "minLength": 128,
+          "description": "Hex-encoded signature (64 bytes for Ed25519)"
+        },
+        "signed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "List of field names included in signature computation"
+        }
+      }
+    }
+  }
+}

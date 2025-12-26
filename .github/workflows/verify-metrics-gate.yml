@@ -164,21 +164,25 @@ jobs:
           
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
           pip install pytest pytest-cov pytest-asyncio
           
       - name: Run Tests
         id: tests
         run: |
-          # Run pytest with JUnit XML output
+          # Run pytest with JUnit XML output (capture exit code for fail-closed)
+          set +e  # Don't exit on error - we need to capture the exit code
           python -m pytest tests/ \
             -v \
             --tb=short \
             --junitxml=test-results.xml \
             --cov=core \
             --cov-report=xml:coverage.xml \
-            --cov-report=term-missing \
-            || true
+            --cov-report=term-missing
+          PYTEST_EXIT=$?
+          set -e
           
           # Parse results
           if [ -f test-results.xml ]; then
@@ -189,6 +193,9 @@ jobs:
             
             PASSED=$((TOTAL - FAILURES - SKIPPED - ERRORS))
             
+            # FAIL-CLOSED: Count errors as failures
+            FAILED=$((FAILURES + ERRORS))
+            
             if [ "$TOTAL" -gt 0 ]; then
               PASS_RATE=$(echo "scale=2; $PASSED * 100 / $TOTAL" | bc)
             else
@@ -197,15 +204,20 @@ jobs:
             
             echo "total=$TOTAL" >> $GITHUB_OUTPUT
             echo "passed=$PASSED" >> $GITHUB_OUTPUT
-            echo "failed=$FAILURES" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
             echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "errors=$ERRORS" >> $GITHUB_OUTPUT
             echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
+            echo "exit_code=$PYTEST_EXIT" >> $GITHUB_OUTPUT
           else
+            # FAIL-CLOSED: Missing JUnit file is a failure
             echo "total=0" >> $GITHUB_OUTPUT
             echo "passed=0" >> $GITHUB_OUTPUT
-            echo "failed=0" >> $GITHUB_OUTPUT
+            echo "failed=1" >> $GITHUB_OUTPUT
             echo "skipped=0" >> $GITHUB_OUTPUT
+            echo "errors=1" >> $GITHUB_OUTPUT
             echo "pass_rate=0" >> $GITHUB_OUTPUT
+            echo "exit_code=1" >> $GITHUB_OUTPUT
           fi
           
       - name: Upload Test Results
@@ -301,27 +313,42 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # FAIL-CLOSED: Use continue-on-error to capture result, then check outcome in Aggregate
         continue-on-error: true
         
       - name: Check keys/ directory
         id: keys
         run: |
+          SECRETS_FOUND="false"
           if [ -d "keys" ]; then
-            # Check for private key patterns
-            PRIVATE_FOUND=$(find keys -type f \( -name "*.pem" -o -name "*private*" -o -name "*secret*" \) | wc -l)
+            # Check for private key patterns (excludes .example and README files)
+            PRIVATE_FOUND=$(find keys -type f \( -name "*.pem" -o -name "*private*" -o -name "*secret*" \) ! -name "*.example" ! -name "README*" | wc -l)
             if [ "$PRIVATE_FOUND" -gt 0 ]; then
               echo "❌ FAIL_CLOSED: Private keys found in keys/ directory"
-              echo "secrets_found=true" >> $GITHUB_OUTPUT
-              exit 1
+              SECRETS_FOUND="true"
             fi
           fi
-          echo "secrets_found=false" >> $GITHUB_OUTPUT
+          echo "secrets_found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
           
       - name: Aggregate Results
         id: scan
         run: |
-          echo "secrets_found=${{ steps.keys.outputs.secrets_found || 'false' }}" >> $GITHUB_OUTPUT
-          echo "vulnerabilities=0" >> $GITHUB_OUTPUT
+          # FAIL-CLOSED: Include gitleaks exit code in secrets detection
+          GITLEAKS_EXIT=${{ steps.gitleaks.outcome == 'failure' && 'true' || 'false' }}
+          KEYS_SECRETS=${{ steps.keys.outputs.secrets_found || 'false' }}
+          
+          if [ "$GITLEAKS_EXIT" = "true" ] || [ "$KEYS_SECRETS" = "true" ]; then
+            echo "secrets_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "secrets_found=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Count vulnerabilities from gitleaks (if report exists)
+          VULN_COUNT=0
+          if [ -f "gitleaks-report.json" ]; then
+            VULN_COUNT=$(jq 'length' gitleaks-report.json 2>/dev/null || echo "0")
+          fi
+          echo "vulnerabilities=$VULN_COUNT" >> $GITHUB_OUTPUT
 
   # ═══════════════════════════════════════════════════════════════════════════════
   # STAGE 6: Generate Receipt
@@ -349,13 +376,33 @@ jobs:
         run: |
           mkdir -p ${{ env.EVIDENCE_DIR }}
           
-          # Compute verification state
-          FAILED=${{ needs.test-suite.outputs.failed }}
-          SECRETS=${{ needs.security-scan.outputs.secrets_found }}
+          # Compute verification state with safe defaults and validation
+          FAILED="${{ needs.test-suite.outputs.failed }}"
+          FAILED=${FAILED:-0}
+          FAILED=$((FAILED + 0))  # Coerce to integer
           
-          if [ "$FAILED" -gt 0 ] || [ "$SECRETS" == "true" ]; then
+          # FAIL-CLOSED: Check pytest exit code directly
+          EXIT_CODE="${{ needs.test-suite.outputs.exit_code }}"
+          EXIT_CODE=${EXIT_CODE:-1}  # Default to failure if missing
+          EXIT_CODE=$((EXIT_CODE + 0))  # Coerce to integer
+          
+          SECRETS="${{ needs.security-scan.outputs.secrets_found }}"
+          SECRETS=${SECRETS:-false}
+          # Normalize to true/false
+          if [ "$SECRETS" != "true" ]; then
+            SECRETS="false"
+          fi
+          
+          COVERAGE="${{ needs.coverage.outputs.line_coverage }}"
+          COVERAGE=${COVERAGE:-0}
+          COVERAGE=$((${COVERAGE%.*} + 0))  # Coerce to integer, strip decimals
+          
+          # FAIL-CLOSED: Exit code trumps everything - catches crashes, errors, missing tests
+          if [ "$EXIT_CODE" -ne 0 ]; then
             STATE="FAIL_CLOSED"
-          elif [ "${{ needs.coverage.outputs.line_coverage }}" -lt 70 ]; then
+          elif [ "$FAILED" -gt 0 ] || [ "$SECRETS" = "true" ]; then
+            STATE="FAIL_CLOSED"
+          elif [ "$COVERAGE" -lt 70 ]; then
             STATE="PENDING"
           else
             STATE="VERIFIED"
@@ -365,7 +412,7 @@ jobs:
           cat > ${{ env.RECEIPT_PATH }} << EOF
           {
             "meta": {
-              "receipt_id": "$(uuidgen || echo $RANDOM)",
+              "receipt_id": "$(uuidgen 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())' 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "00000000-0000-4000-8000-$(date +%s%N | sha256sum | head -c 12)")",
               "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
               "generator_version": "1.0.0",
               "mode": "metrics",

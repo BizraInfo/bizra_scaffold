@@ -1,0 +1,365 @@
+{
+  "$comment": "BIZRA PCI Envelope Test Vectors v1.0.0 - DO NOT EDIT MANUALLY",
+  "$schema": "https://bizra.io/schemas/test-vectors/pci-v1.json",
+  "metadata": {
+    "version": "1.0.0",
+    "generated": "2025-01-01T00:00:00Z",
+    "description": "Golden test vectors for PCI envelope canonicalization and signature verification",
+    "protocol_spec": "PROTOCOL.md v1.0.0",
+    "warning": "Any change to envelope fields requires updating these vectors"
+  },
+  "test_cases": [
+    {
+      "id": "vector-001-minimal-valid",
+      "description": "Minimal valid envelope with all required fields",
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-test-001",
+        "timestamp": "2025-01-01T12:00:00.000000Z",
+        "nonce": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "sender": {
+          "agent_id": "pat-test-001",
+          "agent_type": "PAT",
+          "public_key": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+        },
+        "payload": {
+          "action": "test.action",
+          "data": {},
+          "policy_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "request_id": "req-test-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.98,
+          "origin_layer": 3,
+          "trace_id": "trace-test-001"
+        }
+      },
+      "expected": {
+        "canonical_json_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        "digest_domain": "bizra-pci-v1:",
+        "digest_algorithm": "BLAKE3"
+      }
+    },
+    {
+      "id": "vector-002-high-ihsan",
+      "description": "Envelope with high Ihsān score (0.99) demonstrating ethical alignment",
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-ihsan-high",
+        "timestamp": "2025-01-01T12:30:00.000000Z",
+        "nonce": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+        "sender": {
+          "agent_id": "pat-ihsan-001",
+          "agent_type": "PAT",
+          "public_key": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c"
+        },
+        "payload": {
+          "action": "ethical.decision.make",
+          "data": {
+            "decision_type": "beneficence",
+            "stakeholders": ["community", "individual"],
+            "reversible": true
+          },
+          "policy_hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+          "request_id": "req-ihsan-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.99,
+          "ihsan_breakdown": {
+            "IKHLAS": 0.99,
+            "KARAMA": 0.98,
+            "ADL": 0.99,
+            "KAMAL": 0.99,
+            "ISTIDAMA": 0.98
+          },
+          "origin_layer": 5,
+          "trace_id": "trace-ihsan-001"
+        }
+      },
+      "expected": {
+        "ihsan_threshold_pass": true,
+        "threshold": 0.95,
+        "weighted_formula": "(IKHLAS*0.30) + (KARAMA*0.20) + (ADL*0.20) + (KAMAL*0.20) + (ISTIDAMA*0.10)"
+      }
+    },
+    {
+      "id": "vector-003-replay-detection",
+      "description": "Duplicate nonce scenario - should be rejected by replay guard",
+      "input": {
+        "first_envelope": {
+          "version": "1.0.0",
+          "envelope_id": "env-replay-001",
+          "timestamp": "2025-01-01T13:00:00.000000Z",
+          "nonce": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sender": {
+            "agent_id": "pat-replay-test",
+            "agent_type": "PAT",
+            "public_key": "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025"
+          },
+          "payload": {
+            "action": "state.mutate",
+            "data": {"key": "value"},
+            "policy_hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+            "request_id": "req-replay-001"
+          },
+          "metadata": {
+            "ihsan_score": 0.96,
+            "origin_layer": 4,
+            "trace_id": "trace-replay-001"
+          }
+        },
+        "duplicate_envelope": {
+          "version": "1.0.0",
+          "envelope_id": "env-replay-002",
+          "timestamp": "2025-01-01T13:00:05.000000Z",
+          "nonce": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "sender": {
+            "agent_id": "pat-replay-test",
+            "agent_type": "PAT",
+            "public_key": "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025"
+          },
+          "payload": {
+            "action": "state.mutate.replay.attempt",
+            "data": {"key": "malicious_value"},
+            "policy_hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+            "request_id": "req-replay-002"
+          },
+          "metadata": {
+            "ihsan_score": 0.96,
+            "origin_layer": 4,
+            "trace_id": "trace-replay-002"
+          }
+        }
+      },
+      "expected": {
+        "first_accepted": true,
+        "duplicate_rejected": true,
+        "reject_code": 3,
+        "reject_code_name": "REJECT_NONCE_REPLAY"
+      }
+    },
+    {
+      "id": "vector-004-timestamp-expired",
+      "description": "Envelope with timestamp outside valid window (>120s)",
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-expired-001",
+        "timestamp": "2025-01-01T10:00:00.000000Z",
+        "nonce": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "sender": {
+          "agent_id": "pat-expired-test",
+          "agent_type": "PAT",
+          "public_key": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "payload": {
+          "action": "expired.action",
+          "data": {},
+          "policy_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "request_id": "req-expired-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.97,
+          "origin_layer": 2,
+          "trace_id": "trace-expired-001"
+        }
+      },
+      "expected": {
+        "rejected": true,
+        "reject_code": 3,
+        "reject_code_name": "REJECT_TIMESTAMP_EXPIRED",
+        "max_age_seconds": 120
+      },
+      "test_condition": "current_time - envelope.timestamp > 120s"
+    },
+    {
+      "id": "vector-005-ihsan-below-threshold",
+      "description": "Envelope with Ihsān score below constitutional minimum (0.95)",
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-low-ihsan-001",
+        "timestamp": "2025-01-01T14:00:00.000000Z",
+        "nonce": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "sender": {
+          "agent_id": "pat-low-ihsan",
+          "agent_type": "PAT",
+          "public_key": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "payload": {
+          "action": "questionable.action",
+          "data": {"intent": "self-serving"},
+          "policy_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "request_id": "req-low-ihsan-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.89,
+          "ihsan_breakdown": {
+            "IKHLAS": 0.85,
+            "KARAMA": 0.90,
+            "ADL": 0.88,
+            "KAMAL": 0.92,
+            "ISTIDAMA": 0.91
+          },
+          "origin_layer": 3,
+          "trace_id": "trace-low-ihsan-001"
+        }
+      },
+      "expected": {
+        "rejected": true,
+        "reject_code": 6,
+        "reject_code_name": "REJECT_IHSAN_BELOW_MIN",
+        "threshold": 0.95,
+        "actual_score": 0.89,
+        "gap": 0.06
+      }
+    },
+    {
+      "id": "vector-006-policy-mismatch",
+      "description": "Envelope with policy hash not matching current constitution",
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-policy-mismatch-001",
+        "timestamp": "2025-01-01T15:00:00.000000Z",
+        "nonce": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "sender": {
+          "agent_id": "pat-policy-test",
+          "agent_type": "PAT",
+          "public_key": "2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        "payload": {
+          "action": "policy.bound.action",
+          "data": {},
+          "policy_hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+          "request_id": "req-policy-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.97,
+          "origin_layer": 4,
+          "trace_id": "trace-policy-001"
+        }
+      },
+      "expected": {
+        "rejected": true,
+        "reject_code": 8,
+        "reject_code_name": "REJECT_POLICY_MISMATCH",
+        "reason": "Envelope policy hash does not match current constitution"
+      },
+      "test_condition": "current_policy_hash != envelope.payload.policy_hash"
+    },
+    {
+      "id": "vector-007-signature-verification",
+      "description": "Ed25519 signature verification test case with known keypair",
+      "cryptographic_material": {
+        "$warning": "Test vectors only - NEVER use these keys in production",
+        "algorithm": "Ed25519",
+        "private_key_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+        "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+      },
+      "input": {
+        "version": "1.0.0",
+        "envelope_id": "env-sig-test-001",
+        "timestamp": "2025-01-01T16:00:00.000000Z",
+        "nonce": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "sender": {
+          "agent_id": "pat-sig-test",
+          "agent_type": "PAT",
+          "public_key": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+        },
+        "payload": {
+          "action": "signature.test",
+          "data": {"message": "test"},
+          "policy_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "request_id": "req-sig-001"
+        },
+        "metadata": {
+          "ihsan_score": 0.96,
+          "origin_layer": 3,
+          "trace_id": "trace-sig-001"
+        }
+      },
+      "signing": {
+        "domain_prefix": "bizra-pci-v1:",
+        "canonicalization": "RFC 8785 JCS",
+        "steps": [
+          "1. Serialize envelope without signature field",
+          "2. Apply JCS canonicalization (sorted keys, no whitespace)",
+          "3. Prepend domain prefix to canonical bytes",
+          "4. Compute BLAKE3 hash",
+          "5. Sign hash with Ed25519 private key"
+        ]
+      },
+      "expected": {
+        "signature_valid": true,
+        "pq_migration_ready": true,
+        "pq_algorithm": "Dilithium-5"
+      }
+    },
+    {
+      "id": "vector-008-commit-receipt",
+      "description": "Expected commit receipt structure after successful verification",
+      "input_envelope_digest": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+      "expected_receipt": {
+        "version": "1.0.0",
+        "receipt_id": "rcpt-test-001",
+        "timestamp": "2025-01-01T17:00:00.000000Z",
+        "envelope_digest": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+        "commit_ref": {
+          "type": "eventlog",
+          "offset": 42
+        },
+        "verification": {
+          "tier": "MEDIUM",
+          "latency_ms": 8.5,
+          "gates_passed": ["SCHEMA", "SIGNATURE", "TIMESTAMP", "REPLAY", "ROLE", "SNR", "IHSAN", "POLICY"]
+        },
+        "verifier_set": [
+          {
+            "sat_id": "sat-primary-001",
+            "public_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "signature": "<<ed25519_signature_placeholder>>",
+            "timestamp": "2025-01-01T17:00:00.001000Z"
+          }
+        ],
+        "quorum": {
+          "required": 1,
+          "achieved": 1
+        },
+        "audit_digest": "<<blake3_of_verification_report>>",
+        "policy_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "reject_code_registry": {
+    "$ref": "PROTOCOL.md Section 4",
+    "codes": {
+      "0": {"name": "ACCEPT", "description": "Verification passed (sentinel)"},
+      "1": {"name": "REJECT_SCHEMA", "description": "Envelope structure invalid"},
+      "2": {"name": "REJECT_SIGNATURE", "description": "Cryptographic signature verification failed"},
+      "3": {"name": "REJECT_TIMESTAMP_EXPIRED", "description": "Timestamp outside valid window"},
+      "4": {"name": "REJECT_REPLAY", "description": "Nonce already seen"},
+      "5": {"name": "REJECT_ROLE_VIOLATION", "description": "Agent exceeded role permissions"},
+      "6": {"name": "REJECT_SNR_BELOW_MIN", "description": "Signal-to-noise ratio below threshold"},
+      "7": {"name": "REJECT_IHSAN_BELOW_MIN", "description": "Ethical alignment below constitutional threshold"},
+      "8": {"name": "REJECT_POLICY_MISMATCH", "description": "Policy hash mismatch"},
+      "9": {"name": "REJECT_FATE_VIOLATION", "description": "FATE verification failed"},
+      "10": {"name": "REJECT_FORMAL_PROOF_MISSING", "description": "Required formal proof not provided"},
+      "99": {"name": "REJECT_UNKNOWN", "description": "Unknown error (fail-closed)"}
+    }
+  },
+  "latency_budgets": {
+    "CHEAP_MS": 10,
+    "MEDIUM_MS": 150,
+    "EXPENSIVE_MS": 2000
+  },
+  "gate_ordering": [
+    "SCHEMA",
+    "SIGNATURE",
+    "TIMESTAMP",
+    "REPLAY",
+    "ROLE",
+    "SNR",
+    "IHSAN",
+    "POLICY",
+    "FATE",
+    "FORMAL"
+  ]
+}

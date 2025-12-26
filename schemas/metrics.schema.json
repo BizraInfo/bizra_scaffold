@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bizra.info/schemas/metrics.schema.json",
+  "title": "BIZRA Metrics Schema",
+  "type": "object",
+  "required": [
+    "snr",
+    "ihsan_vector",
+    "latency_ms",
+    "error_rate",
+    "policy_denies",
+    "receipt_completeness",
+    "coverage"
+  ],
+  "properties": {
+    "snr": {
+      "type": "number",
+      "minimum": 0
+    },
+    "ihsan_vector": {
+      "type": "object",
+      "required": [
+        "correctness",
+        "safety",
+        "user_benefit",
+        "efficiency",
+        "auditability",
+        "anti_centralization",
+        "robustness",
+        "adl_fairness",
+        "threshold",
+        "score"
+      ],
+      "properties": {
+        "correctness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "safety": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "user_benefit": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "efficiency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "auditability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "anti_centralization": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "robustness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "adl_fairness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "latency_ms": {
+      "type": "object",
+      "required": [
+        "p50",
+        "p95",
+        "p99"
+      ],
+      "properties": {
+        "p50": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "error_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "policy_denies": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "receipt_completeness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "coverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "additionalProperties": true
+}

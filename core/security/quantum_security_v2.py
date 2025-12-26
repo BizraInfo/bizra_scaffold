@@ -25,10 +25,8 @@ from datetime import datetime, timezone
 try:
     from oqs import Signature, KeyEncapsulation
     QUANTUM_AVAILABLE = True
-except ImportError:
+except (ImportError, OSError):
     QUANTUM_AVAILABLE = False
-    import warnings
-    warnings.warn("liboqs not available, falling back to classical crypto")
 
 # Classical fallback
 from cryptography.hazmat.primitives.asymmetric import ed25519

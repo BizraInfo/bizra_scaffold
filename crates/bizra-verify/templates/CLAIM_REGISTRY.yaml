@@ -34,7 +34,7 @@ claims:
     claim_tag: MEASURED
     verification_command: "python -m pytest tests/ --cov=core --cov-report=xml"
     expected_threshold: 95.0
-    evidence_artifact_path: "coverage.xml"
+    evidence_artifact_path: "evidence/coverage.xml"
     expiry_days: 1
     revalidation_cadence: "every-commit"
     

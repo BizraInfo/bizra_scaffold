@@ -132,7 +132,7 @@ enum Commands {
     },
 }
 
-#[derive(Clone, Copy, ValueEnum, Default)]
+#[derive(Clone, Copy, Debug, ValueEnum, Default)]
 enum VerifyMode {
     /// Quick metrics only (LOC, tests, coverage)
     #[default]
@@ -145,7 +145,7 @@ enum VerifyMode {
     Determinism,
 }
 
-#[derive(Clone, Copy, ValueEnum, Default)]
+#[derive(Clone, Copy, Debug, ValueEnum, Default)]
 enum ExecutionProfile {
     /// CI profile - fast, minimal resources
     #[default]
@@ -158,12 +158,23 @@ enum ExecutionProfile {
     Benchmark,
 }
 
-#[derive(Clone, Copy, ValueEnum)]
+#[derive(Clone, Copy, Debug, ValueEnum)]
 enum ClaimStatus {
     Measured,
     Implemented,
     Target,
     Hypothesis,
+}
+
+impl std::fmt::Display for ClaimStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Measured => write!(f, "MEASURED"),
+            Self::Implemented => write!(f, "IMPLEMENTED"),
+            Self::Target => write!(f, "TARGET"),
+            Self::Hypothesis => write!(f, "HYPOTHESIS"),
+        }
+    }
 }
 
 #[derive(Clone, Copy, ValueEnum, Default)]
@@ -178,7 +189,7 @@ enum OutputFormat {
 // RECEIPT STRUCTURE (Cryptographically Bound)
 // =============================================================================
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MetricsReceipt {
     /// Receipt metadata
     pub meta: ReceiptMeta,
@@ -199,7 +210,7 @@ pub struct MetricsReceipt {
     pub integrity: IntegrityBinding,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ReceiptMeta {
     pub receipt_id: String,
     pub generated_at: DateTime<Utc>,
@@ -208,7 +219,7 @@ pub struct ReceiptMeta {
     pub profile: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct EnvironmentFingerprint {
     /// Git commit SHA
     pub commit_sha: String,
@@ -232,7 +243,7 @@ pub struct EnvironmentFingerprint {
     pub cpu_count: usize,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MeasuredMetrics {
     /// Lines of code breakdown
     pub loc: LocMetrics,
@@ -248,7 +259,7 @@ pub struct MeasuredMetrics {
     pub scorecard: HealthScorecard,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LocMetrics {
     pub total: u64,
     pub rust: u64,
@@ -261,7 +272,7 @@ pub struct LocMetrics {
     pub method: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TestMetrics {
     pub total: u64,
     pub passed: u64,
@@ -273,7 +284,7 @@ pub struct TestMetrics {
     pub node_tests: Option<TestSuiteResult>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TestSuiteResult {
     pub total: u64,
     pub passed: u64,
@@ -284,7 +295,7 @@ pub struct TestSuiteResult {
     pub exit_code: i32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct CoverageMetrics {
     pub line_coverage_percent: f64,
     pub branch_coverage_percent: Option<f64>,
@@ -294,7 +305,7 @@ pub struct CoverageMetrics {
     pub method: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PerformanceMetrics {
     pub latency_p50_ms: f64,
     pub latency_p95_ms: f64,
@@ -303,9 +314,12 @@ pub struct PerformanceMetrics {
     pub reproducibility_rate: f64,
     pub sample_count: u64,
     pub profile: String,
+    /// True if metrics are estimated/placeholder, false if actually measured
+    #[serde(default)]
+    pub estimated: bool,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct GraphMetrics {
     pub node_count: u64,
     pub edge_count: u64,
@@ -315,7 +329,7 @@ pub struct GraphMetrics {
     pub exclusion_rules: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct HealthScorecard {
     pub excellence: ScorecardDimension,
     pub benevolence: ScorecardDimension,
@@ -325,14 +339,14 @@ pub struct HealthScorecard {
     pub overall_score: f64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ScorecardDimension {
     pub score: f64,
     pub weight: f64,
     pub metrics: Vec<ScorecardMetric>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ScorecardMetric {
     pub name: String,
     pub target: f64,
@@ -343,7 +357,7 @@ pub struct ScorecardMetric {
     pub status: String, // Green/Yellow/Red
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ClaimVerification {
     pub claim_id: String,
     pub claim_text: String,
@@ -380,7 +394,7 @@ impl std::fmt::Display for VerificationState {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct IntegrityBinding {
     /// SHA-256 hash of all metrics (excluding this field)
     pub content_hash: String,
@@ -409,7 +423,7 @@ impl VerificationEngine {
 
     fn run(&self) -> Result<MetricsReceipt> {
         info!("Starting verification in {:?} mode with {:?} profile", 
-              self.mode as u8, self.profile as u8);
+              self.mode, self.profile);
 
         let environment = self.collect_environment()?;
         let loc = self.measure_loc()?;
@@ -442,8 +456,8 @@ impl VerificationEngine {
                 receipt_id: Uuid::new_v4().to_string(),
                 generated_at: Utc::now(),
                 generator_version: env!("CARGO_PKG_VERSION").to_string(),
-                mode: format!("{:?}", self.mode as u8),
-                profile: format!("{:?}", self.profile as u8),
+                mode: format!("{:?}", self.mode),
+                profile: format!("{:?}", self.profile),
             },
             environment,
             metrics,
@@ -758,7 +772,8 @@ impl VerificationEngine {
             throughput_rps: 450.0,
             reproducibility_rate: 99.3,
             sample_count: 1000,
-            profile: format!("{:?}", self.profile as u8),
+            profile: format!("{:?}", self.profile),
+            estimated: true,  // Mark as estimated/placeholder
         })
     }
 
@@ -1027,11 +1042,15 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Verify { mode, profile, out, repo, sign, key } => {
-            let repo_root = repo.unwrap_or_else(|| std::env::current_dir().unwrap());
+            let repo_root = match repo {
+                Some(r) => r,
+                None => std::env::current_dir()
+                    .context("failed to determine current directory")?    
+            };
             
             info!("🔬 BIZRA Verification Engine Starting");
-            info!("   Mode: {:?}", mode as u8);
-            info!("   Profile: {:?}", profile as u8);
+            info!("   Mode: {:?}", mode);
+            info!("   Profile: {:?}", profile);
             info!("   Repository: {}", repo_root.display());
 
             let engine = VerificationEngine::new(repo_root.clone(), mode, profile);
@@ -1090,7 +1109,7 @@ fn main() -> Result<()> {
             println!("Claims: {}", reg.claims.len());
             
             for claim in &reg.claims {
-                if status.is_none() || claim.claim_tag == format!("{:?}", status.unwrap()) {
+                if status.is_none() || claim.claim_tag.to_uppercase() == status.unwrap().to_string() {
                     println!("  [{}] {} - {}", claim.claim_tag, claim.claim_id, claim.claim_text);
                 }
             }
@@ -1114,166 +1133,4 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-impl Clone for MetricsReceipt {
-    fn clone(&self) -> Self {
-        Self {
-            meta: ReceiptMeta {
-                receipt_id: self.meta.receipt_id.clone(),
-                generated_at: self.meta.generated_at,
-                generator_version: self.meta.generator_version.clone(),
-                mode: self.meta.mode.clone(),
-                profile: self.meta.profile.clone(),
-            },
-            environment: EnvironmentFingerprint {
-                commit_sha: self.environment.commit_sha.clone(),
-                branch: self.environment.branch.clone(),
-                repo_clean: self.environment.repo_clean,
-                rust_version: self.environment.rust_version.clone(),
-                python_version: self.environment.python_version.clone(),
-                node_version: self.environment.node_version.clone(),
-                os: self.environment.os.clone(),
-                cpu: self.environment.cpu.clone(),
-                ram_gb: self.environment.ram_gb,
-                cpu_count: self.environment.cpu_count,
-            },
-            metrics: MeasuredMetrics {
-                loc: LocMetrics {
-                    total: self.metrics.loc.total,
-                    rust: self.metrics.loc.rust,
-                    python: self.metrics.loc.python,
-                    typescript: self.metrics.loc.typescript,
-                    markdown: self.metrics.loc.markdown,
-                    yaml: self.metrics.loc.yaml,
-                    other: self.metrics.loc.other,
-                    excluded_patterns: self.metrics.loc.excluded_patterns.clone(),
-                    method: self.metrics.loc.method.clone(),
-                },
-                tests: TestMetrics {
-                    total: self.metrics.tests.total,
-                    passed: self.metrics.tests.passed,
-                    failed: self.metrics.tests.failed,
-                    skipped: self.metrics.tests.skipped,
-                    duration_seconds: self.metrics.tests.duration_seconds,
-                    rust_tests: self.metrics.tests.rust_tests.clone(),
-                    python_tests: self.metrics.tests.python_tests.clone(),
-                    node_tests: self.metrics.tests.node_tests.clone(),
-                },
-                coverage: CoverageMetrics {
-                    line_coverage_percent: self.metrics.coverage.line_coverage_percent,
-                    branch_coverage_percent: self.metrics.coverage.branch_coverage_percent,
-                    target_percent: self.metrics.coverage.target_percent,
-                    status: self.metrics.coverage.status.clone(),
-                    artifact_hash: self.metrics.coverage.artifact_hash.clone(),
-                    method: self.metrics.coverage.method.clone(),
-                },
-                performance: self.metrics.performance.clone(),
-                graph: self.metrics.graph.clone(),
-                scorecard: self.metrics.scorecard.clone(),
-            },
-            claims: self.claims.clone(),
-            state: self.state,
-            integrity: IntegrityBinding {
-                content_hash: self.integrity.content_hash.clone(),
-                signature: self.integrity.signature.clone(),
-                signer_fingerprint: self.integrity.signer_fingerprint.clone(),
-                hash_algorithm: self.integrity.hash_algorithm.clone(),
-            },
-        }
-    }
-}
-
-impl Clone for TestSuiteResult {
-    fn clone(&self) -> Self {
-        Self {
-            total: self.total,
-            passed: self.passed,
-            failed: self.failed,
-            skipped: self.skipped,
-            duration_seconds: self.duration_seconds,
-            command: self.command.clone(),
-            exit_code: self.exit_code,
-        }
-    }
-}
-
-impl Clone for PerformanceMetrics {
-    fn clone(&self) -> Self {
-        Self {
-            latency_p50_ms: self.latency_p50_ms,
-            latency_p95_ms: self.latency_p95_ms,
-            latency_p99_ms: self.latency_p99_ms,
-            throughput_rps: self.throughput_rps,
-            reproducibility_rate: self.reproducibility_rate,
-            sample_count: self.sample_count,
-            profile: self.profile.clone(),
-        }
-    }
-}
-
-impl Clone for GraphMetrics {
-    fn clone(&self) -> Self {
-        Self {
-            node_count: self.node_count,
-            edge_count: self.edge_count,
-            dataset_hash: self.dataset_hash.clone(),
-            counting_method: self.counting_method.clone(),
-            inclusion_rules: self.inclusion_rules.clone(),
-            exclusion_rules: self.exclusion_rules.clone(),
-        }
-    }
-}
-
-impl Clone for HealthScorecard {
-    fn clone(&self) -> Self {
-        Self {
-            excellence: self.excellence.clone(),
-            benevolence: self.benevolence.clone(),
-            justice: self.justice.clone(),
-            trust: self.trust.clone(),
-            overall_grade: self.overall_grade.clone(),
-            overall_score: self.overall_score,
-        }
-    }
-}
-
-impl Clone for ScorecardDimension {
-    fn clone(&self) -> Self {
-        Self {
-            score: self.score,
-            weight: self.weight,
-            metrics: self.metrics.clone(),
-        }
-    }
-}
-
-impl Clone for ScorecardMetric {
-    fn clone(&self) -> Self {
-        Self {
-            name: self.name.clone(),
-            target: self.target,
-            current: self.current,
-            unit: self.unit.clone(),
-            method: self.method.clone(),
-            trend: self.trend.clone(),
-            status: self.status.clone(),
-        }
-    }
-}
-
-impl Clone for ClaimVerification {
-    fn clone(&self) -> Self {
-        Self {
-            claim_id: self.claim_id.clone(),
-            claim_text: self.claim_text.clone(),
-            claim_tag: self.claim_tag.clone(),
-            verification_command: self.verification_command.clone(),
-            expected_threshold: self.expected_threshold,
-            measured_value: self.measured_value,
-            status: self.status,
-            evidence_artifact: self.evidence_artifact.clone(),
-            last_verified: self.last_verified,
-        }
-    }
 }

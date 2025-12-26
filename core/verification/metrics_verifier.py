@@ -149,6 +149,7 @@ class PerformanceMetrics:
     reproducibility_rate: float
     sample_count: int
     profile: str
+    estimated: bool = False  # True if placeholder/estimated, False if actually measured
 
 
 @dataclass
@@ -564,9 +565,30 @@ class MetricsVerifier:
             method="pytest-cov",
         )
     
-    def _run_benchmarks(self, profile: ExecutionProfile) -> PerformanceMetrics:
-        """Run performance benchmarks."""
-        # Placeholder - would run actual benchmarks
+    def _run_benchmarks(self, profile: ExecutionProfile) -> Optional[PerformanceMetrics]:
+        """
+        Run performance benchmarks.
+        
+        Returns:
+            PerformanceMetrics if benchmarks were run, None if benchmark infrastructure
+            is not available. When returning placeholder data, estimated=True is set.
+        """
+        # Check if benchmark script exists
+        bench_script = self.repo_root / "benchmarks" / "performance_suite.py"
+        if not bench_script.exists():
+            logger.warning("Benchmark script not found, returning estimated metrics")
+            return PerformanceMetrics(
+                latency_p50_ms=125.0,
+                latency_p95_ms=280.0,
+                latency_p99_ms=347.0,
+                throughput_rps=450.0,
+                reproducibility_rate=99.3,
+                sample_count=1000,
+                profile=profile.value,
+                estimated=True,  # Mark as placeholder
+            )
+        
+        # TODO: Run actual benchmarks when infrastructure is ready
         return PerformanceMetrics(
             latency_p50_ms=125.0,
             latency_p95_ms=280.0,
@@ -575,6 +597,7 @@ class MetricsVerifier:
             reproducibility_rate=99.3,
             sample_count=1000,
             profile=profile.value,
+            estimated=True,  # Mark as placeholder until real benchmarks run
         )
     
     def _measure_graph(self) -> Optional[GraphMetrics]:
@@ -739,9 +762,34 @@ class MetricsVerifier:
         claims: List[ClaimVerification],
         metrics: MeasuredMetrics,
     ) -> VerificationState:
-        """Compute overall verification state."""
-        # Fail closed if any test failed
+        """Compute overall verification state.
+        
+        FAIL-CLOSED semantics:
+        - Any test failure → FAIL_CLOSED
+        - Non-zero exit code → FAIL_CLOSED  
+        - Missing JUnit results → FAIL_CLOSED
+        - Unverified MEASURED claims → PENDING
+        - Scorecard below threshold → PENDING
+        - Otherwise → VERIFIED
+        """
+        # FAIL-CLOSED: Check for test failures
         if metrics.tests.failed > 0:
+            logger.warning(f"FAIL_CLOSED: {metrics.tests.failed} test(s) failed")
+            return VerificationState.FAIL_CLOSED
+        
+        # FAIL-CLOSED: Check for non-zero exit code (catches crashes, errors)
+        if metrics.tests.python_tests and metrics.tests.python_tests.exit_code != 0:
+            logger.warning(f"FAIL_CLOSED: pytest exit code {metrics.tests.python_tests.exit_code}")
+            return VerificationState.FAIL_CLOSED
+        
+        # FAIL-CLOSED: Check for missing JUnit results (test didn't run or no tests found)
+        # python_tests always exists, so check if total is 0 AND exit_code is 0 (silent skip)
+        # OR if python_tests is None (should never happen, but fail-closed anyway)
+        if metrics.tests.python_tests is None or (
+            metrics.tests.total == 0 and 
+            metrics.tests.python_tests.exit_code == 0
+        ):
+            logger.warning("FAIL_CLOSED: No test results found - test suite may not have run")
             return VerificationState.FAIL_CLOSED
         
         # Check for unverified MEASURED claims
@@ -859,12 +907,36 @@ Examples:
             sys.exit(1)
             
     elif args.command == "validate":
-        with open(args.receipt) as f:
-            data = json.load(f)
+        try:
+            with open(args.receipt) as f:
+                data = json.load(f)
+        except (IOError, json.JSONDecodeError) as e:
+            print(f"ERROR: Failed to read receipt: {e}")
+            sys.exit(1)
         
         print(f"Receipt ID: {data['meta']['receipt_id']}")
         print(f"Generated: {data['meta']['generated_at']}")
         print(f"State: {data['state']}")
+        
+        # Verify integrity hash
+        stored_hash = data.get('integrity', {}).get('content_hash', '')
+        if stored_hash:
+            # Recompute hash over content (excluding hash itself)
+            data_copy = json.loads(json.dumps(data))
+            data_copy['integrity']['content_hash'] = ''
+            data_copy['integrity']['signature'] = None
+            content = json.dumps(data_copy, sort_keys=True, default=str)
+            computed_hash = hashlib.sha256(content.encode()).hexdigest()
+            
+            if computed_hash != stored_hash:
+                print(f"ERROR: Integrity check failed!")
+                print(f"  Expected: {stored_hash}")
+                print(f"  Computed: {computed_hash}")
+                sys.exit(1)
+            else:
+                print("Integrity: VERIFIED (hash matches)")
+        else:
+            print("Integrity: SKIPPED (no hash in receipt)")
         
         if args.strict and data['state'] != "VERIFIED":
             print("ERROR: Strict validation failed")

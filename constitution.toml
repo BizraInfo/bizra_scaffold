@@ -1,0 +1,315 @@
+# ╔═══════════════════════════════════════════════════════════════════════════════╗
+# ║                           BIZRA CONSTITUTION v1.0.0                           ║
+# ║                     Machine-Readable Ihsān Protocol                           ║
+# ║═══════════════════════════════════════════════════════════════════════════════║
+# ║  This file is the FROZEN EXECUTABLE LAW of the BIZRA Sovereignty Framework.  ║
+# ║  Any modification requires:                                                   ║
+# ║    1. Formal governance proposal with Ihsān impact analysis                   ║
+# ║    2. 7-day deliberation period                                               ║
+# ║    3. Supermajority (≥67%) approval from Cognitive Sovereigns                 ║
+# ║    4. Re-attestation of all dependent ZK circuits                             ║
+# ╚═══════════════════════════════════════════════════════════════════════════════╝
+
+[meta]
+version = "1.0.0"
+schema_version = "2024-12-26"
+effective_date = "2024-12-26T00:00:00Z"
+hash_algorithm = "blake3"
+signature_algorithm = "ed25519"
+pq_migration_target = "dilithium5"
+canonical_format = "rfc8785"  # JCS (JSON Canonicalization Scheme)
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 1: IHSĀN INVARIANTS
+# ─────────────────────────────────────────────────────────────────────────────────
+# These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
+# Violation results in immediate action rejection (fail-closed).
+
+[invariants.ihsan]
+# Core threshold: No action may proceed with Ihsān score below this value
+minimum_threshold = 0.95
+
+# Emergency degraded mode threshold (requires formal declaration)
+emergency_threshold = 0.90
+
+# Ihsān score precision (decimal places for fixed-point arithmetic)
+precision = 3  # 0.950 → 950 in ZK circuits
+
+# Calculation weights for composite Ihsān score
+[invariants.ihsan.weights]
+snr_contribution = 0.40      # Signal-to-Noise Ratio weight
+impact_contribution = 0.35   # Consequential impact weight
+intent_contribution = 0.25   # Intent alignment weight
+
+# SNR (Signal-to-Noise Ratio) thresholds
+[invariants.ihsan.snr]
+minimum = 0.75
+excellent = 0.95
+critical_action_minimum = 0.90
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 2: JUSTICE INVARIANTS
+# ─────────────────────────────────────────────────────────────────────────────────
+# Economic and distributive justice constraints.
+
+[invariants.justice]
+# Maximum Gini coefficient for resource distribution
+max_gini_coefficient = 0.35
+
+# Minimum resource allocation for any participant
+min_allocation_floor = 0.05
+
+# Maximum concentration in single entity
+max_single_entity_share = 0.25
+
+# Rebalancing trigger threshold
+rebalance_trigger = 0.30
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 3: VERIFICATION GATES
+# ─────────────────────────────────────────────────────────────────────────────────
+# Tiered verification with strict latency budgets.
+
+[gates.schema]
+order = 1
+name = "SCHEMA_VALIDATION"
+description = "JSON Schema compliance check"
+tier = "CHEAP"
+max_latency_ms = 5
+reject_code = 1  # REJECT_SCHEMA
+mandatory = true
+
+[gates.signature]
+order = 2
+name = "SIGNATURE_VERIFICATION"
+description = "Ed25519 cryptographic signature validation"
+tier = "CHEAP"
+max_latency_ms = 10
+reject_code = 2  # REJECT_SIGNATURE
+mandatory = true
+algorithms = ["ed25519", "dilithium5"]
+
+[gates.timestamp]
+order = 3
+name = "TIMESTAMP_VALIDATION"
+description = "Temporal bounds checking with drift tolerance"
+tier = "CHEAP"
+max_latency_ms = 2
+reject_code = 4  # REJECT_TIMESTAMP_STALE
+mandatory = true
+
+[gates.timestamp.bounds]
+max_drift_seconds = 120
+min_drift_seconds = -120
+ttl_seconds = 300
+
+[gates.replay]
+order = 4
+name = "REPLAY_RESISTANCE"
+description = "Nonce uniqueness and TTL cache validation"
+tier = "CHEAP"
+max_latency_ms = 5
+reject_code = 3  # REJECT_NONCE_REPLAY
+mandatory = true
+
+[gates.replay.cache]
+max_entries = 100000
+ttl_seconds = 120
+eviction_policy = "LRU"
+
+[gates.role]
+order = 5
+name = "ROLE_AUTHORIZATION"
+description = "PAT/SAT role separation enforcement"
+tier = "CHEAP"
+max_latency_ms = 3
+reject_code = 5  # REJECT_ROLE_FORBIDDEN
+mandatory = true
+
+[gates.role.permissions]
+pat_allowed = ["propose", "sign", "submit"]
+sat_allowed = ["verify", "commit", "issue_receipt"]
+forbidden_cross = ["pat_commit", "sat_propose"]
+
+[gates.snr]
+order = 6
+name = "SNR_THRESHOLD"
+description = "Signal-to-Noise Ratio minimum enforcement"
+tier = "MEDIUM"
+max_latency_ms = 50
+reject_code = 7  # REJECT_SNR_BELOW_MIN
+mandatory = true
+
+[gates.ihsan]
+order = 7
+name = "IHSAN_THRESHOLD"
+description = "Ihsān ethical score minimum enforcement"
+tier = "MEDIUM"
+max_latency_ms = 100
+reject_code = 6  # REJECT_IHSAN_BELOW_MIN
+mandatory = true
+
+[gates.policy]
+order = 8
+name = "POLICY_BINDING"
+description = "Constitution hash binding verification"
+tier = "MEDIUM"
+max_latency_ms = 20
+reject_code = 8  # REJECT_POLICY_MISMATCH
+mandatory = true
+
+[gates.formal]
+order = 9
+name = "FORMAL_VERIFICATION"
+description = "Optional Z3/SMT-based formal proof verification"
+tier = "EXPENSIVE"
+max_latency_ms = 2000
+reject_code = 11  # REJECT_FORMAL_PROOF_FAILED
+mandatory = false  # Only for critical actions
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 4: TIER DEFINITIONS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[tiers.cheap]
+name = "CHEAP"
+max_latency_ms = 10
+description = "Fast, stateless checks (schema, signature, timestamp)"
+parallel_allowed = true
+
+[tiers.medium]
+name = "MEDIUM"
+max_latency_ms = 150
+description = "Stateful checks requiring context (Ihsān, SNR, policy)"
+parallel_allowed = false
+
+[tiers.expensive]
+name = "EXPENSIVE"
+max_latency_ms = 2000
+description = "Formal verification, ZK proof generation"
+parallel_allowed = false
+requires_explicit_opt_in = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 5: AGENT ROLES
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[agents.pat]
+role = "PROVER"
+description = "Proposal Agent (Prover/Builder) - Creates and signs proposals"
+can_propose = true
+can_sign = true
+can_commit = false  # CRITICAL: PAT cannot commit
+can_verify = false
+
+[agents.sat]
+role = "VERIFIER"
+description = "Sovereignty Agent (Verifier/Governor) - Verifies and commits"
+can_propose = false  # CRITICAL: SAT cannot propose
+can_sign = false
+can_commit = true
+can_verify = true
+issues_receipts = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 6: CRYPTOGRAPHIC PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[crypto.digest]
+algorithm = "blake3"
+domain_prefix = "bizra-pci-v1:"
+output_bytes = 32
+
+[crypto.signature]
+algorithm = "ed25519"
+key_bytes = 32
+signature_bytes = 64
+
+[crypto.nonce]
+bytes = 32
+source = "csprng"
+
+[crypto.pq_migration]
+enabled = false
+target_algorithm = "dilithium5"
+target_date = "2026-01-01T00:00:00Z"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 7: ZK CIRCUIT PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+# Parameters for RiscZero STARK circuit compilation.
+
+[zk.circuit]
+name = "ihsan-verifier"
+version = "1.0.0"
+backend = "risc0"
+hash_algorithm = "sha256"  # Constraint: RiscZero uses SHA256 internally
+
+[zk.circuit.inputs]
+agent_id_bits = 64
+transaction_hash_bits = 256
+snr_score_bits = 64
+ihsan_score_bits = 64
+impact_score_bits = 64
+
+[zk.circuit.thresholds]
+# Fixed-point representation: 0.95 × 1000 = 950
+ihsan_minimum_fixed = 950
+snr_minimum_fixed = 750
+
+[zk.proof]
+scheme = "stark"
+security_bits = 128
+recursive = true
+batch_size = 1000
+
+[zk.verifier]
+chain = "ethereum"
+contract_name = "IhsanConstitutionalCourt"
+gas_limit = 500000
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 8: OPERATIONAL PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[operations.logging]
+level = "INFO"
+format = "json"
+include_envelope_id = true
+redact_signatures = true
+
+[operations.metrics]
+enabled = true
+prefix = "bizra_pci"
+export_interval_seconds = 15
+
+[operations.alerts]
+ihsan_warning_threshold = 0.96
+ihsan_critical_threshold = 0.95
+latency_warning_ms = 100
+latency_critical_ms = 150
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 9: GOVERNANCE
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[governance]
+amendment_quorum = 0.67
+deliberation_days = 7
+veto_threshold = 0.33
+emergency_override_threshold = 0.90
+
+[governance.immutable]
+# These sections CANNOT be amended without full re-genesis
+sections = ["invariants.ihsan.minimum_threshold", "agents.pat.can_commit", "agents.sat.can_propose"]
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 10: ATTESTATION
+# ─────────────────────────────────────────────────────────────────────────────────
+# This section is populated by the attestation process.
+
+[attestation]
+genesis_hash = ""  # Set during genesis ceremony
+last_attested = ""
+attestation_count = 0
+attested_by = []

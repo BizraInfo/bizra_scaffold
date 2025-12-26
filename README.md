@@ -45,3 +45,17 @@ This folder is a **starter kit** to help unify the scattered BIZRA components in
 7. **Run your development environment locally** using VS Code, GitHub Copilot, and Claude 4.5 Opus. Because everything is now unified, you can run tests (`nx test`), build services (`nx build`), and spin up local dev servers (`nx serve api`) from a single entry point.
 
 By following these steps you'll convert years of fragmented development into a cohesive, future-proof system.
+
+## Verification Kernel (BUILD-VERIFY-METRICS)
+
+This scaffold now includes a verification kernel that produces evidence receipts and metrics.
+
+### Quick start (local)
+
+```bash
+python tools/bizra_verify.py --out evidence --artifact-name bizra_scaffold --artifact-version local
+```
+
+### CI
+
+The workflow in `.github/workflows/verify.yml` runs the kernel and uploads evidence artifacts.

@@ -253,6 +253,9 @@ class SoftwareHSM(HSMProvider):
     For production, use a real HSM provider (AWS CloudHSM, Azure Key Vault, etc.)
     """
     
+    # File to store the master key alongside the encrypted storage
+    _MASTER_KEY_FILE = ".master_key"
+    
     def __init__(
         self,
         storage_path: Optional[Path] = None,
@@ -262,17 +265,114 @@ class SoftwareHSM(HSMProvider):
         Initialize software HSM.
         
         Args:
-            storage_path: Optional path for encrypted key storage
-            master_key: Optional master key for storage encryption (32 bytes)
+            storage_path: Optional path for encrypted key storage. When set,
+                keys are persisted and a stable master key is required.
+            master_key: Optional master key for storage encryption (32 bytes).
+                If storage_path is set and no master_key provided, will attempt
+                to load from disk or raise an error.
+                
+        Raises:
+            ValueError: If storage_path is set but no master_key is available
+                (either provided or loadable from disk).
         """
         self._storage_path = storage_path
-        self._master_key = master_key or secrets.token_bytes(32)
         self._keys: Dict[str, Dict] = {}  # key_id -> {metadata, key_material}
         self._connected = False
         self._lock = threading.RLock()
         
+        # Determine master key (stable for persistence)
+        if storage_path:
+            self._master_key = self._resolve_master_key(storage_path, master_key)
+        else:
+            # Ephemeral mode - random key is fine
+            self._master_key = master_key or secrets.token_bytes(32)
+        
         if storage_path:
             self._load_from_storage()
+    
+    def _resolve_master_key(
+        self,
+        storage_path: Path,
+        provided_key: Optional[bytes]
+    ) -> bytes:
+        """Resolve master key for persistent storage.
+        
+        Priority:
+        1. Use provided_key if given
+        2. Load from environment variable BIZRA_HSM_MASTER_KEY
+        3. Load from .master_key file next to storage
+        4. Raise error (don't generate random - would be unrecoverable)
+        """
+        import os
+        import base64
+        
+        # 1. Use provided key
+        if provided_key:
+            if len(provided_key) != 32:
+                raise ValueError("Master key must be exactly 32 bytes")
+            self._persist_master_key(storage_path, provided_key)
+            return provided_key
+        
+        # 2. Check environment variable
+        env_key = os.environ.get("BIZRA_HSM_MASTER_KEY")
+        if env_key:
+            try:
+                key = base64.b64decode(env_key)
+                if len(key) == 32:
+                    logger.info("Using master key from BIZRA_HSM_MASTER_KEY environment")
+                    return key
+            except Exception:
+                pass
+        
+        # 3. Load from file
+        key_file = storage_path.parent / self._MASTER_KEY_FILE
+        if key_file.exists():
+            try:
+                key = key_file.read_bytes()
+                if len(key) == 32:
+                    logger.info(f"Loaded master key from {key_file}")
+                    return key
+            except Exception as e:
+                logger.warning(f"Failed to load master key from file: {e}")
+        
+        # 4. Fail - don't generate random key for persistent storage
+        raise ValueError(
+            f"SoftwareHSM with storage_path requires a stable master_key. "
+            f"Either provide master_key parameter, set BIZRA_HSM_MASTER_KEY "
+            f"environment variable (base64-encoded 32 bytes), or create "
+            f"{key_file} with 32 random bytes. Generating a random key "
+            f"would make stored keys unrecoverable on restart."
+        )
+    
+    def _persist_master_key(self, storage_path: Path, key: bytes) -> None:
+        """Persist master key to disk for future use.
+        
+        Safety: Will not overwrite an existing master key file to prevent
+        accidental key loss. If overwrite is needed, delete the file first.
+        """
+        key_file = storage_path.parent / self._MASTER_KEY_FILE
+        try:
+            # Safety check: don't silently overwrite existing key file
+            if key_file.exists():
+                existing_key = key_file.read_bytes()
+                if existing_key == key:
+                    logger.debug("Master key file already exists with same key")
+                    return
+                else:
+                    logger.warning(
+                        f"Master key file {key_file} already exists with different content. "
+                        f"Not overwriting to prevent key loss. Delete manually if intended."
+                    )
+                    return
+            
+            key_file.parent.mkdir(parents=True, exist_ok=True)
+            key_file.write_bytes(key)
+            # Restrict permissions (best effort on Windows)
+            import stat
+            key_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
+            logger.info(f"Persisted master key to {key_file}")
+        except Exception as e:
+            logger.warning(f"Could not persist master key: {e}")
     
     def connect(self) -> None:
         """Connect (no-op for software HSM)."""

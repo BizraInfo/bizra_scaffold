@@ -1,0 +1,13 @@
+{
+  "threshold": 0.9,
+  "weights": {
+    "correctness": 0.22,
+    "safety": 0.22,
+    "user_benefit": 0.14,
+    "efficiency": 0.12,
+    "auditability": 0.12,
+    "anti_centralization": 0.08,
+    "robustness": 0.06,
+    "adl_fairness": 0.04
+  }
+}

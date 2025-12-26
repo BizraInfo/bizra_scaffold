@@ -280,10 +280,11 @@ class AttestationRateLimiter:
         limit_multiplier = self._get_limit_multiplier(node_id)
         
         # Check operation-specific limit
+        # RateLimiter.check() expects (ip, user_id, endpoint) - map node_id as user_id
         op_limiter = self._operation_limiters[operation]
         op_result = op_limiter.check(
-            identifier=f"{node_id}:{operation.name}",
-            cost=1
+            user_id=node_id,
+            endpoint=operation.name
         )
         
         if not op_result.allowed:
@@ -293,8 +294,7 @@ class AttestationRateLimiter:
         
         # Check global limit
         global_result = self._global_limiter.check(
-            identifier=node_id,
-            cost=1
+            user_id=node_id
         )
         
         if not global_result.allowed:

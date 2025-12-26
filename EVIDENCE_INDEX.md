@@ -59,7 +59,7 @@ Status values: `PENDING`, `VERIFIED`, `INVALIDATED`.
 | ID | Claim summary | Source doc | Evidence artifact | Status | Notes |
 |---|---|---|---|---|---|
 | EVID-026 | Canonical Ihsān Metric Definition | `BIZRA_SOT.md` | `BIZRA_SOT.md#L45-L65` | VERIFIED | 5 dimensions with weights summing to 1.0 |
-| EVID-027 | PoI parameters initial values | `BIZRA_SOT.md` | `BIZRA_SOT.md#L70-L85` | VERIFIED | ihsan_threshold=0.85, dimension weights defined |
+| EVID-027 | PoI parameters initial values | `BIZRA_SOT.md` | `BIZRA_SOT.md#L70-L85` | VERIFIED | ihsan_threshold=0.95, dimension weights defined |
 | EVID-028 | Evidence citation format specification | `BIZRA_SOT.md` | `BIZRA_SOT.md#L95-L110` | VERIFIED | Local, external, CI log formats specified |
 | EVID-029 | Change control process | `BIZRA_SOT.md` | `BIZRA_SOT.md#L87-L93` | VERIFIED | Version bump + evidence + tests required |
 

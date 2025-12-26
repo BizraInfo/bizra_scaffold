@@ -17,8 +17,8 @@ scipy==1.11.4       # Scientific computing
 # ──────────────────────────────────────────────────────────────────────────
 liboqs-python==0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
 cryptography==45.0.7        # Classical crypto (Ed25519, SHA3)
-pycryptodome==3.18.0        # Additional crypto primitives
-
+pycryptodome==3.18.0        # Additional crypto primitivesblake3==1.0.0               # Fast hashing for constitution
+toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
 # MEMORY & DATA STRUCTURES
 # ──────────────────────────────────────────────────────────────────────────
@@ -26,18 +26,18 @@ faiss-cpu==1.7.4            # Vector similarity search (L3 Episodic Memory)
 neo4j==5.13.0               # Graph database driver (L4 Semantic HyperGraph)
 networkx==3.3               # Graph analysis and algorithms
 redis==5.0.0                # In-memory cache (temporal chain acceleration)
-filelock>=3.20.1            # File locking (security fix CVE-2025-68146)
+filelock==3.20.1            # File locking (CVE-2025-68146: race condition fix)
 
 # ──────────────────────────────────────────────────────────────────────────
-# WEB FRAMEWORK & API
+# WEB FRAMEWORK & API (FastAPI/ASGI stack - no Flask required)
 # ──────────────────────────────────────────────────────────────────────────
+# NOTE: CORS is handled via fastapi.middleware.cors.CORSMiddleware (see core/engine/api.py)
+# werkzeug and flask-cors are NOT needed - this is a pure ASGI/Starlette stack
 fastapi==0.127.0            # Modern async web framework
 uvicorn[standard]==0.40.0   # ASGI server with extras (uvloop, httptools)
 pydantic==2.12.5            # Data validation
 pydantic-settings==2.1.0    # Settings management
 python-multipart==0.0.6     # File uploads support
-werkzeug>=3.1.4             # WSGI utilities (security fix CVE-2025-66221)
-flask-cors>=6.0.0           # CORS support (security fix CVE-2024-6844/6866/6839)
 
 # ──────────────────────────────────────────────────────────────────────────
 # MONITORING & OBSERVABILITY
@@ -46,7 +46,7 @@ prometheus-client==0.19.0   # Prometheus metrics exporter
 python-json-logger==2.0.7   # Structured JSON logging
 opentelemetry-api==1.21.0   # Distributed tracing
 opentelemetry-sdk==1.21.0   # OpenTelemetry SDK
-urllib3>=2.6.0              # HTTP client (security fix CVE-2025-66418/66471)
+urllib3==2.6.0              # HTTP client (CVE-2025-66418/66471: request smuggling fix)
 
 # ──────────────────────────────────────────────────────────────────────────
 # DATABASE & PERSISTENCE

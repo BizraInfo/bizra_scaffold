@@ -445,13 +445,34 @@ def rate_limit(
 
 
 class RateLimitExceeded(Exception):
-    """Exception raised when rate limit is exceeded."""
+    """Exception raised when rate limit is exceeded.
     
-    def __init__(self, result: RateLimitResult):
-        self.result = result
-        super().__init__(
-            f"Rate limit exceeded. Retry after {result.retry_after:.2f}s"
-        )
+    Supports two initialization patterns for compatibility:
+    1. RateLimitExceeded(result: RateLimitResult) - from hardening.py rate_limit decorator
+    2. RateLimitExceeded(message: str, retry_after: float) - from attestation_ratelimit.py
+    """
+    
+    def __init__(
+        self,
+        result_or_message: Union[RateLimitResult, str],
+        retry_after: Optional[float] = None
+    ):
+        if isinstance(result_or_message, RateLimitResult):
+            # Called with RateLimitResult object
+            self.result = result_or_message
+            self.retry_after = result_or_message.retry_after or 0.0
+            # Handle None retry_after safely
+            if self.retry_after is not None and self.retry_after > 0:
+                message = f"Rate limit exceeded. Retry after {self.retry_after:.2f}s"
+            else:
+                message = "Rate limit exceeded"
+        else:
+            # Called with message string and optional retry_after
+            self.result = None
+            self.retry_after = retry_after or 0.0
+            message = result_or_message
+        
+        super().__init__(message)
 
 
 # =============================================================================

@@ -15,7 +15,7 @@ import json
 import os
 import pytest
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 import yaml
 
 
@@ -79,6 +79,12 @@ def compare_with_tolerance(expected: Any, actual: Any, tolerance: float) -> bool
     Returns:
         True if values match within tolerance
     """
+    # Handle infinity strings first (before numeric checks)
+    if isinstance(expected, str) and expected == "infinity":
+        return actual == float('inf') or actual == "infinity"
+    if isinstance(actual, str) and actual == "infinity":
+        return expected == float('inf') or expected == "infinity"
+    
     if isinstance(expected, dict) and isinstance(actual, dict):
         return all(
             k in actual and compare_with_tolerance(v, actual[k], tolerance)
@@ -90,22 +96,78 @@ def compare_with_tolerance(expected: Any, actual: Any, tolerance: float) -> bool
             for e, a in zip(expected, actual)
         )
     elif isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
-        if expected == "infinity" or actual == "infinity":
-            return str(expected) == str(actual)
         return abs(expected - actual) <= tolerance
-    elif isinstance(expected, str) and expected == "infinity":
-        return actual == float('inf') or actual == "infinity"
     else:
         return expected == actual
 
 
 # =============================================================================
-# MOCK IMPLEMENTATIONS
+# IMPLEMENTATION RESOLVER
 # =============================================================================
-# These mocks simulate the actual BIZRA functions for testing
+# Attempts to load real implementations, falls back to mocks with warnings
+
+def _resolve_function(function_path: str) -> Optional[Callable]:
+    """
+    Attempt to resolve a function path to a real implementation.
+    
+    Args:
+        function_path: Dotted path like "core.snr_scorer.SNRScorer.compute_snr"
+        
+    Returns:
+        Callable if found, None otherwise
+    """
+    import importlib
+    
+    parts = function_path.split(".")
+    
+    # Try different module/class/method splits
+    for i in range(len(parts) - 1, 0, -1):
+        module_path = ".".join(parts[:i])
+        remainder = parts[i:]
+        
+        try:
+            module = importlib.import_module(module_path)
+            obj = module
+            for attr in remainder:
+                obj = getattr(obj, attr)
+            return obj
+        except (ImportError, AttributeError):
+            continue
+    
+    return None
+
+
+def get_implementation(function_path: str, fallback: Optional[Callable] = None) -> Tuple[Callable, bool]:
+    """
+    Get implementation for a function path.
+    
+    Returns:
+        Tuple of (implementation, is_real) where is_real is True if 
+        the real implementation was found, False if using fallback.
+    """
+    real_impl = _resolve_function(function_path)
+    if real_impl is not None:
+        return real_impl, True
+    
+    if fallback is not None:
+        return fallback, False
+    
+    # No fallback - this is a manifest drift error
+    raise ValueError(
+        f"Implementation not found: {function_path}. "
+        f"Either the function doesn't exist or the manifest references "
+        f"a non-existent entry point. Update manifest.yaml or implement the function."
+    )
+
+
+# =============================================================================
+# MOCK IMPLEMENTATIONS (fallbacks for missing real implementations)
+# =============================================================================
+# WARNING: These mocks are used when real implementations don't exist.
+# Golden vector tests should use real implementations for proper contract testing.
 
 def mock_compute_snr_dual(signal_strength: float, noise_floor: float, **kwargs) -> Dict:
-    """Mock SNR computation."""
+    """Mock SNR computation - FALLBACK ONLY."""
     import math
     
     if noise_floor == 0:
@@ -139,7 +201,7 @@ def mock_compute_snr_dual(signal_strength: float, noise_floor: float, **kwargs) 
 
 
 def mock_evaluate_ethical_proposal(proposal: Dict, thresholds: Dict, **kwargs) -> Dict:
-    """Mock ethical evaluation."""
+    """Mock ethical evaluation - FALLBACK ONLY."""
     # Simplified scoring based on stakeholder count and timeline
     stakeholder_count = len(proposal.get("stakeholders", []))
     timeline = proposal.get("timeline", "unknown")
@@ -198,7 +260,7 @@ class TestGoldenVectorManifest:
         assert len(manifest["categories"]) > 0, "Manifest has no categories"
     
     def test_all_vectors_in_manifest(self):
-        """All vector files should be referenced in manifest."""
+        """All vector files should be referenced in manifest (fail on drift)."""
         manifest = load_manifest()
         vectors = discover_vectors()
         
@@ -207,15 +269,65 @@ class TestGoldenVectorManifest:
             for vec_name in info.get("vectors", []):
                 manifest_vectors.add(f"{category}/{vec_name}")
         
+        # Collect all unmatched vectors
+        unmatched_vectors = []
         for vector_path in vectors:
             relative = vector_path.relative_to(GOLDEN_VECTORS_DIR)
             category = relative.parent.name
             vec_name = relative.name
             
             key = f"{category}/{vec_name}"
-            # Note: this is informational - we don't fail if there are extra vectors
             if key not in manifest_vectors:
-                pytest.skip(f"Vector {key} not in manifest (may be additional test)")
+                unmatched_vectors.append(key)
+        
+        # FAIL on manifest drift - don't silently skip
+        if unmatched_vectors:
+            pytest.fail(
+                f"Manifest drift detected: {len(unmatched_vectors)} vector(s) not in manifest. "
+                f"Update manifest.yaml to include: {', '.join(unmatched_vectors)}"
+            )
+    
+    def test_manifest_entries_have_files(self):
+        """All manifest entries should have corresponding vector files."""
+        manifest = load_manifest()
+        missing_files = []
+        
+        # Check each category in manifest
+        for category_name in ["snr_scoring", "got_reasoning", "ethical_constraints", 
+                             "thermodynamic", "value_oracle", "integration"]:
+            category = manifest.get(category_name, [])
+            for entry in category:
+                file_path = entry.get("file", "")
+                full_path = GOLDEN_VECTORS_DIR / file_path
+                if not full_path.exists():
+                    missing_files.append(file_path)
+        
+        if missing_files:
+            pytest.fail(
+                f"Manifest references non-existent files: {', '.join(missing_files)}"
+            )
+    
+    def test_manifest_functions_are_resolvable(self):
+        """Manifest function paths should resolve to real implementations."""
+        manifest = load_manifest()
+        unresolvable = []
+        
+        # Check each category in manifest
+        for category_name in ["snr_scoring", "got_reasoning", "ethical_constraints", 
+                             "thermodynamic", "value_oracle", "integration"]:
+            category = manifest.get(category_name, [])
+            for entry in category:
+                func_path = entry.get("function", "")
+                if func_path:
+                    impl = _resolve_function(func_path)
+                    if impl is None:
+                        unresolvable.append(f"{entry.get('id', 'unknown')}: {func_path}")
+        
+        if unresolvable:
+            pytest.fail(
+                f"Manifest references unresolvable functions (implementation drift): "
+                f"{'; '.join(unresolvable)}"
+            )
 
 
 class TestGoldenVectorStructure:

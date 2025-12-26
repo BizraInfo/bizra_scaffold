@@ -7,11 +7,12 @@ This file is the canonical reference for the unified BIZRA project. All other do
 ## 1. Identity and Version
 
 - **`sot_id`**: `bizra-sot`
-- **`version`**: `1.0.0-active`
-- **`last_updated`**: `2025-12-22`
+- **`version`**: `1.0.1-active`
+- **`last_updated`**: `2025-12-26`
 - **`status`**: `ACTIVE`
 - **`owners`**: `SAT Council`
 - **`compatibility`**: defines the minimum versions of other components (e.g. Node0, protocol) that are compatible with this SOT.
+- **`change_notes`**: Fixed ihsan_threshold inconsistency (Section 4 now aligns with Section 3: IM >= 0.95)
 
 ## 2. Canonical Names and Roles
 
@@ -63,7 +64,7 @@ To attest an Ihsan Score, the validator must produce a signed bundle containing:
 
 ## 4. PoI Parameters (Initial Values)
 
-- **`ihsan_threshold`**: `0.85` (minimum validation score for attestation acceptance)
+- **`ihsan_threshold`**: `0.95` (minimum validation score for attestation acceptance - aligned with Ethics Enforcement invariant)
 - **Dimension Weights**:
   - Quality: `0.30`
   - Utility: `0.30`

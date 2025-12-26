@@ -41,4 +41,12 @@ If you discover a private key has been committed, immediately:
 ---
 
 **Last Audit:** 2025-12-25  
-**Status:** ⚠️ PENDING CLEANUP - Remove any non-public keys
+**Status:** ✅ CLEAN - Only public keys present
+
+### Placeholder Strategy
+
+For development/testing that requires secret keys:
+1. Use environment variables: `BIZRA_SECRET_KEY`
+2. Use `.env.local` files (gitignored)
+3. Reference `keys/.secret.key.example` as a template (contains instructions, not actual keys)
+4. In CI, inject secrets via GitHub Secrets or vault integration

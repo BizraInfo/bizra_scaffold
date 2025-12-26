@@ -5,7 +5,7 @@ Elite Practitioner Grade | FastAPI + Prometheus + JWT Auth
 
 Features:
 - RESTful API for cognitive operations
-- JWT authentication for protected endpoints
+- JWT authentication for protected endpoints (using SecureJWTService)
 - Secure CORS configuration
 - Prometheus metrics export
 - Health checks and readiness probes
@@ -22,8 +22,8 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import asyncio
 import time
-import jwt
 import secrets
+import logging
 
 # Prometheus metrics
 from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
@@ -31,17 +31,48 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 # Internal imports
 from core.config import get_config
 from core.security.quantum_security_v2 import QuantumSecurityV2
+from core.security.jwt_hardened import (
+    SecureJWTService,
+    JWTConfig,
+    TokenValidationError,
+    TokenRevocationError,
+)
 from core.layers.memory_layers_v2 import (
     L2WorkingMemoryV2,
     L3EpisodicMemoryV2,
     L4SemanticHyperGraphV2
 )
 
+logger = logging.getLogger(__name__)
+
 # Initialize config
 config = get_config()
 
 # Security scheme
 security_scheme = HTTPBearer(auto_error=False)
+
+# Initialize hardened JWT service (singleton)
+_jwt_service: Optional[SecureJWTService] = None
+
+
+def _get_jwt_service() -> SecureJWTService:
+    """Get or create the JWT service singleton."""
+    global _jwt_service
+    if _jwt_service is None:
+        if not config.jwt_secret:
+            raise ValueError("JWT secret not configured. Set BIZRA_JWT_SECRET environment variable.")
+        
+        jwt_config = JWTConfig(
+            secret=config.jwt_secret,
+            algorithm=config.jwt_algorithm,
+            issuer="bizra-api",
+            audience="bizra-clients",
+            access_token_lifetime=timedelta(hours=config.jwt_expiry_hours),
+            strict_validation=True,  # Enforce strong secrets
+        )
+        _jwt_service = SecureJWTService(jwt_config)
+        logger.info("Initialized SecureJWTService with hardened settings")
+    return _jwt_service
 
 
 # ============================================================================
@@ -54,39 +85,33 @@ class AuthenticationError(Exception):
 
 
 def verify_jwt_token(token: str) -> Dict[str, Any]:
-    """Verify and decode JWT token."""
-    if not config.jwt_secret:
-        raise AuthenticationError("JWT secret not configured")
+    """Verify and decode JWT token using SecureJWTService.
     
+    Uses hardened verification with:
+    - Issuer/audience validation
+    - JTI uniqueness checks
+    - Key rotation support
+    - Revocation checking
+    """
     try:
-        payload = jwt.decode(
-            token,
-            config.jwt_secret,
-            algorithms=[config.jwt_algorithm]
-        )
+        service = _get_jwt_service()
+        payload = service.verify_token(token, expected_type="access")
         return payload
-    except jwt.ExpiredSignatureError:
-        raise AuthenticationError("Token has expired")
-    except jwt.InvalidTokenError as e:
-        raise AuthenticationError(f"Invalid token: {e}")
+    except TokenValidationError as e:
+        raise AuthenticationError(str(e))
+    except TokenRevocationError:
+        raise AuthenticationError("Token has been revoked")
+    except Exception as e:
+        raise AuthenticationError(f"Token verification failed: {e}")
 
 
 def create_jwt_token(subject: str, additional_claims: Dict[str, Any] = None) -> str:
-    """Create a new JWT token."""
-    if not config.jwt_secret:
-        raise ValueError("JWT secret not configured")
-    
-    now = datetime.utcnow()
-    payload = {
-        "sub": subject,
-        "iat": now,
-        "exp": now + timedelta(hours=config.jwt_expiry_hours),
-        "jti": secrets.token_hex(16),  # Unique token ID
-    }
-    if additional_claims:
-        payload.update(additional_claims)
-    
-    return jwt.encode(payload, config.jwt_secret, algorithm=config.jwt_algorithm)
+    """Create a new JWT token using SecureJWTService."""
+    service = _get_jwt_service()
+    return service.create_access_token(
+        subject=subject,
+        claims=additional_claims,
+    )
 
 
 async def get_current_user(

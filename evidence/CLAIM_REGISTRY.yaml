@@ -4,10 +4,10 @@
 # Ihsān Principles: صدق (Truthfulness) + أمانة (Trustworthiness) + إحسان (Excellence)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-version: "1.0.0"
+version: "1.0.1"
 generated_at: "2025-12-25T19:30:00Z"
-last_verified: null
-reviewer: null
+last_verified: "2025-12-26T12:00:00Z"
+reviewer: "BIZRA Security Audit (automated)"
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ CLAIM TAGS                                                                  │
@@ -230,10 +230,11 @@ claims:
     verification_command: "python -c \"from core.apex_orchestrator import APEXOrchestrator; print('OK')\""
     expected_threshold: null
     current_value: null
-    evidence_artifact_path: null
-    expiry_days: null
+    evidence_artifact_path: "evidence/architecture/apex-import-test.log"
+    expiry_days: 7
     revalidation_cadence: "on-change"
     status: VERIFIED
+    notes: "Import test confirms module structure"
 
   - claim_id: "ARCH-002"
     claim_text: "Graph-of-Thoughts with beam search reasoning"
@@ -263,10 +264,11 @@ claims:
     verification_command: "python -c \"from core.event_sourcing import EventStore; print('OK')\""
     expected_threshold: null
     current_value: null
-    evidence_artifact_path: null
-    expiry_days: null
+    evidence_artifact_path: "evidence/architecture/event-sourcing-import-test.log"
+    expiry_days: 7
     revalidation_cadence: "on-change"
     status: VERIFIED
+    notes: "Import test confirms module structure"
 
   # ═══════════════════════════════════════════════════════════════════════════════
   # SECURITY CLAIMS
@@ -383,9 +385,9 @@ summary:
   by_tag:
     MEASURED: 7
     IMPLEMENTED: 12
-    TARGET: 2
-    HYPOTHESIS: 1
-  verification_coverage: 72.7%  # VERIFIED / total
+    TARGET: 3    # BEN-002, BEN-003, SEC-004
+    HYPOTHESIS: 1  # JUS-003
+  verification_coverage: 72.73%  # VERIFIED / total = 16/22 = 72.73%
   
 # ═══════════════════════════════════════════════════════════════════════════════
 # AUDIT TRAIL

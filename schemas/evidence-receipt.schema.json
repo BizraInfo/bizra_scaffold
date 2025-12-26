@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bizra.info/schemas/evidence-receipt.schema.json",
+  "title": "BIZRA Evidence Receipt",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "created_at_utc",
+    "artifact",
+    "checks",
+    "policy",
+    "metrics",
+    "hashes",
+    "environment",
+    "result"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "description": "Deterministic ID for this receipt (uuid or hash)."
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "commit",
+        "path"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "details"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "skip"
+            ]
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "decision",
+        "engine",
+        "ruleset_hash"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "engine": {
+          "type": "string",
+          "description": "OPA/Rego, internal rules, etc."
+        },
+        "ruleset_hash": {
+          "type": "string"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "hashes": {
+      "type": "object",
+      "required": [
+        "repo_tree_sha256"
+      ],
+      "properties": {
+        "repo_tree_sha256": {
+          "type": "string"
+        },
+        "sbom_sha256": {
+          "type": "string"
+        },
+        "binary_sha256": {
+          "type": "string"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "os",
+        "python",
+        "node",
+        "rust",
+        "cpu",
+        "memory_gb"
+      ],
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "python": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "rust": {
+          "type": "string"
+        },
+        "cpu": {
+          "type": "string"
+        },
+        "memory_gb": {
+          "type": "number"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "overall",
+        "confidence",
+        "notes",
+        "risks"
+      ],
+      "properties": {
+        "overall": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

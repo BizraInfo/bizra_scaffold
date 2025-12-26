@@ -73,13 +73,13 @@
           "description": "Operating system identifier"
         },
         "cpu": {
-          "type": "string",
-          "description": "CPU brand/model"
+          "type": ["string", "null"],
+          "description": "CPU brand/model (optional, for environment fingerprinting)"
         },
         "ram_gb": {
-          "type": "number",
+          "type": ["number", "null"],
           "minimum": 0,
-          "description": "Total RAM in gigabytes"
+          "description": "Total RAM in gigabytes (optional, for environment fingerprinting)"
         },
         "cpu_count": {
           "type": "integer",
@@ -200,6 +200,7 @@
             },
             "artifact_hash": {
               "type": "string",
+              "pattern": "^[a-f0-9]{8,64}$",
               "description": "SHA-256 hash prefix of coverage artifact"
             },
             "method": {
@@ -377,8 +378,9 @@
     },
     "test_suite_result": {
       "type": ["object", "null"],
+      "description": "Test suite execution result. Invariant: total = passed + failed + skipped",
       "properties": {
-        "total": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0, "description": "Total tests (must equal passed + failed + skipped)" },
         "passed": { "type": "integer", "minimum": 0 },
         "failed": { "type": "integer", "minimum": 0 },
         "skipped": { "type": "integer", "minimum": 0 },
