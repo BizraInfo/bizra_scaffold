@@ -152,6 +152,7 @@ jobs:
       failed: ${{ steps.tests.outputs.failed }}
       skipped: ${{ steps.tests.outputs.skipped }}
       pass_rate: ${{ steps.tests.outputs.pass_rate }}
+      exit_code: ${{ steps.tests.outputs.exit_code }}
       
     steps:
       - name: Checkout
@@ -183,6 +184,10 @@ jobs:
             --cov-report=xml:coverage.xml \
             --cov-report=term-missing
           PYTEST_EXIT=$?
+          
+          # CRITICAL: Write exit code FIRST before any parsing that might fail
+          echo "exit_code=$PYTEST_EXIT" >> $GITHUB_OUTPUT
+          
           set -e
           
           # Parse results
@@ -209,7 +214,6 @@ jobs:
             echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
             echo "errors=$ERRORS" >> $GITHUB_OUTPUT
             echo "pass_rate=$PASS_RATE" >> $GITHUB_OUTPUT
-            echo "exit_code=$PYTEST_EXIT" >> $GITHUB_OUTPUT
           else
             # FAIL-CLOSED: Missing JUnit file is a failure
             echo "total=0" >> $GITHUB_OUTPUT
@@ -218,7 +222,6 @@ jobs:
             echo "skipped=0" >> $GITHUB_OUTPUT
             echo "errors=1" >> $GITHUB_OUTPUT
             echo "pass_rate=0" >> $GITHUB_OUTPUT
-            echo "exit_code=1" >> $GITHUB_OUTPUT
           fi
           
       - name: Upload Test Results
