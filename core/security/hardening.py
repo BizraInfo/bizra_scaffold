@@ -20,7 +20,7 @@ import ipaddress
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from functools import wraps
 from threading import Lock
@@ -1100,7 +1100,7 @@ class CSRFProtection:
             ).hexdigest()
             
             return hmac.compare_digest(signature, expected_signature)
-        except Exception:
+        except (ValueError, TypeError, IndexError):
             return False
 
 
@@ -1116,7 +1116,7 @@ class APIKeyConfig:
     name: str
     scopes: Set[str]
     rate_limit_tier: str = "standard"
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None
     last_used: Optional[datetime] = None
     is_active: bool = True
@@ -1149,7 +1149,7 @@ class APIKeyManager:
         
         expires_at = None
         if expires_in:
-            expires_at = datetime.utcnow() + expires_in
+            expires_at = datetime.now(timezone.utc) + expires_in
         
         config = APIKeyConfig(
             key_id=key_id,
@@ -1185,7 +1185,7 @@ class APIKeyManager:
         if not config.is_active:
             return None
         
-        if config.expires_at and datetime.utcnow() > config.expires_at:
+        if config.expires_at and datetime.now(timezone.utc) > config.expires_at:
             return None
         
         hashed = self._hash_key(raw_key)
@@ -1194,7 +1194,7 @@ class APIKeyManager:
         
         # Update last used
         with self._lock:
-            config.last_used = datetime.utcnow()
+            config.last_used = datetime.now(timezone.utc)
         
         return config
     

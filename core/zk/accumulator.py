@@ -261,13 +261,17 @@ class AccumulatorState:
     
     def to_json(self) -> str:
         """Serialize to JSON."""
-        return json.dumps({
+        return json.dumps(self.to_dict(), indent=2)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a dictionary."""
+        return {
             "merkle_root": self.merkle_root.hex(),
             "leaf_count": self.leaf_count,
             "constitution_hash": self.constitution_hash,
             "batch_id": self.batch_id,
             "sealed_at": self.sealed_at.isoformat(),
-        }, indent=2)
+        }
 
 
 @dataclass
@@ -688,7 +692,7 @@ class ZKAccumulator:
             "status": self._status.name,
             "receipt_count": len(self._receipts),
             "merkle_root": self.get_merkle_root().hex() if self._receipts else None,
-            "sealed_state": self._sealed_state.to_json() if self._sealed_state else None,
+            "sealed_state": self._sealed_state.to_dict() if self._sealed_state else None,
         }, indent=2)
 
 
@@ -745,8 +749,8 @@ class AccumulatorManager:
                 return self._current.batch_id, index
             except BatchOverflowError:
                 # Seal current and create new
-                self._sealed.append(self._current)
                 self._current.seal()
+                self._sealed.append(self._current)
                 
                 self._current = ZKAccumulator(
                     constitution_hash=self._constitution_hash,

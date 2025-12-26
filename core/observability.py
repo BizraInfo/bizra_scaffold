@@ -167,7 +167,7 @@ class TraceContext:
                 parent_span_id=None,  # Unknown in header
                 trace_flags=int(parts[3], 16),
             )
-        except Exception:
+        except (ValueError, IndexError):
             return None
     
     @property

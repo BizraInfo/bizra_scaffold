@@ -254,6 +254,8 @@ class ProofInput:
                 "constitution_hash": self.constitution_hash,
                 "ihsan_threshold": self.public_inputs.get("ihsan_threshold", 950),
                 "snr_threshold": self.public_inputs.get("snr_threshold", 750),
+                "agent_id": self.public_inputs.get("agent_id"),
+                "transaction_hash": self.public_inputs.get("transaction_hash"),
             },
         }
 
@@ -408,18 +410,24 @@ class ZKBridge:
             )
             
             # Convert scores to fixed-point
-            ihsan_score = self._to_fixed_point(
-                envelope.metadata.ihsan_score if envelope.metadata.ihsan_score else 0.0
+            ihsan_value = (
+                envelope.metadata.ihsan_score
+                if envelope.metadata.ihsan_score is not None
+                else 0.0
             )
-            snr_score = self._to_fixed_point(
-                envelope.metadata.snr_score if envelope.metadata.snr_score else 0.0
+            snr_value = (
+                envelope.metadata.snr_score
+                if envelope.metadata.snr_score is not None
+                else 0.0
             )
+            ihsan_score = self._to_fixed_point(ihsan_value)
+            snr_score = self._to_fixed_point(snr_value)
             
             # Impact score from extra dict if present
             impact_score = 0
             if hasattr(envelope.metadata, "extra") and envelope.metadata.extra:
-                extra_impact = envelope.metadata.extra.get("impact_score", 0.0)
-                if extra_impact:
+                extra_impact = envelope.metadata.extra.get("impact_score")
+                if extra_impact is not None:
                     impact_score = self._to_fixed_point(extra_impact)
             
             # Parse timestamp from envelope (datetime object)
@@ -430,6 +438,8 @@ class ZKBridge:
                     envelope.timestamp.replace("Z", "+00:00")
                 )
                 timestamp = int(dt.timestamp())
+            elif isinstance(envelope.timestamp, (int, float)):
+                timestamp = int(envelope.timestamp)
             else:
                 timestamp = int(datetime.now(timezone.utc).timestamp())
             
@@ -481,34 +491,40 @@ class ZKBridge:
             envelope_id = envelope_dict.get("envelope_id", "")
             metadata = envelope_dict.get("metadata", {})
             
-            # Compute transaction hash using same method as convert_envelope:
-            # Combine envelope_id and digest (or compute digest from payload)
-            payload = envelope_dict.get("payload", {})
-            if "digest" in envelope_dict:
-                digest = envelope_dict["digest"]
-            else:
-                # Compute digest from payload using canonical JSON
-                digest = hashlib.sha256(
-                    json.dumps(payload, sort_keys=True, separators=(',', ':')).encode()
-                ).hexdigest()
-            
+            # Compute transaction hash using same method as convert_envelope
+            digest = (
+                envelope_dict.get("digest")
+                or envelope_dict.get("envelope_digest")
+                or envelope_dict.get("payload_digest")
+            )
+            if not digest and PCI_AVAILABLE:
+                try:
+                    digest = _PCIEnvelope.from_dict(envelope_dict).digest()
+                except Exception:
+                    digest = None
+            if not digest:
+                combined = json.dumps(
+                    envelope_dict,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    default=str,
+                )
+                digest = hashlib.sha256(combined.encode()).hexdigest()
             transaction_hash = self._compute_transaction_hash(envelope_id, digest)
             
             # Convert scores - check both metadata.X and metadata.extra.X for consistency
-            ihsan_score = self._to_fixed_point(
-                metadata.get("ihsan_score", 0.0)
-            )
-            snr_score = self._to_fixed_point(
-                metadata.get("snr_score", 0.0)
-            )
+            ihsan_raw = metadata.get("ihsan_score")
+            snr_raw = metadata.get("snr_score")
+            ihsan_score = self._to_fixed_point(ihsan_raw if ihsan_raw is not None else 0.0)
+            snr_score = self._to_fixed_point(snr_raw if snr_raw is not None else 0.0)
             
             # Impact score: check metadata.extra.impact_score first (matches convert_envelope),
             # then fall back to metadata.impact_score for dict-based input compatibility
             impact_score = 0
             extra = metadata.get("extra", {})
-            if extra and "impact_score" in extra:
+            if "impact_score" in extra and extra["impact_score"] is not None:
                 impact_score = self._to_fixed_point(extra["impact_score"])
-            elif "impact_score" in metadata:
+            elif "impact_score" in metadata and metadata["impact_score"] is not None:
                 impact_score = self._to_fixed_point(metadata["impact_score"])
             
             # Parse timestamp from envelope level
@@ -517,6 +533,8 @@ class ZKBridge:
                 if isinstance(ts_str, str):
                     dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
                     timestamp = int(dt.timestamp())
+                elif isinstance(ts_str, (int, float)):
+                    timestamp = int(ts_str)
                 else:
                     timestamp = int(datetime.now(timezone.utc).timestamp())
             else:

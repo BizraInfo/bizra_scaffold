@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import time
 import secrets
@@ -484,7 +484,7 @@ async def execute_cognitive_operation(
                 "chain_length": secured["chain_length"],
                 "cumulative_entropy": secured["cumulative_entropy"]
             },
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.now(timezone.utc).isoformat()
         )
     
     except Exception as e:
@@ -517,8 +517,8 @@ async def metrics():
         try:
             stats = await app.state.l4.get_stats()
             l4_node_count.set(stats["topology"]["node_count"])
-        except Exception:
-            pass  # Don't fail metrics endpoint if L4 unavailable
+        except (KeyError, AttributeError, RuntimeError) as e:
+            logging.debug(f"L4 stats unavailable: {e}")  # Don't fail metrics endpoint
     
     return PlainTextResponse(
         generate_latest().decode('utf-8'),
@@ -626,7 +626,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         content={
             "error": exc.detail,
             "status_code": exc.status_code,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 
@@ -639,7 +639,7 @@ async def general_exception_handler(request: Request, exc: Exception):
         content={
             "error": "Internal server error",
             "detail": str(exc) if config.debug_mode else "An error occurred",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     )
 

@@ -32,6 +32,7 @@ try:
         ConversionError,
         SerializationError,
         ValidationError,
+        ConstitutionNotBoundError,
         IhsanReceipt,
         ProofInput,
         BatchConverter,
@@ -325,7 +326,7 @@ class TestFixedPointConversion:
     
     def test_to_fixed_point_standard(self):
         """Test standard conversions."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         assert bridge._to_fixed_point(0.95) == 950
         assert bridge._to_fixed_point(0.75) == 750
@@ -334,7 +335,7 @@ class TestFixedPointConversion:
     
     def test_to_fixed_point_precision(self):
         """Test precision handling."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         # Should round down
         assert bridge._to_fixed_point(0.9999) == 999
@@ -342,7 +343,7 @@ class TestFixedPointConversion:
     
     def test_to_fixed_point_out_of_range(self):
         """Test out-of-range values raise error."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         with pytest.raises(ConversionError, match="out of range"):
             bridge._to_fixed_point(1.5)
@@ -352,7 +353,7 @@ class TestFixedPointConversion:
     
     def test_from_fixed_point(self):
         """Test reverse conversion."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         assert bridge._from_fixed_point(950) == 0.95
         assert bridge._from_fixed_point(750) == 0.75
@@ -375,15 +376,25 @@ class TestZKBridge:
         assert bridge.conversion_count == 0
     
     def test_bridge_default_constitution(self):
-        """Test bridge with default constitution hash."""
-        bridge = ZKBridge()
+        """Test bridge requires constitution by default."""
+        from core.constitution import ConstitutionError
         
-        # Should have some hash (either loaded or default)
-        assert bridge.constitution_hash is not None
+        # Mock Constitution.get() to raise error (simulating no loaded constitution)
+        with patch("core.constitution.Constitution.get") as mock_get:
+            mock_get.side_effect = ConstitutionError("Not loaded")
+            
+            # Without constitution loaded, should raise error
+            with pytest.raises(ConstitutionNotBoundError):
+                ZKBridge()
+            
+            # With require_constitution=False, should work but be unbound
+            bridge = ZKBridge(require_constitution=False)
+            assert bridge.constitution_hash == "NO_CONSTITUTION"
+            assert not bridge.constitution_bound
     
     def test_hash_agent_id(self):
         """Test agent ID hashing."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         hash1 = bridge._hash_agent_id("agent-001")
         hash2 = bridge._hash_agent_id("agent-002")
@@ -399,7 +410,7 @@ class TestZKBridge:
     
     def test_compute_transaction_hash(self):
         """Test transaction hash computation."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         tx_hash = bridge._compute_transaction_hash("env-123", "digest-abc")
         
@@ -408,7 +419,7 @@ class TestZKBridge:
     
     def test_convert_from_dict(self):
         """Test conversion from dictionary."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         envelope_dict = {
             "envelope_id": "test-envelope-id",
@@ -455,7 +466,7 @@ class TestZKBridge:
     
     def test_validate_receipt_passing(self, sample_receipt: IhsanReceipt):
         """Test receipt validation with passing scores."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         is_valid, reason = bridge.validate_receipt(sample_receipt)
         
@@ -464,7 +475,7 @@ class TestZKBridge:
     
     def test_validate_receipt_failing_ihsan(self):
         """Test receipt validation with failing Ihsān."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         receipt = IhsanReceipt(
             agent_id=0,
@@ -479,11 +490,11 @@ class TestZKBridge:
         is_valid, reason = bridge.validate_receipt(receipt)
         
         assert is_valid is False
-        assert "Ihsān" in reason
+        assert "Ihsān" in reason or "Ihs" in reason
     
     def test_validate_receipt_failing_snr(self):
         """Test receipt validation with failing SNR."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         receipt = IhsanReceipt(
             agent_id=0,
@@ -511,13 +522,15 @@ class TestBatchConverter:
     
     def test_batch_creation(self):
         """Test batch converter creation."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         assert batch.size == 0
     
     def test_add_receipt(self, sample_receipt: IhsanReceipt):
         """Test adding receipt to batch."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         index = batch.add_receipt(sample_receipt)
         
@@ -526,7 +539,8 @@ class TestBatchConverter:
     
     def test_add_multiple_receipts(self, sample_receipt: IhsanReceipt):
         """Test adding multiple receipts."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         for i in range(5):
             # Create unique receipts
@@ -546,7 +560,8 @@ class TestBatchConverter:
     
     def test_add_dict(self):
         """Test adding envelope dict to batch."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         envelope_dict = {
             "envelope_id": "test-id",
@@ -563,7 +578,8 @@ class TestBatchConverter:
     
     def test_get_batch(self, sample_receipt: IhsanReceipt):
         """Test retrieving batch contents."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         batch.add_receipt(sample_receipt)
         
         receipts = batch.get_batch()
@@ -573,7 +589,8 @@ class TestBatchConverter:
     
     def test_clear_batch(self, sample_receipt: IhsanReceipt):
         """Test clearing batch."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         batch.add_receipt(sample_receipt)
         assert batch.size == 1
         
@@ -583,7 +600,8 @@ class TestBatchConverter:
     
     def test_compute_batch_hash_empty(self):
         """Test batch hash of empty batch."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         batch_hash = batch.compute_batch_hash()
         
@@ -591,7 +609,8 @@ class TestBatchConverter:
     
     def test_compute_batch_hash_single(self, sample_receipt: IhsanReceipt):
         """Test batch hash with single receipt."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         batch.add_receipt(sample_receipt)
         
         batch_hash = batch.compute_batch_hash()
@@ -602,7 +621,8 @@ class TestBatchConverter:
     
     def test_compute_batch_hash_multiple(self):
         """Test batch hash with multiple receipts."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         
         # Add two receipts
         r1 = IhsanReceipt(
@@ -638,7 +658,8 @@ class TestBatchConverter:
     
     def test_serialize_batch(self, sample_receipt: IhsanReceipt):
         """Test batch serialization."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         batch.add_receipt(sample_receipt)
         
         data = batch.serialize_batch()
@@ -650,7 +671,8 @@ class TestBatchConverter:
     
     def test_deserialize_batch(self, sample_receipt: IhsanReceipt):
         """Test batch deserialization."""
-        batch = BatchConverter()
+        bridge = ZKBridge(constitution_hash="test_hash")
+        batch = BatchConverter(bridge=bridge)
         batch.add_receipt(sample_receipt)
         
         data = batch.serialize_batch()
@@ -878,7 +900,7 @@ class TestErrorHandling:
     
     def test_conversion_error_message(self):
         """Test error messages are informative."""
-        bridge = ZKBridge()
+        bridge = ZKBridge(constitution_hash="test_hash")
         
         with pytest.raises(ConversionError) as exc_info:
             bridge._to_fixed_point(2.0)

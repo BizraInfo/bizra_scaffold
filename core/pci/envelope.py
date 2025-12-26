@@ -311,16 +311,23 @@ class PCIEnvelope:
         if self.signature is None:
             return (False, "Envelope is not signed")
         
+        if self.signature.signed_fields != SIGNED_FIELDS:
+            return (False, "Signature signed_fields mismatch")
+        
         if self.signature.algorithm != "ed25519":
             return (False, f"Unsupported algorithm: {self.signature.algorithm}")
         
         try:
             # Reconstruct public key
             public_key_bytes = bytes.fromhex(self.sender.public_key)
+            if len(public_key_bytes) != 32:
+                return (False, "Invalid Ed25519 public key length")
             public_key = ed25519.Ed25519PublicKey.from_public_bytes(public_key_bytes)
             
             # Reconstruct signature
             sig_bytes = bytes.fromhex(self.signature.value)
+            if len(sig_bytes) != 64:
+                return (False, "Invalid Ed25519 signature length")
             
             # Verify against canonical bytes
             canonical = self.canonical_bytes()
@@ -354,6 +361,8 @@ class PCIEnvelope:
         if isinstance(timestamp, str):
             # Parse ISO8601 timestamp
             timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        elif isinstance(timestamp, (int, float)):
+            timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc)
         
         signature = None
         if "signature" in data:

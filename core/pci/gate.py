@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -29,7 +30,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519
 
 # PCI imports
 from core.pci.envelope import PCIEnvelope, Sender, Payload, Metadata, Signature
-from core.pci.reject_codes import RejectCode, RejectionResponse, VerificationGate
+from core.pci.reject_codes import RejectCode, RejectionResponse
 from core.pci.replay_guard import ReplayGuard, get_replay_guard
 
 # Agent imports
@@ -144,21 +145,35 @@ class PCIGate:
         Returns:
             GateResult with allowed=True and receipt, or allowed=False and rejection
         """
-        import time
         start_time = time.perf_counter()
+        deadline = None
+        if timeout_ms and timeout_ms > 0:
+            deadline = start_time + (timeout_ms / 1000.0)
         
         self._total_checks += 1
         
         try:
+            def remaining_timeout() -> Optional[float]:
+                if deadline is None:
+                    return None
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0:
+                    raise asyncio.TimeoutError()
+                return remaining
+
             # 1. PAT creates proposal
-            proposal = self._pat.create_proposal(
-                action=action,
-                data=data,
-                policy_hash=policy_hash,
-                ihsan_score=ihsan_score,
-                origin_layer=origin_layer,
-                snr_score=snr_score,
-                trace_id=trace_id,
+            proposal = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self._pat.create_proposal,
+                    action=action,
+                    data=data,
+                    policy_hash=policy_hash,
+                    ihsan_score=ihsan_score,
+                    origin_layer=origin_layer,
+                    snr_score=snr_score,
+                    trace_id=trace_id,
+                ),
+                timeout=remaining_timeout(),
             )
             
             if not proposal.success:
@@ -175,7 +190,10 @@ class PCIGate:
                 )
             
             # 2. SAT verifies envelope
-            verification = self._sat.verify(proposal.envelope)
+            verification = await asyncio.wait_for(
+                asyncio.to_thread(self._sat.verify, proposal.envelope),
+                timeout=remaining_timeout(),
+            )
             
             latency = (time.perf_counter() - start_time) * 1000
             
@@ -208,20 +226,24 @@ class PCIGate:
             self._errors += 1
             latency = (time.perf_counter() - start_time) * 1000
             logger.error(f"PCI Gate: Timeout verifying action={action}")
-            
+            rejection = RejectionResponse.create(
+                code=RejectCode.REJECT_BUDGET_EXCEEDED,
+                envelope_digest="timeout",
+                gate="BUDGET",
+                latency_ms=latency,
+                details={"error": "Verification timeout"},
+            )
             if self._fail_open:
                 logger.warning("Allowing action due to fail_open=True (INSECURE)")
-                return GateResult(allowed=True, latency_ms=latency)
+                return GateResult(
+                    allowed=True,
+                    rejection=rejection,
+                    latency_ms=latency,
+                )
             
             return GateResult(
                 allowed=False,
-                rejection=RejectionResponse.create(
-                    code=RejectCode.REJECT_UNKNOWN,
-                    envelope_digest="timeout",
-                    gate=VerificationGate.SCHEMA,
-                    latency_ms=latency,
-                    details={"error": "Verification timeout"},
-                ),
+                rejection=rejection,
                 latency_ms=latency,
             )
             
@@ -229,20 +251,24 @@ class PCIGate:
             self._errors += 1
             latency = (time.perf_counter() - start_time) * 1000
             logger.exception(f"PCI Gate: Error verifying action={action}: {e}")
-            
+            rejection = RejectionResponse.create(
+                code=RejectCode.REJECT_INTERNAL_ERROR,
+                envelope_digest="error",
+                gate="INTERNAL",
+                latency_ms=latency,
+                details={"error": str(e)},
+            )
             if self._fail_open:
                 logger.warning("Allowing action due to fail_open=True (INSECURE)")
-                return GateResult(allowed=True, latency_ms=latency)
+                return GateResult(
+                    allowed=True,
+                    rejection=rejection,
+                    latency_ms=latency,
+                )
             
             return GateResult(
                 allowed=False,
-                rejection=RejectionResponse.create(
-                    code=RejectCode.REJECT_UNKNOWN,
-                    envelope_digest="error",
-                    gate=VerificationGate.SCHEMA,
-                    latency_ms=latency,
-                    details={"error": str(e)},
-                ),
+                rejection=rejection,
                 latency_ms=latency,
             )
     
@@ -354,34 +380,50 @@ def pci_protected(
     """
     def decorator(func: Callable) -> Callable:
         import functools
-        
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
-            # Extract PCI parameters from kwargs
+
+        async def _run_gate(kwargs: Dict[str, Any]) -> GateResult:
             ihsan_score = kwargs.pop("ihsan_score", require_ihsan)
-            policy_hash = kwargs.pop("policy_hash", "0" * 64)
+            policy_hash = kwargs.pop("policy_hash", None)
+            if not policy_hash:
+                raise RuntimeError("policy_hash is required for PCI verification")
             origin_layer = kwargs.pop("origin_layer", 4)
             data = kwargs.pop("data", {})
-            
-            # Get gate
+
             gate = get_pci_gate()
-            
-            # Check gate
-            result = await gate.check(
+            return await gate.check(
                 action=action or func.__name__,
                 data=data,
                 policy_hash=policy_hash,
                 ihsan_score=ihsan_score,
                 origin_layer=origin_layer,
             )
-            
+
+        if asyncio.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args, **kwargs) -> Any:
+                result = await _run_gate(kwargs)
+                if not result.allowed:
+                    raise PCIRejectionError(result.rejection)
+                return await func(*args, **kwargs)
+
+            return async_wrapper
+
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs) -> Any:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                result = asyncio.run(_run_gate(kwargs))
+            else:
+                raise RuntimeError(
+                    "pci_protected sync wrapper called inside running event loop; "
+                    "use an async function instead"
+                )
             if not result.allowed:
                 raise PCIRejectionError(result.rejection)
-            
-            # Execute function
-            return await func(*args, **kwargs)
-        
-        return wrapper
+            return func(*args, **kwargs)
+
+        return sync_wrapper
     return decorator
 
 

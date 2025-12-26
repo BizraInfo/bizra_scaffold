@@ -47,6 +47,7 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -54,6 +55,43 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+ANSI_PATTERN = re.compile(r"\033\[[0-9;]*m")
+
+
+def strip_ansi(text: str) -> str:
+    """Strip ANSI codes from text for length calculation."""
+    return ANSI_PATTERN.sub("", text)
+
+
+def truncate_ansi(text: str, max_visible: int) -> str:
+    """Truncate text by visible length while preserving ANSI sequences."""
+    if max_visible <= 0:
+        return ""
+    visible = 0
+    parts: List[str] = []
+    last_index = 0
+    for match in ANSI_PATTERN.finditer(text):
+        segment = text[last_index:match.start()]
+        for ch in segment:
+            if visible >= max_visible:
+                break
+            parts.append(ch)
+            visible += 1
+        if visible >= max_visible:
+            break
+        parts.append(match.group(0))
+        last_index = match.end()
+    if visible < max_visible and last_index < len(text):
+        segment = text[last_index:]
+        for ch in segment:
+            if visible >= max_visible:
+                break
+            parts.append(ch)
+            visible += 1
+    if visible >= max_visible and ANSI_PATTERN.search(text):
+        parts.append(Colors.RESET)
+    return "".join(parts)
 
 # ANSI color codes
 class Colors:
@@ -233,10 +271,10 @@ class Box:
         """Render box middle row with content."""
         inner_width = self.width - 4
         # Account for ANSI codes in content length
-        visible_len = len(self._strip_ansi(content))
+        visible_len = len(strip_ansi(content))
         padding = inner_width - visible_len
         if padding < 0:
-            content = content[:inner_width]
+            content = truncate_ansi(content, inner_width)
             padding = 0
         return f"{self.v} {content}{' ' * padding} {self.v}"
     
@@ -244,11 +282,6 @@ class Box:
         """Render box bottom border."""
         return f"{self.bl}{self.h * (self.width - 2)}{self.br}"
     
-    def _strip_ansi(self, text: str) -> str:
-        """Strip ANSI codes from text for length calculation."""
-        import re
-        return re.sub(r'\033\[[0-9;]*m', '', text)
-
 
 class Dashboard:
     """
@@ -307,14 +340,9 @@ class Dashboard:
         """Print a section header."""
         print(self.box.middle(""))
         header = f"{self.light_box.tl}{self.light_box.h} {title} "
-        header += self.light_box.h * (self.config.width - len(self._strip_ansi(header)) - 5)
+        header += self.light_box.h * (self.config.width - len(strip_ansi(header)) - 5)
         header += self.light_box.tr
         print(self.box.middle(header))
-    
-    def _strip_ansi(self, text: str) -> str:
-        """Strip ANSI codes for length calculation."""
-        import re
-        return re.sub(r'\033\[[0-9;]*m', '', text)
     
     def print_health_bar(
         self,

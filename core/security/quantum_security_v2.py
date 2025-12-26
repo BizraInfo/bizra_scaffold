@@ -16,6 +16,8 @@ import struct
 import secrets
 import json
 import os
+import tempfile
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
@@ -34,6 +36,45 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
+
+
+def _atomic_write_bytes(path: Path, data: bytes, mode: int = 0o644) -> None:
+    """
+    Atomically write bytes to a file using write-then-rename pattern.
+    
+    This prevents partial writes on crash - either the old file exists
+    or the new complete file exists, never a partial file.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Create temp file in same directory (ensures same filesystem for atomic rename)
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    tmp_path = Path(tmp_path)
+    
+    try:
+        os.write(fd, data)
+        os.fsync(fd)  # Ensure data hits disk before rename
+        os.close(fd)
+        fd = -1
+        
+        # Set permissions before rename (Unix only, Windows ignores)
+        try:
+            os.chmod(tmp_path, mode)
+        except OSError:
+            pass
+        
+        # Atomic rename
+        tmp_path.replace(path)
+    except Exception:
+        # Clean up temp file on failure
+        if fd >= 0:
+            os.close(fd)
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
 
 
 @dataclass
@@ -136,14 +177,9 @@ class QuantumSecurityV2:
             self.public_key = signer.generate_keypair()
             self.secret_key = signer.export_secret_key()
             
-            # Save with secure permissions
-            with open(public_path, "wb") as f:
-                f.write(self.public_key)
-            with open(secret_path, "wb") as f:
-                f.write(self.secret_key)
-            
-            if os.name != 'nt':
-                os.chmod(secret_path, 0o600)  # Owner read/write only
+            # Save atomically with secure permissions
+            _atomic_write_bytes(public_path, self.public_key, mode=0o644)
+            _atomic_write_bytes(secret_path, self.secret_key, mode=0o600)
     
     def _init_classical_keys(self, public_path: Path, secret_path: Path) -> None:
         """Fallback: Initialize Ed25519 classical keys."""
@@ -169,16 +205,9 @@ class QuantumSecurityV2:
                 encryption_algorithm=serialization.NoEncryption()
             )
             
-            # Write BOTH public and secret keys for proper persistence
-            with open(public_path, "wb") as f:
-                f.write(self.public_key)
-            
-            with open(secret_path, "wb") as f:
-                f.write(self.secret_key)
-            
-            if os.name != 'nt':
-                os.chmod(secret_path, 0o600)
-                os.chmod(public_path, 0o644)  # Public key can be readable
+            # Write BOTH public and secret keys atomically for proper persistence
+            _atomic_write_bytes(public_path, self.public_key, mode=0o644)
+            _atomic_write_bytes(secret_path, self.secret_key, mode=0o600)
     
     def _generate_quantum_nonce(self) -> bytes:
         """Generate cryptographically secure random nonce (512-bit)."""
@@ -356,40 +385,39 @@ class QuantumSecurityV2:
             
         Returns:
             Rotation audit record
+            
+        Note: File I/O is performed atomically outside the critical section
+        where possible to prevent blocking async operations.
         """
+        rotation_time = datetime.now(timezone.utc)
+        rotation_id = hashlib.sha256(
+            f"{rotation_time.isoformat()}{reason}".encode()
+        ).hexdigest()[:16]
+        
+        # Archive paths (prepared outside lock)
+        archive_path = self.key_storage_path / "archive"
+        archive_path.mkdir(parents=True, exist_ok=True)
+        timestamp_str = rotation_time.strftime("%Y%m%d_%H%M%S")
+        old_public_path = archive_path / f"public_{timestamp_str}.key"
+        old_secret_path = archive_path / f"secret_{timestamp_str}.key"
+        
+        # Critical section: capture old keys, generate new keys, update state
         async with self._chain_lock:
-            rotation_time = datetime.now(timezone.utc)
-            rotation_id = hashlib.sha256(
-                f"{rotation_time.isoformat()}{reason}".encode()
-            ).hexdigest()[:16]
-            
-            # Archive old keys
-            archive_path = self.key_storage_path / "archive"
-            archive_path.mkdir(parents=True, exist_ok=True)
-            
-            timestamp_str = rotation_time.strftime("%Y%m%d_%H%M%S")
-            
-            # Copy current keys to archive
-            old_public_path = archive_path / f"public_{timestamp_str}.key"
-            old_secret_path = archive_path / f"secret_{timestamp_str}.key"
-            
-            with open(old_public_path, "wb") as f:
-                f.write(self.public_key)
-            with open(old_secret_path, "wb") as f:
-                f.write(self.secret_key)
-            
-            if os.name != 'nt':
-                os.chmod(old_secret_path, 0o600)
+            # Capture old keys before rotation
+            old_public_key = self.public_key
+            old_secret_key = self.secret_key
+            chain_length = len(self.temporal_chain)
+            entropy = self.chain_entropy
             
             # Create rotation attestation (signed by OLD key)
             rotation_record = {
                 "rotation_id": rotation_id,
                 "timestamp": rotation_time.isoformat(),
                 "reason": reason,
-                "old_public_key": self.public_key.hex(),
+                "old_public_key": old_public_key.hex(),
                 "algorithm": self.algorithm,
-                "chain_length_at_rotation": len(self.temporal_chain),
-                "entropy_at_rotation": self.chain_entropy,
+                "chain_length_at_rotation": chain_length,
+                "entropy_at_rotation": entropy,
             }
             
             # Sign with old key
@@ -400,8 +428,6 @@ class QuantumSecurityV2:
             rotation_record["old_key_signature"] = old_signature.hex()
             
             # Generate new keys
-            old_public = self.public_key
-            
             if QUANTUM_AVAILABLE:
                 signer = Signature("Dilithium5")
                 self.public_key = signer.generate_keypair()
@@ -418,18 +444,6 @@ class QuantumSecurityV2:
                     encryption_algorithm=serialization.NoEncryption()
                 )
             
-            # Save new keys
-            public_key_path = self.key_storage_path / "public.key"
-            secret_key_path = self.key_storage_path / "secret.key"
-            
-            with open(public_key_path, "wb") as f:
-                f.write(self.public_key)
-            with open(secret_key_path, "wb") as f:
-                f.write(self.secret_key)
-            
-            if os.name != 'nt':
-                os.chmod(secret_key_path, 0o600)
-            
             # Add new key attestation
             rotation_record["new_public_key"] = self.public_key.hex()
             
@@ -440,20 +454,38 @@ class QuantumSecurityV2:
             new_signature = self._sign_data(hashlib.sha3_512(new_record_bytes).digest())
             rotation_record["new_key_signature"] = new_signature.hex()
             
-            # Write rotation log
-            rotation_log_path = self.key_storage_path / "rotation_log.jsonl"
-            with open(rotation_log_path, "a") as f:
-                f.write(json.dumps(rotation_record) + "\n")
-            
-            # Create rotation temporal proof
-            await self.secure_operation({
-                "type": "KEY_ROTATION",
-                "rotation_id": rotation_id,
-                "old_public_key_prefix": old_public.hex()[:16],
-                "new_public_key_prefix": self.public_key.hex()[:16],
-            })
-            
-            return rotation_record
+            # Capture new keys for atomic write outside lock
+            new_public_key = self.public_key
+            new_secret_key = self.secret_key
+        
+        # File I/O outside lock (atomic writes - non-blocking relative to chain state)
+        # Archive old keys atomically
+        _atomic_write_bytes(old_public_path, old_public_key, mode=0o644)
+        _atomic_write_bytes(old_secret_path, old_secret_key, mode=0o600)
+        
+        # Save new keys atomically
+        public_key_path = self.key_storage_path / "public.key"
+        secret_key_path = self.key_storage_path / "secret.key"
+        _atomic_write_bytes(public_key_path, new_public_key, mode=0o644)
+        _atomic_write_bytes(secret_key_path, new_secret_key, mode=0o600)
+        
+        # Append to rotation log atomically
+        rotation_log_path = self.key_storage_path / "rotation_log.jsonl"
+        log_entry = json.dumps(rotation_record) + "\n"
+        with open(rotation_log_path, "a") as f:
+            f.write(log_entry)
+            f.flush()
+            os.fsync(f.fileno())
+        
+        # Create rotation temporal proof (back under lock via secure_operation)
+        await self.secure_operation({
+            "type": "KEY_ROTATION",
+            "rotation_id": rotation_id,
+            "old_public_key_prefix": old_public_key.hex()[:16],
+            "new_public_key_prefix": new_public_key.hex()[:16],
+        })
+        
+        return rotation_record
     
     def get_rotation_history(self) -> List[Dict[str, Any]]:
         """Get complete key rotation history."""

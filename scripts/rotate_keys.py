@@ -56,6 +56,51 @@ KEY_SIZE_BYTES = 32
 SIGNATURE_ALGORITHM = "ed25519"
 PQ_MIGRATION_TARGET = "dilithium5"
 
+import tempfile
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def _atomic_write_bytes(path: Path, data: bytes, mode: int = 0o644) -> None:
+    """
+    Atomically write bytes to a file using write-then-rename pattern.
+    
+    This prevents partial writes on crash - either the old file exists
+    or the new complete file exists, never a partial file.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Create temp file in same directory (ensures same filesystem for atomic rename)
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    tmp_path = Path(tmp_path)
+    
+    try:
+        os.write(fd, data)
+        os.fsync(fd)  # Ensure data hits disk before rename
+        os.close(fd)
+        fd = -1
+        
+        # Set permissions before rename
+        os.chmod(tmp_path, mode)
+        
+        # Atomic rename
+        tmp_path.replace(path)
+    except Exception:
+        # Clean up temp file on failure
+        if fd >= 0:
+            os.close(fd)
+        if tmp_path.exists():
+            tmp_path.unlink()
+        raise
+
+
+def _atomic_write_json(path: Path, data: dict, indent: int = 2) -> None:
+    """Atomically write JSON data to a file."""
+    content = json.dumps(data, indent=indent).encode('utf-8')
+    _atomic_write_bytes(path, content, mode=0o644)
+
 
 @dataclass
 class KeyMetadata:
@@ -138,7 +183,8 @@ class KeyRotationManager:
             # Use SHA256 as fallback if BLAKE3 not available
             content = path.read_bytes()
             return hashlib.sha256(content).hexdigest()[:32]
-        except Exception:
+        except (IOError, OSError) as e:
+            logger.warning(f"Failed to hash constitution at {path}: {e}")
             return "HASH_ERROR"
     
     def _load_registry(self) -> dict:
@@ -149,9 +195,8 @@ class KeyRotationManager:
         return {"keys": {}, "active_pat": None, "active_sat": None}
     
     def _save_registry(self):
-        """Persist key registry to disk."""
-        with open(self.metadata_file, "w") as f:
-            json.dump(self.registry, f, indent=2)
+        """Persist key registry to disk atomically."""
+        _atomic_write_json(self.metadata_file, self.registry)
     
     def _load_audit_log(self) -> list:
         """Load audit log from disk."""
@@ -161,9 +206,8 @@ class KeyRotationManager:
         return []
     
     def _save_audit_log(self):
-        """Persist audit log to disk."""
-        with open(self.audit_file, "w") as f:
-            json.dump(self.audit_log, f, indent=2)
+        """Persist audit log to disk atomically."""
+        _atomic_write_json(self.audit_file, self.audit_log)
     
     def _generate_key_id(self) -> str:
         """Generate a unique key identifier."""
@@ -254,21 +298,13 @@ class KeyRotationManager:
         role_dir = self.keys_dir / role
         role_dir.mkdir(exist_ok=True)
         
-        # Store private key (with restrictive permissions)
+        # Store private key atomically (with restrictive permissions)
         private_path = role_dir / f"{key_id}.private.pem"
-        with open(private_path, "wb") as f:
-            f.write(key_pair.private_key_pem)
+        _atomic_write_bytes(private_path, key_pair.private_key_pem, mode=0o600)
         
-        # Set restrictive permissions (Unix)
-        try:
-            os.chmod(private_path, 0o600)
-        except Exception:
-            pass  # Windows doesn't support chmod
-        
-        # Store public key
+        # Store public key atomically
         public_path = role_dir / f"{key_id}.public.pem"
-        with open(public_path, "wb") as f:
-            f.write(key_pair.public_key_pem)
+        _atomic_write_bytes(public_path, key_pair.public_key_pem, mode=0o644)
         
         # Update registry
         self.registry["keys"][key_id] = asdict(key_pair.metadata)

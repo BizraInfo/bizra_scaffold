@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 # Thresholds per BIZRA_SOT.md and PROTOCOL.md
 IHSAN_THRESHOLD = 0.95
 SNR_THRESHOLD_HIGH = 0.80
-SNR_THRESHOLD_MEDIUM = 0.50
+SNR_THRESHOLD_MEDIUM = 0.75
 
 
 @dataclass
@@ -215,8 +215,7 @@ class SATAgent:
         """Get current constitution policy hash."""
         if self._policy_hash_provider:
             return self._policy_hash_provider()
-        # Default: return placeholder (should be configured in production)
-        return "0" * 64
+        raise RuntimeError("policy_hash_provider is required for policy verification")
     
     def _gate_schema(
         self,
@@ -432,8 +431,18 @@ class SATAgent:
     ) -> Optional[RejectionResponse]:
         """POLICY gate: Verify policy hash matches current constitution."""
         start = time.perf_counter()
+        try:
+            current_hash = self._get_current_policy_hash()
+        except RuntimeError as exc:
+            return self._reject(
+                RejectCode.REJECT_INTERNAL_ERROR,
+                envelope.digest(),
+                VerificationGate.POLICY,
+                gate_latencies,
+                start,
+                {"error": str(exc)},
+            )
         
-        current_hash = self._get_current_policy_hash()
         envelope_hash = envelope.payload.policy_hash
         
         if envelope_hash != current_hash:
@@ -527,6 +536,7 @@ class SATAgent:
         commit_offset: int,
     ) -> CommitReceipt:
         """Create and sign commit receipt."""
+        now = datetime.now(timezone.utc)
         # Sign the verification report
         report_bytes = canonical_json(report.to_dict())
         audit_digest = compute_digest(report_bytes, domain_separated=False)
@@ -535,7 +545,7 @@ class SATAgent:
         attestation_data = {
             "envelope_digest": envelope.digest(),
             "audit_digest": audit_digest,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": now.isoformat(),
         }
         attestation_bytes = canonical_json(attestation_data)
         signature = self._private_key.sign(attestation_bytes)
@@ -543,7 +553,7 @@ class SATAgent:
         receipt = CommitReceipt(
             version="1.0.0",
             receipt_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=now,
             envelope_digest=envelope.digest(),
             commit_ref={
                 "type": "eventlog",
@@ -561,7 +571,7 @@ class SATAgent:
                     "sat_id": self._config.agent_id,
                     "public_key": self._public_key_bytes.hex(),
                     "signature": signature.hex(),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": now.isoformat(),
                 }
             ],
             quorum={
@@ -632,18 +642,20 @@ class SATAgent:
         self._envelopes_verified += 1
         
         # Commit via callback or increment local offset
-        if self._commit_callback:
-            commit_offset = self._commit_callback(envelope, None)  # type: ignore
-        else:
-            self._commit_offset += 1
-            commit_offset = self._commit_offset
-        
         report = self._build_report(
             envelope, gates_passed, [],
             tier_reached, gate_latencies, start_time,
         )
         
-        receipt = self._create_receipt(envelope, report, commit_offset)
+        receipt = self._create_receipt(envelope, report, 0)
+        
+        if self._commit_callback:
+            commit_offset = self._commit_callback(envelope, receipt)
+        else:
+            self._commit_offset += 1
+            commit_offset = self._commit_offset
+        
+        receipt.commit_ref["offset"] = commit_offset
         
         logger.info(
             f"SAT verification passed: envelope_id={envelope.envelope_id}, "

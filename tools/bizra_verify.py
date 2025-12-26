@@ -179,10 +179,18 @@ def main() -> int:
     # Audits (optional)
     if stack["rust"]:
         code, out, err = run(["cargo", "audit", "--json"], cwd=root, timeout=1800)
-        if code == 0 and out.strip():
+        if out.strip():
             (out_dir / "checks" / "cargo_audit.json").write_text(out, encoding="utf-8")
             checks.append(
-                {"name": "cargo_audit", "status": "pass", "details": {"saved": "checks/cargo_audit.json"}}
+                {
+                    "name": "cargo_audit",
+                    "status": "pass" if code == 0 else "fail",
+                    "details": {
+                        "code": code,
+                        "saved": "checks/cargo_audit.json",
+                        "stderr": err[-2000:],
+                    },
+                }
             )
         else:
             checks.append(
@@ -244,8 +252,8 @@ def main() -> int:
         policy_hash = repo_tree_hash(policy_dir)
         policy_decision = "allow"
     else:
-        policy_hash = "none"
-        policy_decision = "allow"
+        policy_hash = "unconfigured"
+        policy_decision = "deny"
     policy = {"decision": policy_decision, "engine": "placeholder", "ruleset_hash": policy_hash}
 
     ihsan_cfg_path = root / args.ihsan_config
@@ -296,13 +304,17 @@ def main() -> int:
         "coverage": 0.0,
     }
 
+    try:
+        memory_gb = float(os.environ.get("MEMORY_GB", "0") or 0)
+    except ValueError:
+        memory_gb = 0.0
     env = {
         "os": platform.platform(),
         "python": sys.version.split()[0],
         "node": os.environ.get("NODE_VERSION", "unknown"),
         "rust": os.environ.get("RUST_VERSION", "unknown"),
         "cpu": platform.processor() or "unknown",
-        "memory_gb": float(os.environ.get("MEMORY_GB", "0") or 0),
+        "memory_gb": memory_gb,
     }
 
     receipt_id = hashlib.sha256(
@@ -311,9 +323,14 @@ def main() -> int:
     notes = ["Ihsan and SNR are heuristic until wired to real benchmarks and policies."]
     if strict_skip:
         notes.append("Strict mode failed due to skipped checks.")
+    if policy_decision != "allow":
+        notes.append("Policy directory missing; failing closed on policy enforcement.")
     receipt = {
         "receipt_id": receipt_id,
-        "created_at_utc": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "created_at_utc": datetime.datetime.now(datetime.timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
         "artifact": {
             "name": args.artifact_name,
             "version": args.artifact_version,

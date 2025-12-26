@@ -467,16 +467,26 @@ class GraphOfThoughtsEngine:
         path: List[str],
         thoughts: Dict[str, Thought]
     ) -> float:
-        """Compute aggregate SNR score for path."""
+        """Compute aggregate SNR score for path.
+        
+        Note: Seed concepts (at index 0) don't have Thought objects,
+        so we start scoring from index 1 (depth 1).
+        """
+        if not path:
+            return 0.0
         
         scores = []
-        for i, concept_id in enumerate(path):
-            thought_id = f"thought_{concept_id}_{i}"
+        # Start from index 1 since seed concepts at index 0 have no Thought
+        for depth, concept_id in enumerate(path):
+            if depth == 0:
+                # Seed concept - no thought object, use default score
+                continue
+            thought_id = f"thought_{concept_id}_{depth}"
             if thought_id in thoughts:
                 scores.append(thoughts[thought_id].get_snr_score())
         
         if not scores:
-            return 0.0
+            return 1.0  # Return default score if only seed concept in path
         
         # Aggregate: geometric mean for balanced contribution
         product = math.prod(scores)
@@ -488,21 +498,39 @@ class GraphOfThoughtsEngine:
         current_concept: str,
         thoughts: Dict[str, Thought]
     ) -> Optional[DomainBridge]:
-        """Detect if current step creates cross-domain bridge."""
+        """Detect if current step creates cross-domain bridge.
         
+        Args:
+            parent_path: Path before adding current_concept
+            current_concept: The newly added concept
+            thoughts: Dictionary of all created thoughts
+            
+        Returns:
+            DomainBridge if domain crossing detected, None otherwise
+        """
         if not parent_path:
             return None
         
-        # Get domains of current concept
-        current_thought_id = f"thought_{current_concept}_{len(parent_path)}"
+        # Current thought depth is len(parent_path) since it extends the path
+        current_depth = len(parent_path)
+        current_thought_id = f"thought_{current_concept}_{current_depth}"
+        
         if current_thought_id not in thoughts:
             return None
         
         current_domains = thoughts[current_thought_id].domains
         
-        # Get domains of parent
+        # Parent is at the end of parent_path, at depth len(parent_path)-1
+        # But seed concept at index 0 has no thought - check for this
         parent_concept = parent_path[-1]
-        parent_thought_id = f"thought_{parent_concept}_{len(parent_path)-1}"
+        parent_depth = len(parent_path) - 1
+        
+        if parent_depth == 0:
+            # Parent is seed concept - no thought object, can't detect bridge
+            return None
+        
+        parent_thought_id = f"thought_{parent_concept}_{parent_depth}"
+        
         if parent_thought_id not in thoughts:
             return None
         
@@ -516,8 +544,8 @@ class GraphOfThoughtsEngine:
         
         if crossed_domains:
             # Bridge detected!
-            source_domain = list(parent_domains)[0]
-            target_domain = list(crossed_domains)[0]
+            source_domain = next(iter(parent_domains))  # Safe: checked non-empty
+            target_domain = next(iter(crossed_domains))  # Safe: checked non-empty
             
             bridge = DomainBridge(
                 id=f"bridge_{parent_concept}_{current_concept}",
@@ -544,15 +572,24 @@ class GraphOfThoughtsEngine:
         bridges: List[DomainBridge],
         query: str
     ) -> List[ThoughtChain]:
-        """Convert beam paths to thought chains."""
+        """Convert beam paths to thought chains.
         
+        Note: Seed concepts at index 0 don't have Thought objects,
+        so chain_thoughts starts from depth 1.
+        """
         chains = []
         
         for neg_score, path in beam_paths:
-            # Collect thoughts in order
+            if not path:
+                continue
+                
+            # Collect thoughts in order (skip seed at index 0)
             chain_thoughts = []
-            for i, concept_id in enumerate(path):
-                thought_id = f"thought_{concept_id}_{i}"
+            for depth, concept_id in enumerate(path):
+                if depth == 0:
+                    # Seed concept has no Thought object
+                    continue
+                thought_id = f"thought_{concept_id}_{depth}"
                 if thought_id in thoughts:
                     chain_thoughts.append(thoughts[thought_id])
             
@@ -565,7 +602,7 @@ class GraphOfThoughtsEngine:
             
             # Compute chain metrics
             snr_scores = [t.get_snr_score() for t in chain_thoughts]
-            total_snr = sum(snr_scores)
+            total_snr = sum(snr_scores) if snr_scores else 0.0
             avg_snr = total_snr / len(snr_scores) if snr_scores else 0.0
             
             # Domain diversity (entropy of domain distribution)
@@ -587,13 +624,14 @@ class GraphOfThoughtsEngine:
                 bridges=chain_bridges,
                 total_snr=total_snr,
                 avg_snr=avg_snr,
-                max_depth=len(chain_thoughts),
+                max_depth=len(path),  # Full path length including seed
                 domain_diversity=diversity,
                 query=query,
-                conclusion=path[-1] if path else "",
+                conclusion=path[-1],  # Safe: checked path non-empty above
                 metadata={
                     "path": path,
-                    "beam_score": -neg_score
+                    "beam_score": -neg_score,
+                    "seed_concept": path[0]  # Include seed for reference
                 }
             )
             

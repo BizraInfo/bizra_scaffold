@@ -25,7 +25,7 @@ import time
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import (
     Any,
@@ -906,7 +906,7 @@ class TemporalChain(ContractClass):
             if self._entries else self._genesis_hash
         )
         
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
         
         # Create entry hash
         entry_data = f"{prev_hash}{operation}{data_hash}{timestamp.isoformat()}"

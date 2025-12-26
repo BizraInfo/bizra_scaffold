@@ -443,8 +443,8 @@ class MetricsVerifier:
                 fpath = Path(root) / fname
                 try:
                     lines = len(fpath.read_text(errors="ignore").splitlines())
-                except Exception:
-                    continue
+                except (IOError, OSError, UnicodeDecodeError):
+                    continue  # Skip unreadable files
                 
                 ext = fpath.suffix.lower()
                 if ext == ".rs":

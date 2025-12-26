@@ -34,10 +34,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Generic
+import logging
 import math
 
 # Import post-quantum security
 from core.security.quantum_security_v2 import QuantumSecurityV2, TemporalProof
+
+logger = logging.getLogger(__name__)
 
 
 class BlockType(Enum):
@@ -617,7 +620,8 @@ class BlockchainSubstrate:
                 return self._execute_state_update(tx, state)
             else:
                 return True  # Default: accept
-        except Exception:
+        except (KeyError, TypeError, ValueError) as e:
+            logger.warning(f"Transaction {tx.tx_id} execution failed: {e}")
             return False
     
     def _execute_token_transfer(self, tx: Transaction, state: WorldState) -> bool:

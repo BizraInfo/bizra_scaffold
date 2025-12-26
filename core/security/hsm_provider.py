@@ -321,8 +321,8 @@ class SoftwareHSM(HSMProvider):
                 if len(key) == 32:
                     logger.info("Using master key from BIZRA_HSM_MASTER_KEY environment")
                     return key
-            except Exception:
-                pass
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Invalid BIZRA_HSM_MASTER_KEY format: {e}")
         
         # 3. Load from file
         key_file = storage_path.parent / self._MASTER_KEY_FILE
@@ -332,7 +332,7 @@ class SoftwareHSM(HSMProvider):
                 if len(key) == 32:
                     logger.info(f"Loaded master key from {key_file}")
                     return key
-            except Exception as e:
+            except (IOError, OSError) as e:
                 logger.warning(f"Failed to load master key from file: {e}")
         
         # 4. Fail - don't generate random key for persistent storage

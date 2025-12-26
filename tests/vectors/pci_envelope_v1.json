@@ -165,8 +165,8 @@
       },
       "expected": {
         "rejected": true,
-        "reject_code": 3,
-        "reject_code_name": "REJECT_TIMESTAMP_EXPIRED",
+        "reject_code": 4,
+        "reject_code_name": "REJECT_TIMESTAMP_STALE",
         "max_age_seconds": 120
       },
       "test_condition": "current_time - envelope.timestamp > 120s"
@@ -239,7 +239,7 @@
       },
       "expected": {
         "rejected": true,
-        "reject_code": 8,
+        "reject_code": 9,
         "reject_code_name": "REJECT_POLICY_MISMATCH",
         "reason": "Envelope policy hash does not match current constitution"
       },
@@ -331,18 +331,23 @@
   "reject_code_registry": {
     "$ref": "PROTOCOL.md Section 4",
     "codes": {
-      "0": {"name": "ACCEPT", "description": "Verification passed (sentinel)"},
+      "0": {"name": "SUCCESS", "description": "Verification passed (sentinel)"},
       "1": {"name": "REJECT_SCHEMA", "description": "Envelope structure invalid"},
       "2": {"name": "REJECT_SIGNATURE", "description": "Cryptographic signature verification failed"},
-      "3": {"name": "REJECT_TIMESTAMP_EXPIRED", "description": "Timestamp outside valid window"},
-      "4": {"name": "REJECT_REPLAY", "description": "Nonce already seen"},
-      "5": {"name": "REJECT_ROLE_VIOLATION", "description": "Agent exceeded role permissions"},
-      "6": {"name": "REJECT_SNR_BELOW_MIN", "description": "Signal-to-noise ratio below threshold"},
-      "7": {"name": "REJECT_IHSAN_BELOW_MIN", "description": "Ethical alignment below constitutional threshold"},
-      "8": {"name": "REJECT_POLICY_MISMATCH", "description": "Policy hash mismatch"},
-      "9": {"name": "REJECT_FATE_VIOLATION", "description": "FATE verification failed"},
-      "10": {"name": "REJECT_FORMAL_PROOF_MISSING", "description": "Required formal proof not provided"},
-      "99": {"name": "REJECT_UNKNOWN", "description": "Unknown error (fail-closed)"}
+      "3": {"name": "REJECT_NONCE_REPLAY", "description": "Nonce already seen"},
+      "4": {"name": "REJECT_TIMESTAMP_STALE", "description": "Timestamp too far in past"},
+      "5": {"name": "REJECT_TIMESTAMP_FUTURE", "description": "Timestamp too far in future"},
+      "6": {"name": "REJECT_IHSAN_BELOW_MIN", "description": "Ethical alignment below constitutional threshold"},
+      "7": {"name": "REJECT_SNR_BELOW_MIN", "description": "Signal-to-noise ratio below threshold"},
+      "8": {"name": "REJECT_BUDGET_EXCEEDED", "description": "Verification latency exceeded tier budget"},
+      "9": {"name": "REJECT_POLICY_MISMATCH", "description": "Policy hash mismatch"},
+      "10": {"name": "REJECT_STATE_MISMATCH", "description": "State hash mismatch"},
+      "11": {"name": "REJECT_ROLE_VIOLATION", "description": "Agent exceeded role permissions"},
+      "12": {"name": "REJECT_QUORUM_FAILED", "description": "Insufficient verifier signatures for quorum"},
+      "13": {"name": "REJECT_FATE_VIOLATION", "description": "FATE verification failed"},
+      "14": {"name": "REJECT_INVARIANT_FAILED", "description": "Formal invariant verification failed"},
+      "15": {"name": "REJECT_RATE_LIMITED", "description": "Rate limit exceeded"},
+      "99": {"name": "REJECT_INTERNAL_ERROR", "description": "Unknown error (fail-closed)"}
     }
   },
   "latency_budgets": {

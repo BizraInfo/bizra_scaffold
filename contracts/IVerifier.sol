@@ -25,14 +25,15 @@ interface IVerifier {
      * @param proof The STARK proof bytes from RiscZero prover
      * @param publicInputs Array of public inputs:
      *        [0] agent_id (u64)
-     *        [1] ihsan_threshold_fixed (u64, default 950)
-     *        [2] snr_threshold_fixed (u64, default 750)
-     *        [3] constitution_hash (bytes32 as u256)
+     *        [1] transaction_hash (bytes32 as u256)
+     *        [2] ihsan_threshold_fixed (u64, default 950)
+     *        [3] snr_threshold_fixed (u64, default 750)
+     *        [4] constitution_hash (bytes32 as u256)
      * @return success Whether the proof is valid
      */
     function verifyProof(
         bytes calldata proof,
-        uint256[4] calldata publicInputs
+        uint256[5] calldata publicInputs
     ) external view returns (bool success);
 
     /**
@@ -177,6 +178,9 @@ contract IhsanConstitutionalCourt is IVerifier {
     
     /// @notice Thrown when batch size exceeds maximum
     error BatchSizeExceeded(uint256 size, uint256 maximum);
+
+    /// @notice Thrown when batch size is zero
+    error BatchSizeZero();
     
     /// @notice Thrown when transaction already settled
     error AlreadySettled(bytes32 transactionHash);
@@ -222,30 +226,28 @@ contract IhsanConstitutionalCourt is IVerifier {
      * @notice Verify a single Ihsān receipt proof
      * @dev Calls RiscZero verifier and checks thresholds
      * @param proof The STARK proof bytes
-     * @param publicInputs [agent_id, ihsan_threshold, snr_threshold, constitution_hash]
+     * @param publicInputs [agent_id, transaction_hash, ihsan_threshold, snr_threshold, constitution_hash]
      * @return success True if proof is valid and thresholds met
      */
     function verifyProof(
         bytes calldata proof,
-        uint256[4] calldata publicInputs
+        uint256[5] calldata publicInputs
     ) external view override returns (bool success) {
         // Validate constitution hash binding
-        if (bytes32(publicInputs[3]) != CONSTITUTION_HASH) {
+        if (bytes32(publicInputs[4]) != CONSTITUTION_HASH) {
             return false;
         }
         
         // Validate thresholds match constants
-        if (publicInputs[1] != IHSAN_THRESHOLD_FIXED) {
+        if (publicInputs[2] != IHSAN_THRESHOLD_FIXED) {
             return false;
         }
-        if (publicInputs[2] != SNR_THRESHOLD_FIXED) {
+        if (publicInputs[3] != SNR_THRESHOLD_FIXED) {
             return false;
         }
         
         // Call RiscZero verifier
-        // Note: In production, this would call the actual RiscZero verifier
-        // For now, we validate the proof structure
-        success = _verifyRisc0Proof(proof, publicInputs);
+        success = _verifyRisc0Proof(proof, abi.encode(publicInputs));
         
         return success;
     }
@@ -271,6 +273,9 @@ contract IhsanConstitutionalCourt is IVerifier {
         }
         
         // Validate batch size
+        if (batchSize == 0) {
+            revert BatchSizeZero();
+        }
         if (batchSize > MAX_BATCH_SIZE) {
             revert BatchSizeExceeded(batchSize, MAX_BATCH_SIZE);
         }
@@ -289,7 +294,7 @@ contract IhsanConstitutionalCourt is IVerifier {
         ];
         
         // Verify batch proof
-        if (!_verifyRisc0Proof(proof, batchInputs)) {
+        if (!_verifyRisc0Proof(proof, abi.encode(batchInputs))) {
             revert ProofVerificationFailed();
         }
         
@@ -340,15 +345,16 @@ contract IhsanConstitutionalCourt is IVerifier {
         }
         
         // Build public inputs
-        uint256[4] memory publicInputs = [
+        uint256[5] memory publicInputs = [
             uint256(decoded.agentId),
+            uint256(decoded.transactionHash),
             IHSAN_THRESHOLD_FIXED,
             SNR_THRESHOLD_FIXED,
             uint256(CONSTITUTION_HASH)
         ];
         
         // Verify proof
-        if (!_verifyRisc0Proof(proof, publicInputs)) {
+        if (!_verifyRisc0Proof(proof, abi.encode(publicInputs))) {
             revert ProofVerificationFailed();
         }
         
@@ -462,9 +468,8 @@ contract IhsanConstitutionalCourt is IVerifier {
             // Load 8 bytes from calldata at offset
             let ptr := add(data.offset, offset)
             let raw := calldataload(ptr)
-            // Shift right to get first 8 bytes, then reverse for little-endian
-            // Note: Solidity is big-endian, so we need to byte-swap
-            value := and(raw, 0xFFFFFFFFFFFFFFFF)
+            // Extract the first 8 bytes at offset (big-endian word load)
+            value := shr(192, raw)
         }
         // Byte swap for little-endian
         value = _swapBytes64(value);
@@ -493,24 +498,21 @@ contract IhsanConstitutionalCourt is IVerifier {
      */
     function _verifyRisc0Proof(
         bytes calldata proof,
-        uint256[4] memory publicInputs
+        bytes memory journal
     ) internal view returns (bool valid) {
-        // In production, this would call:
-        // IRiscZeroVerifier(risc0Verifier).verify(CIRCUIT_IMAGE_ID, proof, abi.encode(publicInputs))
-        
-        // For now, validate proof structure
         if (proof.length == 0) {
             return false;
         }
-        
-        // Suppress unused variable warning
-        (publicInputs);
-        
-        // TODO: Integrate actual RiscZero verifier when deployed
-        // This is a placeholder that returns true for valid-looking proofs
-        // MUST be replaced with actual verification in production
-        
-        return proof.length >= 32; // Minimum proof size check
+
+        try IRiscZeroVerifier(risc0Verifier).verify(
+            CIRCUIT_IMAGE_ID,
+            proof,
+            journal
+        ) returns (bool ok) {
+            return ok;
+        } catch {
+            revert VerifierCallFailed();
+        }
     }
 }
 
