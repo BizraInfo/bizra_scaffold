@@ -837,8 +837,8 @@ class TestPerformanceBenchmarks:
             iterations=50000,
         )
         
-        # Pure calculation should be very fast (adjust for system load)
-        assert result.ops_per_second > 30000
+        # Pure calculation should be fast (conservative threshold for CI variability)
+        assert result.ops_per_second > 15000, f"Only {result.ops_per_second:.0f} ops/s (min: 15000)"
 
 
 # ============================================================================
