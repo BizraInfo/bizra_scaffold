@@ -40,6 +40,11 @@ on:
           - prod
           - benchmark
 
+# Workflow permissions for committing receipts
+permissions:
+  contents: write
+  actions: read
+
 # Prevent concurrent verification runs
 concurrency:
   group: verify-${{ github.ref }}

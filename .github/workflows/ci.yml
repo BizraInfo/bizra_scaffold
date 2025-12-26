@@ -112,6 +112,8 @@ jobs:
           pip install pytest pytest-cov pytest-asyncio hypothesis
 
       - name: 🧪 Run tests with coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest tests/ -v \
             --cov=core \
