@@ -16,9 +16,10 @@ import torch
 from unittest.mock import MagicMock, patch
 from typing import Dict, Any
 
-# Import system under test
+# Import system under test - ensure repo root is in path
 import sys
-sys.path.insert(0, '..')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cognitive_sovereign import (
     IhsanPrinciples,
     QuantumTemporalSecurity,

@@ -20,7 +20,8 @@ import asyncio
 
 # Import the module under test
 import sys
-sys.path.insert(0, r"c:\bizra_scaffold")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core.value_oracle import (
     ShapleyOracle,
