@@ -322,10 +322,20 @@ jobs:
         run: |
           SECRETS_FOUND="false"
           if [ -d "keys" ]; then
-            # Check for private key patterns (excludes .example and README files)
-            PRIVATE_FOUND=$(find keys -type f \( -name "*.pem" -o -name "*private*" -o -name "*secret*" \) ! -name "*.example" ! -name "README*" | wc -l)
-            if [ "$PRIVATE_FOUND" -gt 0 ]; then
-              echo "❌ FAIL_CLOSED: Private keys found in keys/ directory"
+            # Flag obvious secret/private filenames (exclude README/example/public)
+            NAME_MATCHES=$(find keys -type f \( -name "*private*" -o -name "*secret*" \) ! -name "*.example" ! -name "README*" ! -name "*public*" -print)
+            # Detect PEM private keys by content (public keys won't match)
+            PEM_PRIVATE=$(grep -RIl --exclude="*.example" --exclude="README*" -e "BEGIN .*PRIVATE KEY" -e "BEGIN OPENSSH PRIVATE KEY" keys || true)
+            if [ -n "$NAME_MATCHES" ] || [ -n "$PEM_PRIVATE" ]; then
+              echo "❌ FAIL_CLOSED: Private key material found in keys/ directory"
+              if [ -n "$NAME_MATCHES" ]; then
+                echo "Name matches:"
+                echo "$NAME_MATCHES"
+              fi
+              if [ -n "$PEM_PRIVATE" ]; then
+                echo "PEM private key matches:"
+                echo "$PEM_PRIVATE"
+              fi
               SECRETS_FOUND="true"
             fi
           fi
