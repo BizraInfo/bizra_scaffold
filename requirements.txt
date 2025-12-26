@@ -3,7 +3,7 @@
 # ============================================================================
 # Pin ALL versions for reproducible builds (SOT compliance)
 # Last Updated: 2025-12-26
-# Python: 3.10+
+# Python: 3.10+ (numpy pins vary by interpreter version)
 #
 # NOTE: This project uses FastAPI (ASGI/Starlette stack), NOT Flask.
 # CORS is handled via fastapi.middleware.cors.CORSMiddleware (see core/engine/api.py)
@@ -15,7 +15,8 @@
 # Core ML & Numerics (pinned for reproducible builds)
 # Using CPU version for CI compatibility - see CUDA Note above for GPU
 torch>=2.7.1                # CVE-2025-3730 affects 2.6.0 only (disputed)
-numpy==2.3.3
+numpy==2.2.6; python_version < "3.11"
+numpy==2.3.3; python_version >= "3.11"
 networkx==3.3
 cryptography==45.0.7
 

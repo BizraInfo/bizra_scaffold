@@ -51,8 +51,8 @@ def _atomic_write_bytes(path: Path, data: bytes, mode: int = 0o644) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     
     # Create temp file in same directory (ensures same filesystem for atomic rename)
-    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
-    tmp_path = Path(tmp_path)
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    tmp_path = Path(tmp_name)
     
     try:
         os.write(fd, data)
@@ -89,7 +89,7 @@ class TemporalProof:
     chain_index: int
     algorithm: str
     
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON-compatible dict."""
         return {
             "nonce": self.nonce.hex(),

@@ -403,7 +403,14 @@ def pci_protected(
             async def async_wrapper(*args, **kwargs) -> Any:
                 result = await _run_gate(kwargs)
                 if not result.allowed:
-                    raise PCIRejectionError(result.rejection)
+                    rejection = result.rejection or RejectionResponse.create(
+                        code=RejectCode.REJECT_INTERNAL_ERROR,
+                        envelope_digest="unknown",
+                        gate="PCI_GATE",
+                        latency_ms=0.0,
+                        details={"reason": "missing rejection"},
+                    )
+                    raise PCIRejectionError(rejection)
                 return await func(*args, **kwargs)
 
             return async_wrapper
@@ -420,7 +427,14 @@ def pci_protected(
                     "use an async function instead"
                 )
             if not result.allowed:
-                raise PCIRejectionError(result.rejection)
+                rejection = result.rejection or RejectionResponse.create(
+                    code=RejectCode.REJECT_INTERNAL_ERROR,
+                    envelope_digest="unknown",
+                    gate="PCI_GATE",
+                    latency_ms=0.0,
+                    details={"reason": "missing rejection"},
+                )
+                raise PCIRejectionError(rejection)
             return func(*args, **kwargs)
 
         return sync_wrapper

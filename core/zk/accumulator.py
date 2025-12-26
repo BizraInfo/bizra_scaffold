@@ -751,21 +751,25 @@ class AccumulatorManager:
         """
         with self._lock:
             self._ensure_current()
+            current = self._current
+            if current is None:
+                raise RuntimeError("AccumulatorManager current accumulator missing")
             
             try:
-                index = self._current.add(receipt)
-                return self._current.batch_id, index
+                index = current.add(receipt)
+                return current.batch_id, index
             except BatchOverflowError:
                 # Seal current and create new
-                self._current.seal()
-                self._sealed.append(self._current)
+                current.seal()
+                self._sealed.append(current)
                 
-                self._current = ZKAccumulator(
+                current = ZKAccumulator(
                     constitution_hash=self._constitution_hash,
                     max_size=self._batch_size,
                 )
-                index = self._current.add(receipt)
-                return self._current.batch_id, index
+                self._current = current
+                index = current.add(receipt)
+                return current.batch_id, index
     
     def seal_current(self) -> Optional[AccumulatorState]:
         """Seal current accumulator if it has receipts."""

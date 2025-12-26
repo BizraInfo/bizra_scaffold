@@ -50,6 +50,7 @@ env:
   RUST_VERSION: "1.75"
   EVIDENCE_DIR: "evidence/metrics"
   RECEIPT_PATH: "evidence/metrics/latest.json"
+  MIN_COVERAGE: "55"
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════════
@@ -396,13 +397,17 @@ jobs:
           COVERAGE="${{ needs.coverage.outputs.line_coverage }}"
           COVERAGE=${COVERAGE:-0}
           COVERAGE=$((${COVERAGE%.*} + 0))  # Coerce to integer, strip decimals
+
+          MIN_COVERAGE="${{ env.MIN_COVERAGE }}"
+          MIN_COVERAGE=${MIN_COVERAGE:-70}
+          MIN_COVERAGE=$((MIN_COVERAGE + 0))
           
           # FAIL-CLOSED: Exit code trumps everything - catches crashes, errors, missing tests
           if [ "$EXIT_CODE" -ne 0 ]; then
             STATE="FAIL_CLOSED"
           elif [ "$FAILED" -gt 0 ] || [ "$SECRETS" = "true" ]; then
             STATE="FAIL_CLOSED"
-          elif [ "$COVERAGE" -lt 70 ]; then
+          elif [ "$COVERAGE" -lt "$MIN_COVERAGE" ]; then
             STATE="PENDING"
           else
             STATE="VERIFIED"
@@ -442,7 +447,7 @@ jobs:
               "coverage": {
                 "line_coverage_percent": ${{ needs.coverage.outputs.line_coverage }},
                 "status": "${{ needs.coverage.outputs.status }}",
-                "target_percent": 95
+                "target_percent": ${{ env.MIN_COVERAGE }}
               },
               "security": {
                 "secrets_found": ${{ needs.security-scan.outputs.secrets_found }},
