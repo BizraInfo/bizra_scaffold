@@ -40,6 +40,55 @@ P = ParamSpec("P")
 
 
 # =============================================================================
+# PYTHON 3.10 COMPATIBILITY: asyncio.timeout shim
+# =============================================================================
+
+import sys
+
+if sys.version_info >= (3, 11):
+    # Python 3.11+ has native asyncio.timeout
+    from asyncio import timeout as async_timeout
+else:
+    # Python 3.10: Provide a compatible implementation
+    from contextlib import asynccontextmanager as _acm
+    
+    @_acm
+    async def async_timeout(delay: float):
+        """
+        Compatibility shim for asyncio.timeout (added in Python 3.11).
+        
+        Uses asyncio.wait_for semantics to provide timeout functionality.
+        """
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + delay
+        
+        # Create a task that will be cancelled on timeout
+        class _TimeoutContext:
+            def __init__(self):
+                self._task = asyncio.current_task()
+                self._cancelled = False
+                self._timeout_handle = None
+            
+            def _on_timeout(self):
+                self._cancelled = True
+                if self._task:
+                    self._task.cancel()
+        
+        ctx = _TimeoutContext()
+        ctx._timeout_handle = loop.call_at(deadline, ctx._on_timeout)
+        
+        try:
+            yield
+        except asyncio.CancelledError:
+            if ctx._cancelled:
+                raise asyncio.TimeoutError()
+            raise
+        finally:
+            if ctx._timeout_handle:
+                ctx._timeout_handle.cancel()
+
+
+# =============================================================================
 # THREAD POOL EXECUTOR MANAGEMENT
 # =============================================================================
 

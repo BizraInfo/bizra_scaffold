@@ -26,6 +26,9 @@ from datetime import datetime, timezone, timedelta
 from enum import Enum
 from functools import wraps
 
+# Python 3.10 compatibility: use shim for asyncio.timeout
+from core.async_utils.execution import async_timeout
+
 logger = logging.getLogger(__name__)
 
 
@@ -395,7 +398,7 @@ class HealthChecker:
     ) -> bool:
         """Check if Neo4j is reachable."""
         try:
-            async with asyncio.timeout(timeout):
+            async with async_timeout(timeout):
                 # Simple connectivity test
                 topology = await l4_hypergraph.analyze_topology()
                 return topology is not None

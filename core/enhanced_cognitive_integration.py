@@ -48,6 +48,9 @@ from core.production_safeguards import (
     get_audit_logger
 )
 
+# Python 3.10 compatibility: use shim for asyncio.timeout
+from core.async_utils.execution import async_timeout
+
 logger = logging.getLogger(__name__)
 
 
@@ -427,7 +430,7 @@ class EnhancedCognitiveProcessor:
     async def _safe_query_hypergraph(self, node_name: str) -> List[Dict[str, Any]]:
         """Safe hypergraph query with timeout."""
         try:
-            async with asyncio.timeout(5.0):  # 5 second timeout
+            async with async_timeout(5.0):  # 5 second timeout
                 neighbors = await self.l4.get_neighbors_with_domains(
                     node_name,
                     max_neighbors=20
@@ -443,7 +446,7 @@ class EnhancedCognitiveProcessor:
     async def _safe_compute_convergence(self, observation: Observation) -> ConvergenceResult:
         """Safe convergence computation with timeout."""
         try:
-            async with asyncio.timeout(10.0):  # 10 second timeout
+            async with async_timeout(10.0):  # 10 second timeout
                 return self.convergence.compute(observation)
         except asyncio.TimeoutError:
             logger.error("Convergence computation timeout")

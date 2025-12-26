@@ -19,6 +19,9 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime, timezone
 
+# Python 3.10 compatibility: use shim for asyncio.timeout
+from core.async_utils.execution import async_timeout
+
 from core.production_safeguards import (
     CircuitBreaker,
     CircuitBreakerConfig,
@@ -467,7 +470,7 @@ class TestTimeoutProtection:
             await asyncio.sleep(0.01)
             return "success"
         
-        async with asyncio.timeout(1.0):
+        async with async_timeout(1.0):
             result = await fast_operation()
         
         assert result == "success"
@@ -480,7 +483,7 @@ class TestTimeoutProtection:
             return "should_not_reach"
         
         with pytest.raises(asyncio.TimeoutError):
-            async with asyncio.timeout(0.1):
+            async with async_timeout(0.1):
                 await slow_operation()
 
 

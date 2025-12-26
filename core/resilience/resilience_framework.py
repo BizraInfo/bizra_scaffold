@@ -61,6 +61,9 @@ from typing import (
 
 logger = logging.getLogger("bizra.resilience")
 
+# Python 3.10 compatibility: use shim for asyncio.timeout
+from core.async_utils.execution import async_timeout
+
 # ============================================================================
 # TIMEOUT CONSTANTS
 # ============================================================================
@@ -816,7 +819,7 @@ class Timeout:
         self._total_calls += 1
         
         try:
-            async with asyncio.timeout(timeout):
+            async with async_timeout(timeout):
                 yield
             self._total_successes += 1
         except asyncio.TimeoutError:
