@@ -2,25 +2,23 @@
 # BIZRA AEON OMEGA - PRODUCTION DOCKERFILE
 # ============================================================================
 # Multi-stage build for optimal image size and security
-# Target size: <500MB (optimized from 1.2GB)
-# Python 3.10+ | Alpine-based for minimal footprint
+# Python 3.10+ | Debian slim for PyTorch compatibility
 
 # ──────────────────────────────────────────────────────────────────────────
 # STAGE 1: BUILD - Install dependencies and compile
 # ──────────────────────────────────────────────────────────────────────────
-FROM python:3.10-alpine AS builder
+FROM python:3.10-slim-bookworm AS builder
 
 # Install build dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
-    musl-dev \
-    linux-headers \
     libffi-dev \
-    openssl-dev \
+    libssl-dev \
     cmake \
     make \
-    git
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install liboqs (post-quantum cryptography)
 RUN git clone --depth 1 --branch 0.8.0 https://github.com/open-quantum-safe/liboqs.git \
@@ -46,14 +44,13 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
 # ──────────────────────────────────────────────────────────────────────────
 # STAGE 2: PRODUCTION - Minimal runtime image
 # ──────────────────────────────────────────────────────────────────────────
-FROM python:3.10-alpine
+FROM python:3.10-slim-bookworm
 
 # Install runtime dependencies only
-RUN apk add --no-cache \
-    libstdc++ \
-    libgomp \
-    libffi \
-    openssl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    libffi8 \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy liboqs from builder
 COPY --from=builder /usr/local/lib/liboqs* /usr/local/lib/
@@ -63,9 +60,12 @@ COPY --from=builder /usr/local/include/oqs /usr/local/include/oqs
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Update library cache
+RUN ldconfig
+
 # Create non-root user
-RUN addgroup -g 1000 bizra \
-    && adduser -D -u 1000 -G bizra bizra
+RUN groupadd -g 1000 bizra \
+    && useradd -m -u 1000 -g bizra bizra
 
 # Set working directory
 WORKDIR /app
@@ -108,7 +108,6 @@ CMD ["uvicorn", "core.engine.api:app", "--host", "0.0.0.0", "--port", "8000"]
 #
 # Size verification:
 #   docker images bizra:10.0.0
-#   Expected: <500MB
 #
 # Security scan:
 #   docker scan bizra:10.0.0
