@@ -8,7 +8,8 @@
 # ──────────────────────────────────────────────────────────────────────────
 # CORE DEEP LEARNING & NUMERICS
 # ──────────────────────────────────────────────────────────────────────────
-torch==2.7.1+cu118  # PyTorch with CUDA 11.8 support
+# For CUDA builds, use: pip install torch --extra-index-url https://download.pytorch.org/whl/cu118
+torch>=2.0.0        # PyTorch (CPU version for Docker compatibility)
 numpy==2.2.6; python_version < "3.11"  # Numerical computing
 numpy==2.3.3; python_version >= "3.11"
 scipy==1.11.4       # Scientific computing
