@@ -34,7 +34,7 @@ prometheus_client==0.19.0   # Metrics exporter
 neo4j==5.14.0               # Graph database
 
 # Vector Search
-faiss-cpu==1.7.4            # Similarity search
+faiss-cpu>=1.9.0            # Similarity search (>=1.9 for numpy 2.x compat)
 
 # Cryptography
 blake3==0.3.3               # Fast hashing
