@@ -49,6 +49,33 @@ daughter = "Dema"
 siblings = { twin_brother = 1, sisters = 2 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# DEDICATIONS & HONORS
+# ─────────────────────────────────────────────────────────────────────────────────
+# Knowledge integrated into the genesis knowledge base in honor of those
+# whose work has contributed to BIZRA's foundation.
+
+[genesis.dedications]
+
+[genesis.dedications.dr_kais_dukes]
+name = "Dr. Kais Dukes"
+full_title = "PhD AI Expert, Creator of the Quranic Arabic Corpus"
+github = "https://github.com/kaisdukes"
+tribute = "In loving memory - God bless his soul (رحمه الله)"
+contribution = """
+His pioneering work on Quranic linguistics and AI has been integrated into 
+the genesis knowledge base. Key contributions honored:
+- Quranic Arabic Corpus: The definitive linguistic resource for Quranic study
+- Quran Neural Parser: Dependency graph parsing based on traditional إعراب (i'rāb)
+- Quran Neural Chunker: Data preprocessing for Quranic Treebank
+- Quran SVM Parser: Original ML-based parsing (Dukes & Habash, 2011)
+- MemSeqDB: High-performance in-memory graph database
+- Foundational neural network educational resources
+"""
+alignment = "His work on Quranic AI directly informs BIZRA's Ihsān principles"
+location = "London, UK"
+organization = "Hunna Technology"
+status = "Honored in Genesis Knowledge Base"
+# ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
 # ─────────────────────────────────────────────────────────────────────────────────
 # These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
