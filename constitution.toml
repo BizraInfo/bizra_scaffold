@@ -49,15 +49,38 @@ daughter = "Dema"
 siblings = { twin_brother = 1, sisters = 2 }
 
 # ─────────────────────────────────────────────────────────────────────────────────
-# DEDICATIONS & HONORS
+# KNOWLEDGE FOUNDATION (الأصول - The Roots)
 # ─────────────────────────────────────────────────────────────────────────────────
-# Knowledge integrated into the genesis knowledge base in honor of those
-# whose work has contributed to BIZRA's foundation.
+# These two corpora form the ROOT LAYER (Layer 0) of BIZRA's knowledge architecture.
+# All knowledge graphs, semantic embeddings, and hypergraph structures are built
+# ABOVE these foundational sources. They are not merely dedications - they are the
+# bedrock upon which the entire cognitive framework stands.
+#
+#   ┌─────────────────────────────────────────────────────────────────┐
+#   │                    BIZRA Knowledge Architecture                 │
+#   ├─────────────────────────────────────────────────────────────────┤
+#   │  L4: Semantic HyperGraph (Graph-of-Thoughts)                    │
+#   │  L3: Domain Knowledge (Chat History, Organized Data)            │
+#   │  L2: Embedding Space (Vector Representations)                   │
+#   │  L1: Parsed Structures (Dependency Graphs, Annotations)         │
+#   │  ════════════════════════════════════════════════════════════   │
+#   │  L0: ROOT LAYER (الأصول)                                        │
+#   │      ├── القرآن الكريم (Quranic Arabic Corpus)                  │
+#   │      └── السنة النبوية (LK-Hadith-Corpus)                       │
+#   └─────────────────────────────────────────────────────────────────┘
+#
+# The Quran and Sunnah together form the complete foundation. Everything above
+# inherits meaning, ethics, and alignment from these roots.
 
-[genesis.dedications]
+[genesis.foundations]
 
-[genesis.dedications.dr_kais_dukes]
-name = "Dr. Kais Dukes"
+[genesis.foundations.quran]
+# الأصل الأول - The First Root
+name = "Quranic Arabic Corpus"
+arabic_name = "القرآن الكريم"
+layer = "L0 - Root Layer"
+role = "Primary Divine Source"
+curator = "Dr. Kais Dukes"
 full_title = "PhD AI Expert, Creator of the Quranic Arabic Corpus"
 github = "https://github.com/kaisdukes"
 tribute = "In loving memory - God bless his soul (رحمه الله)"
@@ -74,12 +97,16 @@ the genesis knowledge base. Key contributions honored:
 alignment = "His work on Quranic AI directly informs BIZRA's Ihsān principles"
 location = "London, UK"
 organization = "Hunna Technology"
-status = "Honored in Genesis Knowledge Base"
+status = "INTEGRATED - Genesis Knowledge Base"
 
-[genesis.dedications.lk_hadith_corpus]
+[genesis.foundations.sunnah]
+# الأصل الثاني - The Second Root
 name = "LK-Hadith-Corpus"
+arabic_name = "السنة النبوية"
+layer = "L0 - Root Layer"
+role = "Prophetic Tradition Source"
 full_title = "Leeds University & King Saud University Hadith Corpus"
-author = "Shatha Altammami"
+curator = "Shatha Altammami"
 affiliations = ["Leeds University (UK)", "King Saud University (Saudi Arabia)"]
 github = "https://github.com/ShathaTm/LK-Hadith-Corpus"
 tribute = "Academic excellence in service of the Sunnah"
@@ -97,7 +124,29 @@ papers = [
   "Constructing a Bilingual Hadith Corpus Using a Segmentation Tool (LREC 2020)"
 ]
 alignment = "Complements Quranic Arabic Corpus for complete Islamic knowledge integration"
-status = "Planned Integration - Genesis Knowledge Base"
+status = "PLANNED - Genesis Knowledge Base"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ROOT LAYER DECLARATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[genesis.foundations.declaration]
+statement = """
+بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+
+The Quran (القرآن) and Sunnah (السنة) together form the complete ROOT LAYER
+of BIZRA's knowledge architecture. All semantic graphs, embeddings, and 
+cognitive structures built above these roots inherit their ethical alignment
+and epistemological grounding from these divine and prophetic sources.
+
+This is not merely a technical architecture choice - it is the soul of BIZRA.
+Everything built above stands upon this foundation.
+
+وَمَا آتَاكُمُ الرَّسُولُ فَخُذُوهُ وَمَا نَهَاكُمْ عَنْهُ فَانتَهُوا
+"And whatever the Messenger gives you, take it; and whatever he forbids you, abstain from it."
+— Surah Al-Hashr (59:7)
+"""
+frozen = true
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
