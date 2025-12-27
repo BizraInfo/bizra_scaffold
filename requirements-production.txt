@@ -17,9 +17,10 @@ scipy==1.11.4       # Scientific computing
 # ──────────────────────────────────────────────────────────────────────────
 # POST-QUANTUM CRYPTOGRAPHY (NIST-Certified)
 # ──────────────────────────────────────────────────────────────────────────
-liboqs-python==0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
+liboqs-python>=0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
 cryptography==45.0.7        # Classical crypto (Ed25519, SHA3)
-pycryptodome==3.18.0        # Additional crypto primitivesblake3==1.0.0               # Fast hashing for constitution
+pycryptodome==3.18.0        # Additional crypto primitives
+blake3==1.0.0               # Fast cryptographic hash (attestation IDs)
 toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
 # MEMORY & DATA STRUCTURES
