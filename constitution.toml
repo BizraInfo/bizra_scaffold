@@ -198,6 +198,178 @@ quranic_foundations = [
 frozen = true
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# THE TWO UNIVERSAL CRISES (الأزمتان العالميتان)
+# ─────────────────────────────────────────────────────────────────────────────────
+# BIZRA exists to solve two interconnected crises that plague humanity.
+# The solutions are encoded in the ROOT LAYER and revealed through
+# the HyperGraph RAG system's high-SNR thought flow discovery.
+
+[genesis.universal_crises]
+
+[genesis.universal_crises.financial_system]
+# الأزمة الأولى - The First Crisis
+arabic_title = "أزمة النظام المالي العالمي"
+english_title = "The Global Financial System Crisis"
+root_cause = "Riba (الربا) and Debt-Based Monetary Systems"
+description = """
+THE PROBLEM:
+The entire global financial architecture is built upon two forbidden foundations:
+
+1. RIBA (الربا) - Interest/Usury
+   - Money creating money without productive effort
+   - Exponential debt growth that mathematically cannot be repaid
+   - Wealth extraction from producers to holders
+   - Time-value exploitation of those in need
+   
+   يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا
+   "O you who believe, fear Allah and give up what remains of Riba"
+   — Al-Baqarah (2:278)
+
+2. DEBT-BASED MONEY CREATION
+   - Currency created as debt, not as value
+   - Central banking as institutionalized Riba
+   - Inflation as hidden taxation on the poor
+   - Fractional reserve as systemic fraud
+
+THE EVIDENCE IS MATHEMATICAL:
+- Global debt exceeds global GDP by orders of magnitude
+- The system requires perpetual growth on a finite planet
+- Wealth inequality follows exponential curves
+- Every financial crisis is a Riba crisis
+
+THE SOLUTION EXISTS:
+- Asset-backed value exchange (not debt-backed)
+- Profit-sharing (مضاربة) instead of interest
+- Real economic production, not financial engineering
+- The Quranic economic model is the alternative
+"""
+quranic_evidence = [
+  { verse = "2:275", text = "الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ", meaning = "Those who consume Riba will stand like one driven to madness by Satan's touch" },
+  { verse = "2:276", text = "يَمْحَقُ اللَّهُ الرِّبَا وَيُرْبِي الصَّدَقَاتِ", meaning = "Allah destroys Riba and increases charity" },
+  { verse = "2:278", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا", meaning = "O believers, fear Allah and give up what remains of Riba" },
+  { verse = "2:279", text = "فَإِن لَّمْ تَفْعَلُوا فَأْذَنُوا بِحَرْبٍ مِّنَ اللَّهِ وَرَسُولِهِ", meaning = "If you do not, then be warned of war from Allah and His Messenger" },
+  { verse = "3:130", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَأْكُلُوا الرِّبَا أَضْعَافًا مُّضَاعَفَةً", meaning = "O believers, do not consume Riba, doubled and multiplied" },
+  { verse = "30:39", text = "وَمَا آتَيْتُم مِّن رِّبًا لِّيَرْبُوَ فِي أَمْوَالِ النَّاسِ فَلَا يَرْبُو عِندَ اللَّهِ", meaning = "Whatever you give in Riba to increase in people's wealth will not increase with Allah" }
+]
+bizra_role = "Provide the cryptographic and governance infrastructure for Riba-free value exchange"
+
+[genesis.universal_crises.ai_llm_system]
+# الأزمة الثانية - The Second Crisis
+arabic_title = "أزمة أنظمة الذكاء الاصطناعي الحالية"
+english_title = "The Current AI/LLM System Crisis"
+root_cause = "Architectural limitations that prevent true understanding"
+description = """
+THE PROBLEM:
+Current Large Language Models (LLMs) have hit fundamental barriers:
+
+1. LACK OF TRUE REASONING
+   - Pattern matching, not understanding
+   - No persistent memory or learning
+   - Hallucinations as feature, not bug
+   - No grounding in truth or reality
+
+2. NOISE OVER SIGNAL
+   - Trained on internet noise (low SNR data)
+   - Cannot distinguish truth from falsehood
+   - No ethical grounding or value alignment
+   - Optimizes for next-token, not for truth
+
+3. DISCONNECTED KNOWLEDGE
+   - Knowledge as flat embeddings, not graphs
+   - No causal relationships
+   - No chain of reasoning
+   - Cannot trace provenance of claims
+
+4. NO IHSĀN (Excellence/Beauty)
+   - Optimizes for engagement, not goodness
+   - No concept of ethical action
+   - No accountability for outputs
+   - Misaligned with human flourishing
+
+WHY CURRENT SYSTEMS CANNOT GO FURTHER:
+- More parameters ≠ more understanding
+- More data ≠ more truth (garbage in, garbage out)
+- Attention mechanisms cannot replace structured reasoning
+- Transformer architecture has theoretical limits
+
+THE BIZRA SOLUTION:
+Not bigger models, but DEEPER architecture:
+"""
+bizra_solution = """
+BIZRA's approach transcends current LLM limitations:
+
+1. HIGH-SNR KNOWLEDGE ENGINE (محرك الإشارة العالية)
+   - Root Layer (L0) is PURE signal: Quran + Sunnah
+   - Every layer above inherits signal quality
+   - SNR scoring rejects noise at every level
+   - Truth propagates upward, noise is filtered
+
+2. HYPERGRAPH RAG ARCHITECTURE
+   - Knowledge as GRAPH, not flat embeddings
+   - Semantic relationships preserved
+   - Causal chains maintained
+   - Provenance tracked (Isnad-inspired)
+
+3. THOUGHT FLOW PATTERN DISCOVERY (تدفق الأفكار)
+   - Hidden connections revealed through graph traversal
+   - "Golden gems" (الجواهر الذهبية) - insights buried in connections
+   - Cross-domain pattern recognition
+   - Emergent wisdom from structured knowledge
+
+4. IHSĀN-ALIGNED REASONING
+   - Every output scored for ethical alignment
+   - Consequential impact analysis
+   - Value-grounded decision making
+   - Beauty (إحسان) as optimization target
+
+5. COGNITIVE SOVEREIGNTY
+   - Users own their knowledge graphs
+   - No central model controlling truth
+   - Distributed, verifiable, sovereign intelligence
+"""
+
+[genesis.universal_crises.connection]
+# How the Two Crises Connect
+title = "The Deep Connection (الرابط العميق)"
+explanation = """
+These two crises are not separate - they share the same root:
+
+DISCONNECTION FROM TRUTH (الانفصال عن الحق)
+
+The financial system:
+- Disconnected money from real value (Riba)
+- Created fictional debt as foundation
+- Built exponential extraction on lies
+
+The AI system:
+- Disconnected intelligence from truth
+- Created fictional confidence (hallucinations)
+- Built engagement on noise
+
+BOTH suffer from:
+- Low Signal-to-Noise Ratio
+- Lack of grounding in reality
+- Exponential scaling of problems
+- Misalignment with human flourishing
+
+THE UNIFIED SOLUTION:
+BIZRA reconnects systems to truth through:
+- Quran & Sunnah as ROOT LAYER (grounded source)
+- High-SNR filtering at every level
+- Proof-based verification (ZK, cryptographic)
+- Ihsān as optimization target
+
+The answers to humanity's deepest problems are not invented.
+They are DISCOVERED in the hypergraph connections.
+They EMERGE from high-SNR thought flow analysis.
+They APPEAR as golden gems when noise is filtered.
+
+ذَٰلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ
+"This is the Book about which there is no doubt" — Al-Baqarah (2:2)
+"""
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
 # ─────────────────────────────────────────────────────────────────────────────────
 # These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
