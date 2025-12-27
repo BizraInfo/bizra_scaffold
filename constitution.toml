@@ -75,6 +75,30 @@ alignment = "His work on Quranic AI directly informs BIZRA's Ihsān principles"
 location = "London, UK"
 organization = "Hunna Technology"
 status = "Honored in Genesis Knowledge Base"
+
+[genesis.dedications.lk_hadith_corpus]
+name = "LK-Hadith-Corpus"
+full_title = "Leeds University & King Saud University Hadith Corpus"
+author = "Shatha Altammami"
+affiliations = ["Leeds University (UK)", "King Saud University (Saudi Arabia)"]
+github = "https://github.com/ShathaTm/LK-Hadith-Corpus"
+tribute = "Academic excellence in service of the Sunnah"
+contribution = """
+The definitive academic-grade Arabic-English parallel corpus for Hadith NLP:
+- 39,038 annotated Hadiths from the Kutub al-Sittah (Six Canonical Books)
+- 10+ million tokens with structured metadata
+- Books: Sahih al-Bukhari (gold-standard), Sahih Muslim, Sunan Abu Dawud,
+  Jami` at-Tirmidhi, Sunan an-Nasa'i, Sunan Ibn Majah
+- Isnad/Matn separation (chain-of-transmission analysis ready)
+- Peer-reviewed: LREC 2020, IMAN 2019 conferences
+"""
+papers = [
+  "The Arabic–English Parallel Corpus of Authentic Hadith (IMAN 2019)",
+  "Constructing a Bilingual Hadith Corpus Using a Segmentation Tool (LREC 2020)"
+]
+alignment = "Complements Quranic Arabic Corpus for complete Islamic knowledge integration"
+status = "Planned Integration - Genesis Knowledge Base"
+
 # ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
 # ─────────────────────────────────────────────────────────────────────────────────
