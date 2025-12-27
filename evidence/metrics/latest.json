@@ -1,13 +1,13 @@
 {
   "meta": {
-    "receipt_id": "bd4c725e-e726-4856-a4d8-2158c7c9c0b7",
-    "generated_at": "2025-12-27T03:38:53Z",
+    "receipt_id": "9f9075e6-fd8a-4d18-86aa-d9a5c275235a",
+    "generated_at": "2025-12-27T03:44:01Z",
     "generator_version": "1.0.0",
     "mode": "metrics",
     "profile": "ci"
   },
   "environment": {
-    "commit_sha": "3dcb4c8a5e94fe2f482c7080451510745effdc3e",
+    "commit_sha": "eadd26df7a7c5789d7de6c713b44cf18a75b3b4c",
     "branch": "main",
     "repo_clean": true,
     "python_version": "3.11",
@@ -28,7 +28,7 @@
       "pass_rate": 98.67
     },
     "coverage": {
-      "line_coverage_percent": 56.2900,
+      "line_coverage_percent": 56.0900,
       "status": "Red",
       "target_percent": 55
     },
@@ -40,6 +40,6 @@
   "state": "VERIFIED",
   "integrity": {
     "hash_algorithm": "SHA-256",
-    "content_hash": "8bbd0dbbc4fe45a98db4ae8b02beae920e2254dc697ee154065767f42b2a9108"
+    "content_hash": "d701f80acc6dc8b060766eb903d615fdecc02f65a9de19dc95a7f5616059a3a6"
   }
 }
