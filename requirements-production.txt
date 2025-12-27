@@ -19,7 +19,7 @@ defusedxml>=0.7.1   # B314 fix: Secure XML parsing (prevents XXE attacks)
 # ──────────────────────────────────────────────────────────────────────────
 liboqs-python>=0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
 cryptography==45.0.7        # Classical crypto (Ed25519, SHA3)
-pycryptodome==3.18.0        # Additional crypto primitives
+pycryptodome>=3.19.1        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel fix
 blake3==1.0.0               # Fast cryptographic hash (attestation IDs)
 toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ fastapi==0.127.0            # Modern async web framework
 uvicorn[standard]==0.40.0   # ASGI server with extras (uvloop, httptools)
 pydantic==2.12.5            # Data validation
 pydantic-settings==2.1.0    # Settings management
-python-multipart==0.0.6     # File uploads support
+python-multipart>=0.0.18    # GHSA-59g5-xgcq-4qw3: File uploads (security patched)
 
 # ──────────────────────────────────────────────────────────────────────────
 # MONITORING & OBSERVABILITY

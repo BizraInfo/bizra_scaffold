@@ -25,13 +25,13 @@ import platform
 import subprocess
 import sys
 import uuid
-
-import defusedxml.ElementTree as ET  # B314 fix: secure XML parsing
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import defusedxml.ElementTree as ET  # B314 fix: secure XML parsing
 
 logger = logging.getLogger("bizra.verification")
 
