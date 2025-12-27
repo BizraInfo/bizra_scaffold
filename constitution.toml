@@ -20,6 +20,35 @@ pq_migration_target = "dilithium5"
 canonical_format = "rfc8785"  # JCS (JSON Canonicalization Scheme)
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 0: GENESIS DECLARATION
+# ─────────────────────────────────────────────────────────────────────────────────
+# The immutable origin record of BIZRA. This section is FROZEN and cannot be
+# modified by any governance process. It establishes provenance and ownership.
+
+[genesis]
+# Founder & Sole Owner of Node0 (Genesis Block)
+founder_legal_name = "Mohamed Ahmed Beshr Elsayed Hassan"
+founder_alias = "MoMo"
+founder_role = "First Architect, First Node, First Owner, First User"
+
+# Genesis Artifacts (the two raw files written in 2023)
+[genesis.artifacts]
+message = { file = "BIZRA-Genesis-Message-Presentation.html", title = "الرسالة (The Message)", written = "Ramadan 2023" }
+seed = { file = "BIZRA-Genesis-Seed-Presentation.html", title = "البذرة (The Seed)", written = "Ramadan 2023" }
+
+# Node0 Declaration
+[genesis.node0]
+description = "The genesis block - home base of BIZRA origin"
+location = "Local hardware owned by founder"
+ownership = "Sole ownership by Mohamed Ahmed Beshr Elsayed Hassan"
+status = "Active"
+
+# Family Context (for historical record)
+[genesis.family]
+daughter = "Dema"
+siblings = { twin_brother = 1, sisters = 2 }
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
 # ─────────────────────────────────────────────────────────────────────────────────
 # These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
