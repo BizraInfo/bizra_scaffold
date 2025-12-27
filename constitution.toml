@@ -144,7 +144,13 @@ It contains:
 By ingesting this data, the system becomes SELF-AWARE of its own
 intellectual heritage and trajectory.
 """
-status = "INGESTION READY"
+status = "active_ingestion"
+primary_evidence = "evidence/RECOVERED_MASTERPIECE.md"
+
+[genesis.foundations.living_knowledge.artifacts]
+masterpiece_blueprint = "Gem #1: BIZRA flagship design system"
+audit_protocol = "Gem #7: Core system update"
+ops_manual = "Gem #5: Unknown command input"
 
 # ─────────────────────────────────────────────────────────────────────────────────
 # ROOT LAYER DECLARATION
