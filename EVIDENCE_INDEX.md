@@ -138,4 +138,17 @@ Status values: `PENDING`, `VERIFIED`, `INVALIDATED`.
 | EVID-068 | Comprehensive security test suite | `tests/test_security_infrastructure.py` | `test_security_infrastructure.py#L1-L600` | VERIFIED | JWT, HSM, memory, async, modular architecture tests |
 | EVID-069 | Performance regression testing framework | `tests/performance/regression_tests.py` | `regression_tests.py#L1-L500` | VERIFIED | CI/CD integration, threshold-based gates, baseline comparison |
 
+## Security Remediation Evidence (Session 2025-12-27)
+
+| ID | Claim summary | Source doc | Evidence artifact | Status | Notes |
+|---|---|---|---|---|---|
+| EVID-070 | B314 XML vulnerability fix (defusedxml) | `core/verification/metrics_verifier.py` | `commit@e90ece8` | VERIFIED | Replaced xml.etree.ElementTree with defusedxml (XXE prevention) |
+| EVID-071 | B104 binding documentation (nosec) | `core/config.py` | `config.py#L22-L25` | VERIFIED | 0.0.0.0 binding intentional for k8s, documented with nosec B104 |
+| EVID-072 | GHSA-59g5-xgcq-4qw3 python-multipart fix | `requirements*.txt` | `commit@3dcb4c8` | VERIFIED | Upgraded to >=0.0.21 (DoS vulnerability patched) |
+| EVID-073 | GHSA-j225-cvw7-qrx7 pycryptodome fix | `requirements*.txt` | `commit@3dcb4c8` | VERIFIED | Upgraded to >=3.19.1 (OAEP decryption side-channel fix) |
+| EVID-074 | GHSA-fj7x-q9j7-g6q6 black fix | `requirements.txt` | `commit@3dcb4c8` | VERIFIED | Added black>=24.3.0 (directory traversal fix) |
+| EVID-075 | Bandit scan clean (0 issues) | `core/` | `bandit -r core/ -ll -s B101` | VERIFIED | 0 issues identified, 1 suppressed (B104 intentional) |
+| EVID-076 | Governance validation success | `scripts/validate_governance.py` | Local CLI output | VERIFIED | 69 VERIFIED, 0 PENDING |
+| EVID-077 | Test suite passing (597/8) | `tests/` | `pytest tests/ --tb=no -q` | VERIFIED | 597 passed, 8 skipped (Hypothesis not installed) |
+
 Update this file whenever claims are added, removed, or reclassified.
