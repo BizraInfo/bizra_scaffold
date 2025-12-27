@@ -2,7 +2,7 @@
 # BIZRA AEON OMEGA - Development Dependencies
 # ============================================================================
 # Pin ALL versions for reproducible builds (SOT compliance)
-# Last Updated: 2025-12-26
+# Last Updated: 2025-12-27
 # Python: 3.10+ (numpy pins vary by interpreter version)
 #
 # NOTE: This project uses FastAPI (ASGI/Starlette stack), NOT Flask.
@@ -10,6 +10,11 @@
 #
 # CUDA Note: For GPU support, install torch with:
 #   pip install torch==2.7.1+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+#
+# ⚠️ NUMPY VERSION POLICY:
+# - Development: numpy 2.x for latest features
+# - Production (requirements-production.txt): numpy <2.0 for scipy 1.11.x compatibility
+# - Developers MUST NOT use numpy 2.0-only APIs in production code paths
 # ============================================================================
 
 # Core ML & Numerics (pinned for reproducible builds)
@@ -19,6 +24,7 @@ numpy==2.2.6; python_version < "3.11"
 numpy==2.3.3; python_version >= "3.11"
 networkx==3.3
 cryptography==45.0.7
+defusedxml>=0.7.1           # B314 fix: Secure XML parsing (prevents XXE attacks)
 
 # Web API (FastAPI/ASGI stack - no Flask required)
 fastapi==0.127.0            # Async web framework (tested compatible)

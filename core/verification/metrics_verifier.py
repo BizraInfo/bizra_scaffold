@@ -25,7 +25,8 @@ import platform
 import subprocess
 import sys
 import uuid
-import xml.etree.ElementTree as ET
+
+import defusedxml.ElementTree as ET  # B314 fix: secure XML parsing
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum

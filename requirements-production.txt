@@ -12,6 +12,7 @@
 torch>=2.0.0        # PyTorch (CPU version for Docker compatibility)
 numpy>=1.24.0,<2.0  # Numerical computing (compatible with scipy 1.11.x)
 scipy==1.11.4       # Scientific computing
+defusedxml>=0.7.1   # B314 fix: Secure XML parsing (prevents XXE attacks)
 
 # ──────────────────────────────────────────────────────────────────────────
 # POST-QUANTUM CRYPTOGRAPHY (NIST-Certified)

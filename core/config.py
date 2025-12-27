@@ -19,7 +19,9 @@ class BIZRAConfig(BaseSettings):
     system_mode: Literal["production", "staging", "development"] = "production"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     workers: int = Field(default=10, ge=1, le=100)
-    host: str = "0.0.0.0"
+    # B104: Binding to 0.0.0.0 is intentional for container/k8s deployment.
+    # In production, network isolation is enforced via k8s NetworkPolicy.
+    host: str = "0.0.0.0"  # nosec B104
     port: int = Field(default=8000, ge=1024, le=65535)
 
     # ═══ NEO4J DATABASE ═══
