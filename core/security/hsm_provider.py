@@ -37,8 +37,102 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 logger = logging.getLogger("bizra.security.hsm")
+
+
+# =============================================================================
+# KDF CONFIGURATION (versioned for forward compatibility)
+# =============================================================================
+
+# KDF version metadata - bump version when changing parameters
+KDF_VERSION = 1
+KDF_ALGORITHM = "PBKDF2-HMAC-SHA256"
+KDF_ITERATIONS = 600_000  # OWASP 2024 recommendation for PBKDF2-HMAC-SHA256
+KDF_SALT_BYTES = 32
+KDF_KEY_BYTES = 32
+
+
+@dataclass
+class KDFParams:
+    """Versioned KDF parameters for password-derived keys.
+
+    This structure is serialized alongside encrypted key storage to enable
+    forward-compatible KDF upgrades without breaking existing encrypted data.
+    """
+
+    version: int
+    algorithm: str
+    iterations: int
+    salt: bytes  # Must be unique per derivation
+    key_length: int
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for JSON storage."""
+        return {
+            "version": self.version,
+            "algorithm": self.algorithm,
+            "iterations": self.iterations,
+            "salt": base64.b64encode(self.salt).decode("ascii"),
+            "key_length": self.key_length,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "KDFParams":
+        """Deserialize from JSON storage."""
+        return cls(
+            version=data["version"],
+            algorithm=data["algorithm"],
+            iterations=data["iterations"],
+            salt=base64.b64decode(data["salt"]),
+            key_length=data["key_length"],
+        )
+
+    @classmethod
+    def generate(cls) -> "KDFParams":
+        """Generate new KDF params with fresh salt."""
+        return cls(
+            version=KDF_VERSION,
+            algorithm=KDF_ALGORITHM,
+            iterations=KDF_ITERATIONS,
+            salt=secrets.token_bytes(KDF_SALT_BYTES),
+            key_length=KDF_KEY_BYTES,
+        )
+
+
+def derive_key_from_password(password: str, params: KDFParams) -> bytes:
+    """
+    Derive a cryptographic key from a password using PBKDF2-HMAC.
+
+    This is the ONLY approved method for password-to-key derivation.
+    HKDF must NOT be used directly for password-based key derivation as
+    it lacks the computational work factor needed to resist brute-force attacks.
+
+    Args:
+        password: User-provided password (UTF-8 encoded)
+        params: KDF parameters including salt and iteration count
+
+    Returns:
+        32-byte derived key suitable for AES-256
+
+    Raises:
+        ValueError: If params.algorithm is unsupported
+    """
+    if params.algorithm != "PBKDF2-HMAC-SHA256":
+        raise ValueError(
+            f"Unsupported KDF algorithm: {params.algorithm}. "
+            f"Only PBKDF2-HMAC-SHA256 is currently supported."
+        )
+
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=params.key_length,
+        salt=params.salt,
+        iterations=params.iterations,
+        backend=default_backend(),
+    )
+    return kdf.derive(password.encode("utf-8"))
 
 
 # =============================================================================
@@ -260,13 +354,24 @@ class SoftwareHSM(HSMProvider):
     and optionally persisted to encrypted files.
 
     For production, use a real HSM provider (AWS CloudHSM, Azure Key Vault, etc.)
+
+    Security Note:
+        When using password-based encryption, always use the `password` parameter
+        or `from_password()` class method. This ensures proper key derivation using
+        PBKDF2-HMAC-SHA256 with 600,000 iterations (OWASP 2024 recommendation).
+        Never use HKDF directly for password-based key derivation.
     """
 
     # File to store the master key alongside the encrypted storage
     _MASTER_KEY_FILE = ".master_key"
+    # File to store KDF parameters for password-derived keys
+    _KDF_PARAMS_FILE = ".kdf_params.json"
 
     def __init__(
-        self, storage_path: Optional[Path] = None, master_key: Optional[bytes] = None
+        self,
+        storage_path: Optional[Path] = None,
+        master_key: Optional[bytes] = None,
+        password: Optional[str] = None,
     ):
         """
         Initialize software HSM.
@@ -277,13 +382,119 @@ class SoftwareHSM(HSMProvider):
             master_key: Optional master key for storage encryption (32 bytes).
                 If storage_path is set and no master_key provided, will attempt
                 to load from disk or raise an error.
+            password: Optional password for deriving the master key using PBKDF2.
+                When provided, takes precedence over master_key. The password is
+                processed through PBKDF2-HMAC-SHA256 with 600,000 iterations.
+                KDF parameters are stored alongside the encrypted storage for
+                reproducible key derivation.
 
         Raises:
-            ValueError: If storage_path is set but no master_key is available
+            ValueError: If storage_path is set but no master_key/password is available
                 (either provided or loadable from disk).
+            ValueError: If both master_key and password are provided.
         """
+        if master_key is not None and password is not None:
+            raise ValueError(
+                "Cannot provide both master_key and password. Use one or the other."
+            )
+
         self._storage_path = storage_path
         self._keys: Dict[str, Dict] = {}  # key_id -> {metadata, key_material}
+        self._connected = False
+        self._lock = threading.RLock()
+        self._kdf_params: Optional[KDFParams] = None
+
+        # Determine master key (stable for persistence)
+        if password is not None and storage_path:
+            self._master_key = self._derive_master_key_from_password(
+                storage_path, password
+            )
+        elif storage_path:
+            self._master_key = self._resolve_master_key(storage_path, master_key)
+        else:
+            # Ephemeral mode - random key is fine
+            self._master_key = master_key or secrets.token_bytes(32)
+
+        if storage_path:
+            self._load_from_storage()
+
+    @classmethod
+    def from_password(
+        cls, storage_path: Path, password: str
+    ) -> "SoftwareHSM":
+        """
+        Create a SoftwareHSM instance using password-based key derivation.
+
+        This is the recommended method for password-protected key storage.
+        Uses PBKDF2-HMAC-SHA256 with 600,000 iterations per OWASP 2024 guidelines.
+
+        Args:
+            storage_path: Path for encrypted key storage
+            password: Password for key derivation
+
+        Returns:
+            Configured SoftwareHSM instance
+
+        Example:
+            hsm = SoftwareHSM.from_password(
+                storage_path=Path("./keys/hsm_store.enc"),
+                password=getpass.getpass("HSM Password: ")
+            )
+        """
+        return cls(storage_path=storage_path, password=password)
+
+    def _derive_master_key_from_password(
+        self, storage_path: Path, password: str
+    ) -> bytes:
+        """
+        Derive master key from password using PBKDF2.
+
+        If KDF params exist on disk, loads and uses them for consistent derivation.
+        Otherwise, generates new params and persists them.
+
+        Args:
+            storage_path: Path to storage (used to locate KDF params file)
+            password: User password
+
+        Returns:
+            32-byte derived key
+        """
+        kdf_file = storage_path.parent / self._KDF_PARAMS_FILE
+
+        if kdf_file.exists():
+            # Load existing KDF params for consistent key derivation
+            try:
+                with open(kdf_file, "r") as f:
+                    params_dict = json.load(f)
+                self._kdf_params = KDFParams.from_dict(params_dict)
+                logger.info(
+                    f"Loaded KDF params (v{self._kdf_params.version}, "
+                    f"{self._kdf_params.iterations} iterations)"
+                )
+            except (IOError, json.JSONDecodeError, KeyError) as e:
+                raise ValueError(f"Failed to load KDF params from {kdf_file}: {e}")
+        else:
+            # Generate new KDF params
+            self._kdf_params = KDFParams.generate()
+            kdf_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Persist KDF params (NOT the key, just the params)
+            with open(kdf_file, "w") as f:
+                json.dump(self._kdf_params.to_dict(), f, indent=2)
+
+            # Restrict permissions
+            try:
+                import stat
+                kdf_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
+            except OSError:
+                pass  # Best effort on Windows
+
+            logger.info(
+                f"Generated new KDF params (v{self._kdf_params.version}, "
+                f"{self._kdf_params.iterations} iterations)"
+            )
+
+        return derive_key_from_password(password, self._kdf_params)
         self._connected = False
         self._lock = threading.RLock()
 

@@ -37,7 +37,7 @@ All envelopes MUST be serialized using JSON Canonicalization Scheme:
 - No duplicate keys
 
 ```python
-# Reference implementation: core/security/attestation_bridge.py
+# Reference implementation: core/pci/envelope.py
 def canonical_json(data: Dict[str, Any]) -> bytes:
     return json.dumps(
         data,

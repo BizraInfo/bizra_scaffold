@@ -15,24 +15,31 @@
 # - Development: numpy 2.x for latest features
 # - Production (requirements-production.txt): numpy <2.0 for scipy 1.11.x compatibility
 # - Developers MUST NOT use numpy 2.0-only APIs in production code paths
+#
+# ⚠️ VERSION PINNING POLICY (SOT Compliance):
+# - ALL dependencies MUST use exact version pins (==) for reproducibility
+# - Minimum version constraints (>=) are ONLY allowed when:
+#   1. A transitive dependency requires a minimum version, AND
+#   2. The minimum satisfies our security requirements
+# - Such exceptions MUST be documented with the requiring package
 # ============================================================================
 
 # Core ML & Numerics (pinned for reproducible builds)
 # Using CPU version for CI compatibility - see CUDA Note above for GPU
-torch>=2.7.1                # CVE-2025-3730 affects 2.6.0 only (disputed)
+torch==2.7.1                # CVE-2025-3730 affects 2.6.0 only (disputed)
 numpy==2.2.6; python_version < "3.11"
 numpy==2.3.3; python_version >= "3.11"
 networkx==3.3
 cryptography==45.0.7
-defusedxml>=0.7.1           # B314 fix: Secure XML parsing (prevents XXE attacks)
+defusedxml==0.7.1           # B314 fix: Secure XML parsing (prevents XXE attacks)
 
 # Web API (FastAPI/ASGI stack - no Flask required)
 fastapi==0.127.0            # Async web framework (tested compatible)
 uvicorn[standard]==0.40.0   # ASGI server with uvloop/httptools
-pydantic-settings>=2.5.2    # Settings management (mcp requires >=2.5.2)
+pydantic-settings==2.7.1    # Settings management (mcp requires >=2.5.2, pinned to latest stable)
 
 # Authentication
-PyJWT>=2.10.1               # JWT tokens (mcp requires >=2.10.1)
+PyJWT==2.10.1               # JWT tokens (mcp requires >=2.10.1, pinned to latest stable)
 
 # Metrics & Monitoring
 prometheus_client==0.19.0   # Metrics exporter
@@ -41,7 +48,7 @@ prometheus_client==0.19.0   # Metrics exporter
 neo4j==5.14.0               # Graph database
 
 # Vector Search
-faiss-cpu>=1.9.0            # Similarity search (>=1.9 for numpy 2.x compat)
+faiss-cpu==1.10.0           # Similarity search (>=1.9 for numpy 2.x compat, pinned to latest)
 
 # Cryptography
 blake3==0.3.3               # Fast hashing
@@ -52,9 +59,9 @@ toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
 filelock==3.20.1            # CVE-2025-68146: race condition in lock acquisition
 urllib3==2.6.0              # CVE-2025-66418, CVE-2025-66471: request smuggling
-python-multipart>=0.0.21    # GHSA-59g5-xgcq-4qw3: DoS in form parsing (>=0.0.18 patched)
-pycryptodome>=3.19.1        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel
-black>=24.3.0               # GHSA-fj7x-q9j7-g6q6: directory traversal vulnerability
+python-multipart==0.0.21    # GHSA-59g5-xgcq-4qw3: DoS in form parsing (>=0.0.18 patched)
+pycryptodome==3.21.0        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel (pinned to latest)
+black==24.10.0              # GHSA-fj7x-q9j7-g6q6: directory traversal vulnerability (pinned to latest)
 
 # ──────────────────────────────────────────────────────────────────────────
 # Transitive Security Fixes (indirect deps - pinned via constraints)

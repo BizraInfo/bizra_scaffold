@@ -829,6 +829,7 @@ class MetricsVerifier:
         - Any test failure → FAIL_CLOSED
         - Non-zero exit code → FAIL_CLOSED
         - Missing JUnit results → FAIL_CLOSED
+        - Estimated/placeholder performance metrics → PENDING (Ihsān truthfulness)
         - Unverified MEASURED claims → PENDING
         - Scorecard below threshold → PENDING
         - Otherwise → VERIFIED
@@ -855,6 +856,16 @@ class MetricsVerifier:
                 "FAIL_CLOSED: No test results found - test suite may not have run"
             )
             return VerificationState.FAIL_CLOSED
+
+        # PENDING: Check for estimated/placeholder performance metrics
+        # Per Ihsān (truthfulness) principle: placeholder values cannot be treated as VERIFIED
+        # They must be tagged as HYPOTHESIS/TARGET and excluded from Ihsan scoring
+        if metrics.performance is not None and metrics.performance.estimated:
+            logger.info(
+                "PENDING: Performance metrics are estimated/placeholder - "
+                "cannot verify without actual measurements (Ihsān truthfulness)"
+            )
+            return VerificationState.PENDING
 
         # Check for unverified MEASURED claims
         unverified = sum(

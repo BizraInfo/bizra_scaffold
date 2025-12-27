@@ -163,9 +163,14 @@ class ChatIngestor:
         print(f"Exported {top_k} gems to {output_path}")
 
 if __name__ == "__main__":
-    ingestor = ChatIngestor("C:\\bizra_scaffold\\chat data sample")
+    import os
+    # Use environment variables for personal paths - NEVER hardcode
+    chat_data_path = os.environ.get("BIZRA_CHAT_DATA", "./data/chat")
+    evidence_path = os.environ.get("BIZRA_EVIDENCE_PATH", "./evidence")
+    
+    ingestor = ChatIngestor(chat_data_path)
     ingestor.ingest_all()
     
-    output_file = "C:\\bizra_scaffold\\evidence\\RECOVERED_MASTERPIECE.md"
+    output_file = os.path.join(evidence_path, "RECOVERED_MASTERPIECE.md")
     ingestor.export_gems_to_markdown(output_file, top_k=5)
 

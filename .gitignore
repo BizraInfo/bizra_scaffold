@@ -136,6 +136,26 @@ data/neo4j/
 data/manifests/
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# 🔴 PERSONAL DATA PROTECTION - NODE0 BOUNDARY
+# ═══════════════════════════════════════════════════════════════════════════════
+# Identity files contain personal information - NEVER commit
+data/agents/*_identity.json
+data/agents/*_profile.json
+data/agents/personal/
+
+# Knowledge base dumps (your priceless data)
+data/knowledge/
+data/exports/
+*.knowledge.json
+*.graph.json
+
+# Chat history and personal data
+data/chat/
+data/conversations/
+**/chat_history*
+**/personal_data*
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # OS-specific
 # ═══════════════════════════════════════════════════════════════════════════════
 .DS_Store
