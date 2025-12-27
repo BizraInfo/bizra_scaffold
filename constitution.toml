@@ -149,6 +149,55 @@ Everything built above stands upon this foundation.
 frozen = true
 
 # ─────────────────────────────────────────────────────────────────────────────────
+# EPISTEMOLOGICAL METHODOLOGY (منهج البرهان - The Way of Proof)
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[genesis.foundations.epistemology]
+arabic_title = "منهج البرهان"
+english_title = "The Way of Proof"
+principle = """
+BIZRA is built upon the principle that universal truths can be discovered,
+proven, and made undeniable through rigorous evidence. This is rooted in:
+
+1. LINGUISTIC DEPTH (عمق اللغة)
+   The Arabic language of the Quran and Hadith contains layers of meaning,
+   morphological precision, and semantic structures that encode universal truths.
+   The إعراب (grammatical parsing) reveals logical relationships.
+   The بلاغة (rhetoric) unveils layers of meaning.
+   The corpus linguistics make the invisible visible.
+
+2. UNIVERSAL PROBLEMS (المشكلات العالمية)
+   Trust, justice, fairness, accountability, transparency, consent -
+   these are problems as old as humanity. The solutions are encoded in
+   the linguistic and ethical frameworks of the foundational sources.
+   We are not inventing - we are uncovering what was always there.
+
+3. PROOF-BASED ARCHITECTURE (البناء القائم على البرهان)
+   Every claim in BIZRA has evidence:
+   - Zero-Knowledge Proofs: Mathematical certainty without exposure
+   - Cryptographic Attestations: Immutable records of truth
+   - Formal Verification: Logical guarantees of correctness
+   - Chain of Transmission: Isnad-inspired provenance tracking
+   
+   قُلْ هَاتُوا بُرْهَانَكُمْ إِن كُنتُمْ صَادِقِينَ
+   "Say: Bring your proof if you are truthful." — Al-Baqarah (2:111)
+
+4. UNDENIABLE EVIDENCE (الدليل الذي لا يُنكر)
+   What is proven mathematically cannot be denied.
+   What is attested cryptographically cannot be forged.
+   What is grounded in divine wisdom cannot be corrupted.
+   
+   This is the BIZRA promise: Truth that stands on its own evidence.
+"""
+quranic_foundations = [
+  { verse = "2:111", text = "قُلْ هَاتُوا بُرْهَانَكُمْ إِن كُنتُمْ صَادِقِينَ", meaning = "Say: Bring your proof if you are truthful" },
+  { verse = "4:174", text = "يَا أَيُّهَا النَّاسُ قَدْ جَاءَكُم بُرْهَانٌ مِّن رَّبِّكُمْ", meaning = "O mankind, there has come to you proof from your Lord" },
+  { verse = "21:24", text = "هَٰذَا ذِكْرُ مَن مَّعِيَ وَذِكْرُ مَن قَبْلِي", meaning = "This is the reminder of those with me and those before me" },
+  { verse = "27:64", text = "قُلْ هَاتُوا بُرْهَانَكُمْ", meaning = "Say: Bring your proof" }
+]
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
 # SECTION 1: IHSĀN INVARIANTS
 # ─────────────────────────────────────────────────────────────────────────────────
 # These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
