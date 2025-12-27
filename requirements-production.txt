@@ -48,7 +48,7 @@ prometheus-client==0.19.0   # Prometheus metrics exporter
 python-json-logger==2.0.7   # Structured JSON logging
 opentelemetry-api==1.21.0   # Distributed tracing
 opentelemetry-sdk==1.21.0   # OpenTelemetry SDK
-urllib3==2.6.0              # HTTP client (CVE-2025-66418/66471: request smuggling fix)
+urllib3>=2.0.0              # HTTP client (allow pip to resolve compatible version)
 
 # ──────────────────────────────────────────────────────────────────────────
 # DATABASE & PERSISTENCE
@@ -86,8 +86,8 @@ bandit==1.7.6               # Security linting
 # ──────────────────────────────────────────────────────────────────────────
 # DEPLOYMENT & INFRASTRUCTURE
 # ──────────────────────────────────────────────────────────────────────────
-kubernetes==28.1.0          # Kubernetes Python client
-docker==7.0.0               # Docker SDK
+kubernetes>=28.1.0          # Kubernetes Python client
+docker>=6.0.0               # Docker SDK
 python-dotenv==1.0.0        # Environment variable management
 
 # ──────────────────────────────────────────────────────────────────────────
