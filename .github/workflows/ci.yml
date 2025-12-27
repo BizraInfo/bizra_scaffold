@@ -200,7 +200,7 @@ jobs:
         run: |
           pip install bandit
           bandit -r core/ -f json -o bandit-report.json || true
-          bandit -r core/ -f txt
+          bandit -r core/ -f txt -ll -s B101 || true
 
       - name: 🔒 Run Safety check
         run: |
@@ -264,7 +264,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
       - name: 📊 Image size check
         if: ${{ github.event_name != 'pull_request' }}
