@@ -227,6 +227,19 @@ jobs:
       image_tag: ${{ steps.meta.outputs.tags }}
       image_digest: ${{ steps.build.outputs.digest }}
     steps:
+      - name: 🧹 Free disk space
+        run: |
+          echo "=== Disk usage before cleanup ==="
+          df -h
+          # Remove unnecessary tools to free up space
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af
+          echo "=== Disk usage after cleanup ==="
+          df -h
+
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
