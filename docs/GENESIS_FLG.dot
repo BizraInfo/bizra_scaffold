@@ -1,0 +1,95 @@
+// BIZRA Genesis Formal Logic Graph (FLG)
+// Generated: 2025-12-29T20:15:00+04:00
+// Use: dot -Tsvg docs/GENESIS_FLG.dot -o docs/GENESIS_FLG.svg
+
+digraph BIZRA_Genesis_Logic {
+    // ELITE CONFIGURATION
+    rankdir=LR;
+    splines=ortho;
+    nodesep=0.6;
+    ranksep=1.0;
+    fontname="Helvetica Neue";
+    fontsize=12;
+    bgcolor="#0d1117"; // GitHub Dark Dimmed
+    
+    // STYLES
+    node [style=filled, fontname="Consolas", fontsize=10, fontcolor="#ffffff"];
+    edge [color="#8b949e", fontcolor="#8b949e", fontsize=9, fontname="Consolas"];
+
+    // 1. ARTIFACTS CLUSTER (The Objects)
+    subgraph cluster_artifacts {
+        label="STATIC ARTIFACTS";
+        style=dashed; color="#30363d"; fontcolor="#8b949e";
+        
+        node [shape=box, fillcolor="#161b22", color="#30363d", width=2];
+        M [label="Manifest (M)\n[Hash: 931 artifacts]"];
+        I [label="Node0 Identity (I)\n[FP: node0_32feeb...]"];
+        C [label="Constitution (C)\n[Hash: 1bdc8f...]"];
+        P [label="Proof of Impact (P)\n[Hash: 1b9fbe...]"];
+        Aroot [label="Ecosystem Root (Aroot)\n[Hash: 5bd656...]"];
+        G [label="Git State (G)\n[Tag: genesis-v1.0.0]"];
+    }
+
+    // 2. CRYPTO CLUSTER (The Glue)
+    subgraph cluster_crypto {
+        label="CRYPTOGRAPHIC BINDING (Genesis Seal)";
+        style=solid; color="#238636"; fontcolor="#238636"; penwidth=2;
+        
+        node [shape=record, fillcolor="#238636", fontcolor="#ffffff", color="#238636"];
+        S [label="{ Genesis Seal (S) | <sig> Sig: bccfaf... | <pk> PK: node0_key }"];
+    }
+
+    // 3. OTS CLUSTER (The Anchor)
+    subgraph cluster_ots {
+        label="TEMPORAL ANCHOR";
+        style=dotted; color="#d29922"; fontcolor="#d29922";
+        
+        node [shape=diamond, fillcolor="#d29922", fontcolor="#000000", height=1];
+        R [label="OTS Receipt (R)"];
+        BTC [label="Bitcoin Block"];
+    }
+
+    // 4. LOGIC GATES (Inference Rules)
+    node [shape=circle, width=0.8, fillcolor="#1f6feb", color="#1f6feb", label=""];
+    
+    Gate_R1 [label="R1"]; // Manifest Completeness
+    Gate_R2 [label="R2"]; // Identity Binding
+    Gate_R3 [label="R3"]; // Sig Validity
+    Gate_R7 [label="R7"]; // Provenance
+    Gate_R9 [label="R9"]; // Anchor Verification
+
+    // 5. FINAL STATE
+    node [shape=doublecircle, width=1.2, fillcolor="#ffffff", fontcolor="#000000", color="#ffffff"];
+    Genesis_Verified [label="GENESIS\nVERIFIED"];
+
+    // EDGES (The Proof Path)
+    // R1: Manifest checks
+    M -> Gate_R1 [label="contents verified"];
+    
+    // R2: Identity Binding
+    I -> Gate_R2 [label="fingerprint(I)"];
+    S:pk -> Gate_R2 [label="derived_fp(S)"];
+    
+    // R3: Signature Logic
+    S -> Gate_R3 [label="verifies(M,C,P,Aroot)"];
+    Gate_R3 -> Gate_R2 [label="authenticated"];
+
+    // Bindings (Implicit in R3/Seal)
+    M -> S [style=dotted, label="binds"];
+    C -> S [style=dotted, label="binds"];
+    P -> S [style=dotted, label="binds"];
+    Aroot -> S [style=dotted, label="binds"];
+
+    // R7: Git Provenance
+    G -> Gate_R7 [label="tag points to commit"];
+
+    // R9: OTS Logic
+    R -> Gate_R9 [label="proof submitted"];
+    BTC -> R [label="confirms", style=bold, color="#d29922"];
+
+    // R10: The Grand Theorem
+    Gate_R1 -> Genesis_Verified;
+    Gate_R2 -> Genesis_Verified;
+    Gate_R7 -> Genesis_Verified;
+    Gate_R9 -> Genesis_Verified [label="if VERIFIED"];
+}

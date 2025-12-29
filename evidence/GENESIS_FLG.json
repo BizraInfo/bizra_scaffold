@@ -1,0 +1,105 @@
+{
+  "flg_version": "1.0.0",
+  "context": "BIZRA_GENESIS_SEAL",
+  "generated_at": "2025-12-29T20:15:00+04:00",
+  "entities": {
+    "M": { "type": "Artifact", "desc": "System Manifest", "hash_ref": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e" },
+    "I": { "type": "Identity", "desc": "Node0 Identity", "fingerprint": "node0_32feeb91600a", "seal_hash": "dfd1df2d12932a5791dc2923b26036d4" },
+    "S": { "type": "Seal", "desc": "Genesis Seal Object", "signature": "bccfaf26afdaea7dd0a071bdc3118bcfcc55f9e3b050bfc65c04343129d37920" },
+    "C": { "type": "Artifact", "desc": "Constitution", "hash_ref": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6" },
+    "P": { "type": "Artifact", "desc": "Proof of Impact", "hash_ref": "1b9fbe0b808b932dd9e46573d1f8675a21a68cfb594260ffea57592c2cfeb5db" },
+    "Aroot": { "type": "Artifact", "desc": "Ecosystem Root", "hash_ref": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e" },
+    "G": { "type": "State", "desc": "Git Provenance", "tag": "genesis-v1.0.0", "commit": "01dd837" },
+    "R": { "type": "Receipt", "desc": "OpenTimestamps", "status": "PENDING_CONFIRMATION", "proof_file": "data/genesis/GENESIS_SEAL.json.ots" }
+  },
+  "predicates": [
+    "ManifestComplete(M)",
+    "IdentityBound(S, I)",
+    "ConstitutionBound(S, C)",
+    "PoIBound(S, P)",
+    "EcosystemRootBound(S, Aroot)",
+    "ProvenanceLocked(G)",
+    "SealSignatureValid(S)",
+    "AnchoredToBitcoin(R)"
+  ],
+  "inference_rules": [
+    {
+      "id": "R1",
+      "name": "Manifest Completeness",
+      "premises": ["Exists(M)", "HashMatch(M)", "ArtifactCount(M) == 931"],
+      "conclusion": "ManifestComplete(M)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R2",
+      "name": "Identity Binding",
+      "premises": ["Exists(S)", "Exists(I)", "FingerprintMatch(S, I)"],
+      "conclusion": "IdentityBound(S, I)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R3",
+      "name": "Seal Validity",
+      "premises": ["SignedBy(S, pk(I))", "VerifySig(S)"],
+      "conclusion": "SealSignatureValid(S)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R4",
+      "name": "Constitution Binding",
+      "premises": ["Exists(C)", "HashInSeal(S, C)"],
+      "conclusion": "ConstitutionBound(S, C)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R5",
+      "name": "Proof of Impact Binding",
+      "premises": ["Exists(P)", "HashInSeal(S, P)"],
+      "conclusion": "PoIBound(S, P)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R6",
+      "name": "Ecosystem Root Binding",
+      "premises": ["Exists(Aroot)", "RootHashInSeal(S, Aroot)"],
+      "conclusion": "EcosystemRootBound(S, Aroot)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R7",
+      "name": "Git Provenance",
+      "premises": ["TagExists(G)", "TagPointsToCommit(G)"],
+      "conclusion": "ProvenanceLocked(G)",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "R9",
+      "name": "OTS Anchor",
+      "premises": ["OTSProofSubmitted(R)", "OTSVerify(R)"],
+      "conclusion": "AnchoredToBitcoin(R)",
+      "status": "PENDING_CONFIRMATION"
+    },
+    {
+      "id": "R10",
+      "name": "Genesis Theorem",
+      "premises": [
+        "ManifestComplete(M)",
+        "IdentityBound(S, I)",
+        "ConstitutionBound(S, C)",
+        "PoIBound(S, P)",
+        "EcosystemRootBound(S, Aroot)",
+        "ProvenanceLocked(G)",
+        "SealSignatureValid(S)"
+      ],
+      "conclusion": "GenesisVerified(TRUE)",
+      "status": "VERIFIED",
+      "note": "R9 (OTS) is optional for boot; becomes COMPLETE when Bitcoin confirms"
+    }
+  ],
+  "theorem_state": {
+    "R10_satisfied": true,
+    "chain_integrity": "COMPLETE",
+    "ots_status": "PENDING_CONFIRMATION",
+    "boot_allowed": true
+  }
+}
