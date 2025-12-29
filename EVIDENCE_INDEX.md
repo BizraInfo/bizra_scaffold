@@ -165,4 +165,17 @@ Status values: `PENDING`, `VERIFIED`, `INVALIDATED`.
 | EVID-082 | GoT adaptive beam width with P2 cache fix | `core/graph_of_thoughts.py` | `graph_of_thoughts.py#L240-L275` | VERIFIED | max(1, ...) floor, 10% LRU eviction |
 | EVID-083 | Circuit breaker state machine verification | `core/resilience/circuit_breaker.py` | `circuit_breaker.py#L150-L250` | VERIFIED | CLOSED→OPEN→HALF_OPEN with asyncio.Lock |
 
+## Genesis Block Evidence (Session 2025-12-29)
+
+| ID | Claim summary | Source doc | Evidence artifact | Status | Notes |
+|---|---|---|---|---|---|
+| EVID-084 | Genesis System Manifest (931 artifacts, 6 territories) | `data/genesis/GENESIS_SYSTEM_MANIFEST.json` | `sha256:5bd65637f5b99bec...` | VERIFIED | Host-centric manifest binding Node0 to physical machine |
+| EVID-085 | Node Zero Identity (node0_32feeb91600a) | `data/genesis/NODE_ZERO_IDENTITY.json` | `seal_hash:dfd1df2d12932a57...` | VERIFIED | Ed25519-signed identity with manifest binding |
+| EVID-086 | Genesis Seal (bccfaf26afdaea7d) | `data/genesis/GENESIS_SEAL.json` | `seal_hash:bccfaf26afdaea7d...` | VERIFIED | Ecosystem root hash + Node0 + PoI + Constitution binding |
+| EVID-087 | Proof of Impact (2,440.075 total) | `data/genesis/PROOF_OF_IMPACT.json` | `proof_hash:1b9fbe0b808b932d...` | VERIFIED | 3-year contribution attestation (2023-2025) |
+| EVID-088 | OpenTimestamps Bitcoin anchor | `data/genesis/GENESIS_SEAL.json.ots` | 4 calendar submissions | PENDING_CONFIRMATION | Awaiting Bitcoin blockchain confirmation (~1-6 hours) |
+| EVID-089 | Chain integrity verification script | `scripts/verify_genesis_chain.py` | `--json` output | VERIFIED | 6-step verification: Manifest→Identity→Seal→Binding→Constitution→OTS |
+| EVID-090 | Genesis Evidence Pack | `evidence/packs/GENESIS-V1.0.0/` | `run.json`, `receipt.json` | VERIFIED | Structured run log with OTS metadata |
+| EVID-091 | Genesis Certificate | `GENESIS_CERTIFICATE.md` | Human-readable attestation | VERIFIED | Court-grade summary with verification steps |
+
 Update this file whenever claims are added, removed, or reclassified.
