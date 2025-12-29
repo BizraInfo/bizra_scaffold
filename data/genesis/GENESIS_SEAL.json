@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "ecosystem_root_hash": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e4fda813ed0228e41927ec6f1238b8a746be50deed39e68f76f1666d00e709a27",
+  "node_id": "node0_32feeb91600a",
+  "owner_id": "owner_d4b060ed492d",
+  "owner_alias": "Momo",
+  "owner_public_key": "92eb0dad6cbe459f0a1a153c56634dd1d80d0954c02d580bd72c9dd1e11d0670",
+  "proof_of_impact_hash": "1b9fbe0b808b932dd9e46573d1f8675a21a68cfb594260ffea57592c2cfeb5db",
+  "total_impact": 2440.075,
+  "artifact_count": 931,
+  "repository_count": 6,
+  "timeline_start": "2023-01-14T00:00:00+00:00",
+  "timeline_end": "2025-12-29T07:35:25+00:00",
+  "constitution_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+  "machine_fingerprint": "e60e021a23df60a78973873cdcf6f24e61d03b654a19cff01f72df959d1f001e",
+  "sealed_at": "2025-12-29T12:59:11.690016+00:00",
+  "seal_hash": "bccfaf26afdaea7dd0a071bdc3118bcfcc55f9e3b050bfc65c04343129d37920",
+  "signature": "c787588a04bc67f3a7f5771dd9be1794820a4532b863621edf1280f3e94ff00af5bce9b586095c5aafa6ebc1123f47d58e69897dd0a75b4112eee02ca322a905",
+  "ots_proof": "data/genesis/GENESIS_SEAL.json.ots"
+}

@@ -1,0 +1,21 @@
+{
+  "sid": "sid-20251229-1140",
+  "qid": "genesis-node0-v1",
+  "ctr": 1,
+  "policy_version": "0.3.0",
+  "proposal_hash": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e",
+  "state_before": "0000000000000000000000000000000000000000000000000000000000000000",
+  "state_after": "bccfaf26afdaea7dd0a071bdc3118bcfcc55f9e3b050bfc65c04343129d37920",
+  "audit_head": "bccfaf26afdaea7dd0a071bdc3118bcfcc55f9e3b050bfc65c04343129d37920",
+  "signature_ed25519": null,
+  "ts_ns": 1767000414892657152,
+  "status": "VERIFIED_PENDING_OTS_CONFIRMATION",
+  "message": "Genesis chain reverified; OTS proof submitted (awaiting Bitcoin confirmation).",
+  "ots_metadata": {
+    "proof_file": "data/genesis/GENESIS_SEAL.json.ots",
+    "submitted_at": "2025-12-29T13:25:00Z",
+    "calendars": 4,
+    "confirmation_expected": "1-6 hours after submission",
+    "next_action": "Re-run 'ots verify' when Bitcoin confirmations available"
+  }
+}

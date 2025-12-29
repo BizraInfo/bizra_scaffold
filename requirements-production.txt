@@ -9,19 +9,22 @@
 # CORE DEEP LEARNING & NUMERICS
 # ──────────────────────────────────────────────────────────────────────────
 # For CUDA builds, use: pip install torch --extra-index-url https://download.pytorch.org/whl/cu118
-torch>=2.0.0        # PyTorch (CPU version for Docker compatibility)
-numpy>=1.24.0,<2.0  # Numerical computing (compatible with scipy 1.11.x)
-scipy==1.11.4       # Scientific computing
-defusedxml>=0.7.1   # B314 fix: Secure XML parsing (prevents XXE attacks)
+# P2 FIX: Pinned exact versions for reproducible builds (SOT Section 5)
+torch==2.7.1            # PyTorch (CPU version for Docker compatibility)
+numpy==1.26.4           # Numerical computing (compatible with scipy 1.11.x)
+scipy==1.11.4           # Scientific computing
+defusedxml==0.7.1       # B314 fix: Secure XML parsing (prevents XXE attacks)
 
 # ──────────────────────────────────────────────────────────────────────────
 # POST-QUANTUM CRYPTOGRAPHY (NIST-Certified)
 # ──────────────────────────────────────────────────────────────────────────
-liboqs-python>=0.8.0        # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
+# P2 FIX: Pinned exact versions for reproducible builds
+liboqs-python==0.10.0       # NIST post-quantum algorithms (Dilithium-5, Kyber-1024)
 cryptography==45.0.7        # Classical crypto (Ed25519, SHA3)
-pycryptodome>=3.19.1        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel fix
+pycryptodome==3.21.0        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel fix
 blake3==1.0.0               # Fast cryptographic hash (attestation IDs)
 toml==0.10.2                # TOML parser for constitution.toml
+opentimestamps-client==0.7.1  # Bitcoin-anchored timestamps (court-grade provenance)
 # ──────────────────────────────────────────────────────────────────────────
 # MEMORY & DATA STRUCTURES
 # ──────────────────────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ fastapi==0.127.0            # Modern async web framework
 uvicorn[standard]==0.40.0   # ASGI server with extras (uvloop, httptools)
 pydantic==2.12.5            # Data validation
 pydantic-settings==2.1.0    # Settings management
-python-multipart>=0.0.18    # GHSA-59g5-xgcq-4qw3: File uploads (security patched)
+python-multipart==0.0.20    # GHSA-59g5-xgcq-4qw3: File uploads (security patched, P2 FIX: pinned)
 
 # ──────────────────────────────────────────────────────────────────────────
 # MONITORING & OBSERVABILITY
@@ -49,7 +52,7 @@ prometheus-client==0.19.0   # Prometheus metrics exporter
 python-json-logger==2.0.7   # Structured JSON logging
 opentelemetry-api==1.21.0   # Distributed tracing
 opentelemetry-sdk==1.21.0   # OpenTelemetry SDK
-urllib3>=2.0.0              # HTTP client (allow pip to resolve compatible version)
+urllib3==2.2.3              # HTTP client (P2 FIX: pinned exact version)
 
 # ──────────────────────────────────────────────────────────────────────────
 # DATABASE & PERSISTENCE
@@ -87,8 +90,9 @@ bandit==1.7.6               # Security linting
 # ──────────────────────────────────────────────────────────────────────────
 # DEPLOYMENT & INFRASTRUCTURE
 # ──────────────────────────────────────────────────────────────────────────
-kubernetes>=28.1.0          # Kubernetes Python client
-docker>=6.0.0               # Docker SDK
+# P2 FIX: Pinned exact versions
+kubernetes==31.0.0          # Kubernetes Python client
+docker==7.1.0               # Docker SDK
 python-dotenv==1.0.0        # Environment variable management
 
 # ──────────────────────────────────────────────────────────────────────────

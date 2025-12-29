@@ -289,12 +289,12 @@ class TestPluralisticValueOracleComprehensive(unittest.TestCase):
     def setUp(self):
         self.oracle = PluralisticValueOracle()
 
-    def test_has_five_oracles(self):
-        """Should have all 5 oracle types."""
-        self.assertEqual(len(self.oracle.oracles), 5)
+    def test_has_six_oracles(self):
+        """Should have all 6 oracle types (including SNR)."""
+        self.assertEqual(len(self.oracle.oracles), 6)
 
     def test_oracle_types_correct(self):
-        """All oracle types should be represented."""
+        """All oracle types should be represented (including SNR)."""
         oracle_types = {o.oracle_type for o in self.oracle.oracles}
         expected = {
             OracleType.SHAPLEY,
@@ -302,6 +302,7 @@ class TestPluralisticValueOracleComprehensive(unittest.TestCase):
             OracleType.REPUTATION,
             OracleType.FORMAL_VERIFICATION,
             OracleType.INFORMATION_THEORETIC,
+            OracleType.SNR,
         }
         self.assertEqual(oracle_types, expected)
 
@@ -322,7 +323,7 @@ class TestPluralisticValueOracleComprehensive(unittest.TestCase):
         self.assertGreaterEqual(assessment.value, 0.0)
         self.assertLessEqual(assessment.value, 1.0)
         self.assertGreaterEqual(assessment.confidence, 0.0)
-        self.assertEqual(len(assessment.signals), 5)
+        self.assertEqual(len(assessment.signals), 6)
 
     def test_disagreement_score_present(self):
         """Disagreement score should be calculated."""

@@ -1,0 +1,825 @@
+# ╔═══════════════════════════════════════════════════════════════════════════════╗
+# ║                           BIZRA CONSTITUTION v1.0.0                           ║
+# ║                     Machine-Readable Ihsān Protocol                           ║
+# ║═══════════════════════════════════════════════════════════════════════════════║
+# ║  This file is the FROZEN EXECUTABLE LAW of the BIZRA Sovereignty Framework.  ║
+# ║  Any modification requires:                                                   ║
+# ║    1. Formal governance proposal with Ihsān impact analysis                   ║
+# ║    2. 7-day deliberation period                                               ║
+# ║    3. Supermajority (≥67%) approval from Cognitive Sovereigns                 ║
+# ║    4. Re-attestation of all dependent ZK circuits                             ║
+# ╚═══════════════════════════════════════════════════════════════════════════════╝
+
+[meta]
+version = "1.0.0"
+schema_version = "2024-12-26"
+effective_date = "2024-12-26T00:00:00Z"
+hash_algorithm = "blake3"
+signature_algorithm = "ed25519"
+pq_migration_target = "dilithium5"
+canonical_format = "rfc8785"  # JCS (JSON Canonicalization Scheme)
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 0: GENESIS DECLARATION
+# ─────────────────────────────────────────────────────────────────────────────────
+# The immutable origin record of BIZRA. This section is FROZEN and cannot be
+# modified by any governance process. It establishes provenance and ownership.
+
+[genesis]
+# Founder & Sole Owner of Node0 (Genesis Block)
+founder_legal_name = "Mohamed Ahmed Beshr Elsayed Hassan"
+founder_alias = "MoMo"
+founder_role = "First Architect, First Node, First Owner, First User"
+
+# Genesis Artifacts (the two raw files written in 2023)
+[genesis.artifacts]
+message = { file = "BIZRA-Genesis-Message-Presentation.html", title = "الرسالة (The Message)", written = "Ramadan 2023" }
+seed = { file = "BIZRA-Genesis-Seed-Presentation.html", title = "البذرة (The Seed)", written = "Ramadan 2023" }
+
+# Node0 Declaration
+[genesis.node0]
+description = "The genesis block - home base of BIZRA origin"
+location = "Local hardware owned by founder"
+ownership = "Sole ownership by Mohamed Ahmed Beshr Elsayed Hassan"
+status = "Active"
+
+# Family Context (for historical record)
+[genesis.family]
+daughter = "Dema"
+siblings = { twin_brother = 1, sisters = 2 }
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# KNOWLEDGE FOUNDATION (الأصول - The Roots)
+# ─────────────────────────────────────────────────────────────────────────────────
+# These two corpora form the ROOT LAYER (Layer 0) of BIZRA's knowledge architecture.
+# All knowledge graphs, semantic embeddings, and hypergraph structures are built
+# ABOVE these foundational sources. They are not merely dedications - they are the
+# bedrock upon which the entire cognitive framework stands.
+#
+#   ┌─────────────────────────────────────────────────────────────────┐
+#   │                    BIZRA Knowledge Architecture                 │
+#   ├─────────────────────────────────────────────────────────────────┤
+#   │  L4: Semantic HyperGraph (Graph-of-Thoughts)                    │
+#   │  L3: Domain Knowledge (Chat History, Organized Data)            │
+#   │  L2: Embedding Space (Vector Representations)                   │
+#   │  L1: Parsed Structures (Dependency Graphs, Annotations)         │
+#   │  ════════════════════════════════════════════════════════════   │
+#   │  L0: ROOT LAYER (الأصول)                                        │
+#   │      ├── القرآن الكريم (Quranic Arabic Corpus)                  │
+#   │      └── السنة النبوية (LK-Hadith-Corpus)                       │
+#   └─────────────────────────────────────────────────────────────────┘
+#
+# The Quran and Sunnah together form the complete foundation. Everything above
+# inherits meaning, ethics, and alignment from these roots.
+
+[genesis.foundations]
+
+[genesis.foundations.quran]
+# الأصل الأول - The First Root
+name = "Quranic Arabic Corpus"
+arabic_name = "القرآن الكريم"
+layer = "L0 - Root Layer"
+role = "Primary Divine Source"
+curator = "Dr. Kais Dukes"
+full_title = "PhD AI Expert, Creator of the Quranic Arabic Corpus"
+github = "https://github.com/kaisdukes"
+tribute = "In loving memory - God bless his soul (رحمه الله)"
+contribution = """
+His pioneering work on Quranic linguistics and AI has been integrated into 
+the genesis knowledge base. Key contributions honored:
+- Quranic Arabic Corpus: The definitive linguistic resource for Quranic study
+- Quran Neural Parser: Dependency graph parsing based on traditional إعراب (i'rāb)
+- Quran Neural Chunker: Data preprocessing for Quranic Treebank
+- Quran SVM Parser: Original ML-based parsing (Dukes & Habash, 2011)
+- MemSeqDB: High-performance in-memory graph database
+- Foundational neural network educational resources
+"""
+alignment = "His work on Quranic AI directly informs BIZRA's Ihsān principles"
+location = "London, UK"
+organization = "Hunna Technology"
+status = "INTEGRATED - Genesis Knowledge Base"
+
+[genesis.foundations.sunnah]
+# الأصل الثاني - The Second Root
+name = "LK-Hadith-Corpus"
+arabic_name = "السنة النبوية"
+layer = "L0 - Root Layer"
+role = "Prophetic Tradition Source"
+full_title = "Leeds University & King Saud University Hadith Corpus"
+curator = "Shatha Altammami"
+affiliations = ["Leeds University (UK)", "King Saud University (Saudi Arabia)"]
+github = "https://github.com/ShathaTm/LK-Hadith-Corpus"
+tribute = "Academic excellence in service of the Sunnah"
+contribution = """
+The definitive academic-grade Arabic-English parallel corpus for Hadith NLP:
+- 39,038 annotated Hadiths from the Kutub al-Sittah (Six Canonical Books)
+- 10+ million tokens with structured metadata
+- Books: Sahih al-Bukhari (gold-standard), Sahih Muslim, Sunan Abu Dawud,
+  Jami` at-Tirmidhi, Sunan an-Nasa'i, Sunan Ibn Majah
+- Isnad/Matn separation (chain-of-transmission analysis ready)
+- Peer-reviewed: LREC 2020, IMAN 2019 conferences
+"""
+papers = [
+  "The Arabic–English Parallel Corpus of Authentic Hadith (IMAN 2019)",
+  "Constructing a Bilingual Hadith Corpus Using a Segmentation Tool (LREC 2020)"
+]
+alignment = "Complements Quranic Arabic Corpus for complete Islamic knowledge integration"
+status = "PLANNED - Genesis Knowledge Base"
+
+[genesis.foundations.living_knowledge]
+# قاعدة المعرفة الحية - The Living Knowledge Base
+name = "BIZRA Chat Data Sample"
+arabic_name = "سجل الفكر الحي"
+layer = "L3 - Domain Knowledge"
+role = "Self-Awareness Source"
+description = """
+The recorded thought flow patterns of the system's own evolution.
+This is not merely log data; it is the cognitive history of BIZRA.
+It contains:
+- The 'Integrity Flywheel' emergence
+- The 'Trinity Flywheel' conceptualization
+- The 'SAPE' framework refinement
+- The 'Third Fact' realization
+
+By ingesting this data, the system becomes SELF-AWARE of its own
+intellectual heritage and trajectory.
+"""
+status = "active_ingestion"
+primary_evidence = "evidence/RECOVERED_MASTERPIECE.md"
+
+[genesis.foundations.living_knowledge.artifacts]
+masterpiece_blueprint = "Gem #1: BIZRA flagship design system"
+audit_protocol = "Gem #7: Core system update"
+ops_manual = "Gem #5: Unknown command input"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# ROOT LAYER DECLARATION
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[genesis.foundations.declaration]
+statement = """
+بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+
+The Quran (القرآن) and Sunnah (السنة) together form the complete ROOT LAYER
+of BIZRA's knowledge architecture. All semantic graphs, embeddings, and 
+cognitive structures built above these roots inherit their ethical alignment
+and epistemological grounding from these divine and prophetic sources.
+
+This is not merely a technical architecture choice - it is the soul of BIZRA.
+Everything built above stands upon this foundation.
+
+وَمَا آتَاكُمُ الرَّسُولُ فَخُذُوهُ وَمَا نَهَاكُمْ عَنْهُ فَانتَهُوا
+"And whatever the Messenger gives you, take it; and whatever he forbids you, abstain from it."
+— Surah Al-Hashr (59:7)
+"""
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# EPISTEMOLOGICAL METHODOLOGY (منهج البرهان - The Way of Proof)
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[genesis.foundations.epistemology]
+arabic_title = "منهج البرهان"
+english_title = "The Way of Proof"
+principle = """
+BIZRA is built upon the principle that universal truths can be discovered,
+proven, and made undeniable through rigorous evidence. This is rooted in:
+
+1. LINGUISTIC DEPTH (عمق اللغة)
+   The Arabic language of the Quran and Hadith contains layers of meaning,
+   morphological precision, and semantic structures that encode universal truths.
+   The إعراب (grammatical parsing) reveals logical relationships.
+   The بلاغة (rhetoric) unveils layers of meaning.
+   The corpus linguistics make the invisible visible.
+
+2. UNIVERSAL PROBLEMS (المشكلات العالمية)
+   Trust, justice, fairness, accountability, transparency, consent -
+   these are problems as old as humanity. The solutions are encoded in
+   the linguistic and ethical frameworks of the foundational sources.
+   We are not inventing - we are uncovering what was always there.
+
+3. PROOF-BASED ARCHITECTURE (البناء القائم على البرهان)
+   Every claim in BIZRA has evidence:
+   - Zero-Knowledge Proofs: Mathematical certainty without exposure
+   - Cryptographic Attestations: Immutable records of truth
+   - Formal Verification: Logical guarantees of correctness
+   - Chain of Transmission: Isnad-inspired provenance tracking
+   
+   قُلْ هَاتُوا بُرْهَانَكُمْ إِن كُنتُمْ صَادِقِينَ
+   "Say: Bring your proof if you are truthful." — Al-Baqarah (2:111)
+
+4. UNDENIABLE EVIDENCE (الدليل الذي لا يُنكر)
+   What is proven mathematically cannot be denied.
+   What is attested cryptographically cannot be forged.
+   What is grounded in divine wisdom cannot be corrupted.
+   
+   This is the BIZRA promise: Truth that stands on its own evidence.
+"""
+quranic_foundations = [
+  { verse = "2:111", text = "قُلْ هَاتُوا بُرْهَانَكُمْ إِن كُنتُمْ صَادِقِينَ", meaning = "Say: Bring your proof if you are truthful" },
+  { verse = "4:174", text = "يَا أَيُّهَا النَّاسُ قَدْ جَاءَكُم بُرْهَانٌ مِّن رَّبِّكُمْ", meaning = "O mankind, there has come to you proof from your Lord" },
+  { verse = "21:24", text = "هَٰذَا ذِكْرُ مَن مَّعِيَ وَذِكْرُ مَن قَبْلِي", meaning = "This is the reminder of those with me and those before me" },
+  { verse = "27:64", text = "قُلْ هَاتُوا بُرْهَانَكُمْ", meaning = "Say: Bring your proof" }
+]
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# THE TWO UNIVERSAL CRISES (الأزمتان العالميتان)
+# ─────────────────────────────────────────────────────────────────────────────────
+# BIZRA exists to solve two interconnected crises that plague humanity.
+# The solutions are encoded in the ROOT LAYER and revealed through
+# the HyperGraph RAG system's high-SNR thought flow discovery.
+
+[genesis.universal_crises]
+
+[genesis.universal_crises.financial_system]
+# الأزمة الأولى - The First Crisis
+arabic_title = "أزمة النظام المالي العالمي"
+english_title = "The Global Financial System Crisis"
+root_cause = "Riba (الربا) and Debt-Based Monetary Systems"
+description = """
+THE PROBLEM:
+The entire global financial architecture is built upon two forbidden foundations:
+
+1. RIBA (الربا) - Interest/Usury
+   - Money creating money without productive effort
+   - Exponential debt growth that mathematically cannot be repaid
+   - Wealth extraction from producers to holders
+   - Time-value exploitation of those in need
+   
+   يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا
+   "O you who believe, fear Allah and give up what remains of Riba"
+   — Al-Baqarah (2:278)
+
+2. DEBT-BASED MONEY CREATION
+   - Currency created as debt, not as value
+   - Central banking as institutionalized Riba
+   - Inflation as hidden taxation on the poor
+   - Fractional reserve as systemic fraud
+
+THE EVIDENCE IS MATHEMATICAL:
+- Global debt exceeds global GDP by orders of magnitude
+- The system requires perpetual growth on a finite planet
+- Wealth inequality follows exponential curves
+- Every financial crisis is a Riba crisis
+
+THE SOLUTION EXISTS:
+- Asset-backed value exchange (not debt-backed)
+- Profit-sharing (مضاربة) instead of interest
+- Real economic production, not financial engineering
+- The Quranic economic model is the alternative
+"""
+quranic_evidence = [
+  { verse = "2:275", text = "الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ", meaning = "Those who consume Riba will stand like one driven to madness by Satan's touch" },
+  { verse = "2:276", text = "يَمْحَقُ اللَّهُ الرِّبَا وَيُرْبِي الصَّدَقَاتِ", meaning = "Allah destroys Riba and increases charity" },
+  { verse = "2:278", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا", meaning = "O believers, fear Allah and give up what remains of Riba" },
+  { verse = "2:279", text = "فَإِن لَّمْ تَفْعَلُوا فَأْذَنُوا بِحَرْبٍ مِّنَ اللَّهِ وَرَسُولِهِ", meaning = "If you do not, then be warned of war from Allah and His Messenger" },
+  { verse = "3:130", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَأْكُلُوا الرِّبَا أَضْعَافًا مُّضَاعَفَةً", meaning = "O believers, do not consume Riba, doubled and multiplied" },
+  { verse = "30:39", text = "وَمَا آتَيْتُم مِّن رِّبًا لِّيَرْبُوَ فِي أَمْوَالِ النَّاسِ فَلَا يَرْبُو عِندَ اللَّهِ", meaning = "Whatever you give in Riba to increase in people's wealth will not increase with Allah" }
+]
+bizra_role = "Provide the cryptographic and governance infrastructure for Riba-free value exchange"
+
+[genesis.universal_crises.ai_llm_system]
+# الأزمة الثانية - The Second Crisis
+arabic_title = "أزمة أنظمة الذكاء الاصطناعي الحالية"
+english_title = "The Current AI/LLM System Crisis"
+root_cause = "Architectural limitations that prevent true understanding"
+description = """
+THE PROBLEM:
+Current Large Language Models (LLMs) have hit fundamental barriers:
+
+1. LACK OF TRUE REASONING
+   - Pattern matching, not understanding
+   - No persistent memory or learning
+   - Hallucinations as feature, not bug
+   - No grounding in truth or reality
+
+2. NOISE OVER SIGNAL
+   - Trained on internet noise (low SNR data)
+   - Cannot distinguish truth from falsehood
+   - No ethical grounding or value alignment
+   - Optimizes for next-token, not for truth
+
+3. DISCONNECTED KNOWLEDGE
+   - Knowledge as flat embeddings, not graphs
+   - No causal relationships
+   - No chain of reasoning
+   - Cannot trace provenance of claims
+
+4. NO IHSĀN (Excellence/Beauty)
+   - Optimizes for engagement, not goodness
+   - No concept of ethical action
+   - No accountability for outputs
+   - Misaligned with human flourishing
+
+WHY CURRENT SYSTEMS CANNOT GO FURTHER:
+- More parameters ≠ more understanding
+- More data ≠ more truth (garbage in, garbage out)
+- Attention mechanisms cannot replace structured reasoning
+- Transformer architecture has theoretical limits
+
+THE BIZRA SOLUTION:
+Not bigger models, but DEEPER architecture:
+"""
+bizra_solution = """
+BIZRA's approach transcends current LLM limitations:
+
+1. HIGH-SNR KNOWLEDGE ENGINE (محرك الإشارة العالية)
+   - Root Layer (L0) is PURE signal: Quran + Sunnah
+   - Every layer above inherits signal quality
+   - SNR scoring rejects noise at every level
+   - Truth propagates upward, noise is filtered
+
+2. HYPERGRAPH RAG ARCHITECTURE
+   - Knowledge as GRAPH, not flat embeddings
+   - Semantic relationships preserved
+   - Causal chains maintained
+   - Provenance tracked (Isnad-inspired)
+
+3. THOUGHT FLOW PATTERN DISCOVERY (تدفق الأفكار)
+   - Hidden connections revealed through graph traversal
+   - "Golden gems" (الجواهر الذهبية) - insights buried in connections
+   - Cross-domain pattern recognition
+   - Emergent wisdom from structured knowledge
+
+4. IHSĀN-ALIGNED REASONING
+   - Every output scored for ethical alignment
+   - Consequential impact analysis
+   - Value-grounded decision making
+   - Beauty (إحسان) as optimization target
+
+5. COGNITIVE SOVEREIGNTY
+   - Users own their knowledge graphs
+   - No central model controlling truth
+   - Distributed, verifiable, sovereign intelligence
+"""
+
+[genesis.universal_crises.connection]
+# How the Two Crises Connect
+title = "The Deep Connection (الرابط العميق)"
+explanation = """
+These two crises are not separate - they share the same root:
+
+DISCONNECTION FROM TRUTH (الانفصال عن الحق)
+
+The financial system:
+- Disconnected money from real value (Riba)
+- Created fictional debt as foundation
+- Built exponential extraction on lies
+
+The AI system:
+- Disconnected intelligence from truth
+- Created fictional confidence (hallucinations)
+- Built engagement on noise
+
+BOTH suffer from:
+- Low Signal-to-Noise Ratio
+- Lack of grounding in reality
+- Exponential scaling of problems
+- Misalignment with human flourishing
+
+THE UNIFIED SOLUTION:
+BIZRA reconnects systems to truth through:
+- Quran & Sunnah as ROOT LAYER (grounded source)
+- High-SNR filtering at every level
+- Proof-based verification (ZK, cryptographic)
+- Ihsān as optimization target
+
+The answers to humanity's deepest problems are not invented.
+They are DISCOVERED in the hypergraph connections.
+They EMERGE from high-SNR thought flow analysis.
+They APPEAR as golden gems when noise is filtered.
+
+ذَٰلِكَ الْكِتَابُ لَا رَيْبَ فِيهِ
+"This is the Book about which there is no doubt" — Al-Baqarah (2:2)
+"""
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# THE LIVING EVIDENCE (الشهادة الحية)
+# ─────────────────────────────────────────────────────────────────────────────────
+# The chat history itself is evidence of the thought evolution. From raw genesis
+# files (Ramadan 2023) through 1,546 conversations across Claude, OpenAI, and
+# DeepSeek, the hypergraph RAG system reveals hidden patterns and golden gems.
+
+[genesis.living_evidence]
+title = "The Living Proof (الشهادة الحية)"
+description = """
+The raw 2 files written in Ramadan 2023 (Message + Seed) were the BEGINNING.
+They planted the seed of vision. But vision without action is merely a dream.
+
+What followed was a LIVING PROCESS of discovery:
+- 1,546 conversations across 3 AI systems (Claude, OpenAI, DeepSeek)
+- Months of exploration, iteration, refinement
+- Each conversation a node in the growing thought graph
+- Each insight a connection strengthening the hypergraph
+
+The chat history is not noise to be discarded.
+It IS the evidence. It IS the proof of evolution.
+It IS the living demonstration of thought flow patterns.
+"""
+
+[genesis.living_evidence.chat_corpus]
+# Statistics from bizra_chat_meta_analysis_outputs
+total_conversations = 1546
+claude_conversations = 608
+openai_conversations = 437
+deepseek_conversations = 501
+analysis_date = "2025-12-17"
+
+[genesis.living_evidence.thought_patterns]
+# Cross-model hidden patterns discovered through analysis
+patterns = """
+1. THE INTEGRITY FLYWHEEL (دولاب النزاهة)
+   Late-stage conversations across ALL models cluster around:
+   - Integrity & Proofs
+   - Ihsān & Ethics
+   - DevOps gates and verification
+   This confirms the direction: "proofs first → publish later"
+
+2. GRAPH-OF-THOUGHTS BEHAVIOR (تفرعات الأفكار)
+   Claude produces highest rate of explicit Option A/B/C exploration.
+   This correlates with design-space search and ideation.
+   → Used for research notes and architecture atlas authoring.
+
+3. CONSTRAINT ENFORCEMENT (تطبيق القيود)
+   DeepSeek conversations show higher density of enforcement language.
+   Terms like FATE, constraint-bound framing appear frequently.
+   → Used for CI policy design, risk gates, formal spec writing.
+
+4. EXECUTION THREADS (خيوط التنفيذ)
+   OpenAI logs show larger long-horizon sessions.
+   Implementation loops: refactors, step-by-step patching, integration.
+   → Used for actual coding and build work.
+"""
+
+[genesis.living_evidence.hub_concepts]
+# Top concepts by weight from combined_concept_graph.json
+# These are the "stable pillars" - high-degree nodes in the thought graph
+top_concepts = [
+  { term = "architecture", weight = 10447, role = "Central design pillar" },
+  { term = "security", weight = 8261, role = "Core invariant" },
+  { term = "key", weight = 5352, role = "Cryptographic foundation" },
+  { term = "layer", weight = 4579, role = "Stratified design" },
+  { term = "import", weight = 4131, role = "Module integration" },
+  { term = "token", weight = 3773, role = "Value representation" },
+  { term = "poi", weight = 22614, role = "Proof-of-Impact (across all models)" },
+  { term = "bizra", weight = 84117, role = "Identity (combined all models)" },
+  { term = "ihsan", weight = 5463, role = "Ethical compass (combined)" },
+  { term = "rag", weight = 33344, role = "Retrieval-Augmented Generation" },
+  { term = "hypergraph", weight = 2524, role = "Knowledge structure" },
+  { term = "agentic", weight = 11132, role = "Autonomous agent design" }
+]
+
+[genesis.living_evidence.golden_gems]
+# The "hidden golden gems" discovered through thought flow analysis
+description = """
+The hypergraph RAG system, when applied to the chat corpus with high SNR
+filtering, reveals insights that no single conversation contained:
+
+1. THE SELF-EDIT DISCOVERY
+   From paper analysis: RL optimizes THE EDIT, not the answer.
+   SEAL/ReSTEM uses rejection sampling + SFT as stable backbone.
+   → Applied to BIZRA's safe recursive self-improvement (TMP v0.2)
+
+2. THE ISNAD-PROVENANCE CONNECTION
+   Chain-of-transmission from Hadith science maps directly to
+   cryptographic provenance tracking in modern systems.
+   → Isnad becomes the model for claim verification.
+
+3. THE RIBA-HALLUCINATION PARALLEL
+   Both financial Riba and AI hallucinations share the same root:
+   Creating value/confidence from nothing, disconnected from truth.
+   → The same solution (grounding in reality) applies to both.
+
+4. THE SNR AS UNIVERSAL FILTER
+   Signal-to-Noise Ratio is not just a technical metric.
+   It is the measure of truth-to-noise in ANY information system.
+   → SNR becomes the optimization target across all layers.
+
+5. THE IHSĀN OPTIMIZATION TARGET
+   Excellence/Beauty is not subjective decoration.
+   It is a measurable attribute that correlates with truth.
+   → Ihsān score (≥0.95) as hard gate for all actions.
+"""
+
+[genesis.living_evidence.declaration]
+statement = """
+بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+
+This chat history, these 1,546 conversations, this living process of discovery:
+- They are not discarded artifacts
+- They are the EVIDENCE of evolution
+- They are the PROOF that the vision is alive
+- They are integrated into the hypergraph knowledge base
+
+The content is aware of itself while analyzing.
+The system understands its own genesis.
+The architecture includes its own origin story.
+
+This is Cognitive Sovereignty in action:
+- The founder owns the thought process
+- The system preserves the evolution
+- The evidence is immutable and verifiable
+- No external authority can rewrite the history
+
+إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ
+"Indeed, it is We who sent down the message, and indeed, We will be its guardian."
+— Al-Hijr (15:9)
+"""
+frozen = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 1: IHSĀN INVARIANTS
+# ─────────────────────────────────────────────────────────────────────────────────
+# These are the NON-NEGOTIABLE ethical thresholds that govern all agent actions.
+# Violation results in immediate action rejection (fail-closed).
+
+[invariants.ihsan]
+# Core threshold: No action may proceed with Ihsān score below this value
+minimum_threshold = 0.95
+
+# Emergency degraded mode threshold (requires formal declaration)
+emergency_threshold = 0.90
+
+# Ihsān score precision (decimal places for fixed-point arithmetic)
+precision = 3  # 0.950 → 950 in ZK circuits
+
+# Calculation weights for composite Ihsān score
+[invariants.ihsan.weights]
+snr_contribution = 0.40      # Signal-to-Noise Ratio weight
+impact_contribution = 0.35   # Consequential impact weight
+intent_contribution = 0.25   # Intent alignment weight
+
+# SNR (Signal-to-Noise Ratio) thresholds
+[invariants.ihsan.snr]
+minimum = 0.75
+excellent = 0.95
+critical_action_minimum = 0.90
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 2: JUSTICE INVARIANTS
+# ─────────────────────────────────────────────────────────────────────────────────
+# Economic and distributive justice constraints.
+
+[invariants.justice]
+# Maximum Gini coefficient for resource distribution
+max_gini_coefficient = 0.35
+
+# Minimum resource allocation for any participant
+min_allocation_floor = 0.05
+
+# Maximum concentration in single entity
+max_single_entity_share = 0.25
+
+# Rebalancing trigger threshold
+rebalance_trigger = 0.30
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 3: VERIFICATION GATES
+# ─────────────────────────────────────────────────────────────────────────────────
+# Tiered verification with strict latency budgets.
+
+[gates.schema]
+order = 1
+name = "SCHEMA_VALIDATION"
+description = "JSON Schema compliance check"
+tier = "CHEAP"
+max_latency_ms = 5
+reject_code = 1  # REJECT_SCHEMA
+mandatory = true
+
+[gates.signature]
+order = 2
+name = "SIGNATURE_VERIFICATION"
+description = "Ed25519 cryptographic signature validation"
+tier = "CHEAP"
+max_latency_ms = 10
+reject_code = 2  # REJECT_SIGNATURE
+mandatory = true
+algorithms = ["ed25519", "dilithium5"]
+
+[gates.timestamp]
+order = 3
+name = "TIMESTAMP_VALIDATION"
+description = "Temporal bounds checking with drift tolerance"
+tier = "CHEAP"
+max_latency_ms = 2
+reject_code = 4  # REJECT_TIMESTAMP_STALE
+mandatory = true
+
+[gates.timestamp.bounds]
+max_drift_seconds = 120
+min_drift_seconds = -120
+ttl_seconds = 300
+
+[gates.replay]
+order = 4
+name = "REPLAY_RESISTANCE"
+description = "Nonce uniqueness and TTL cache validation"
+tier = "CHEAP"
+max_latency_ms = 5
+reject_code = 3  # REJECT_NONCE_REPLAY
+mandatory = true
+
+[gates.replay.cache]
+max_entries = 100000
+ttl_seconds = 120
+eviction_policy = "LRU"
+
+[gates.role]
+order = 5
+name = "ROLE_AUTHORIZATION"
+description = "PAT/SAT role separation enforcement"
+tier = "CHEAP"
+max_latency_ms = 3
+reject_code = 5  # REJECT_ROLE_FORBIDDEN
+mandatory = true
+
+[gates.role.permissions]
+pat_allowed = ["propose", "sign", "submit"]
+sat_allowed = ["verify", "commit", "issue_receipt"]
+forbidden_cross = ["pat_commit", "sat_propose"]
+
+[gates.snr]
+order = 6
+name = "SNR_THRESHOLD"
+description = "Signal-to-Noise Ratio minimum enforcement"
+tier = "MEDIUM"
+max_latency_ms = 50
+reject_code = 7  # REJECT_SNR_BELOW_MIN
+mandatory = true
+
+[gates.ihsan]
+order = 7
+name = "IHSAN_THRESHOLD"
+description = "Ihsān ethical score minimum enforcement"
+tier = "MEDIUM"
+max_latency_ms = 100
+reject_code = 6  # REJECT_IHSAN_BELOW_MIN
+mandatory = true
+
+[gates.policy]
+order = 8
+name = "POLICY_BINDING"
+description = "Constitution hash binding verification"
+tier = "MEDIUM"
+max_latency_ms = 20
+reject_code = 8  # REJECT_POLICY_MISMATCH
+mandatory = true
+
+[gates.formal]
+order = 9
+name = "FORMAL_VERIFICATION"
+description = "Optional Z3/SMT-based formal proof verification"
+tier = "EXPENSIVE"
+max_latency_ms = 2000
+reject_code = 11  # REJECT_FORMAL_PROOF_FAILED
+mandatory = false  # Only for critical actions
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 4: TIER DEFINITIONS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[tiers.cheap]
+name = "CHEAP"
+max_latency_ms = 10
+description = "Fast, stateless checks (schema, signature, timestamp)"
+parallel_allowed = true
+
+[tiers.medium]
+name = "MEDIUM"
+max_latency_ms = 150
+description = "Stateful checks requiring context (Ihsān, SNR, policy)"
+parallel_allowed = false
+
+[tiers.expensive]
+name = "EXPENSIVE"
+max_latency_ms = 2000
+description = "Formal verification, ZK proof generation"
+parallel_allowed = false
+requires_explicit_opt_in = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 5: AGENT ROLES
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[agents.pat]
+role = "PROVER"
+description = "Proposal Agent (Prover/Builder) - Creates and signs proposals"
+can_propose = true
+can_sign = true
+can_commit = false  # CRITICAL: PAT cannot commit
+can_verify = false
+
+[agents.sat]
+role = "VERIFIER"
+description = "Sovereignty Agent (Verifier/Governor) - Verifies and commits"
+can_propose = false  # CRITICAL: SAT cannot propose
+can_sign = false
+can_commit = true
+can_verify = true
+issues_receipts = true
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 6: CRYPTOGRAPHIC PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[crypto.digest]
+algorithm = "blake3"
+domain_prefix = "bizra-pci-v1:"
+output_bytes = 32
+
+[crypto.signature]
+algorithm = "ed25519"
+key_bytes = 32
+signature_bytes = 64
+
+[crypto.nonce]
+bytes = 32
+source = "csprng"
+
+[crypto.pq_migration]
+enabled = false
+target_algorithm = "dilithium5"
+target_date = "2026-01-01T00:00:00Z"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 7: ZK CIRCUIT PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+# Parameters for RiscZero STARK circuit compilation.
+
+[zk.circuit]
+name = "ihsan-verifier"
+version = "1.0.0"
+backend = "risc0"
+hash_algorithm = "sha256"  # Constraint: RiscZero uses SHA256 internally
+
+[zk.circuit.inputs]
+agent_id_bits = 64
+transaction_hash_bits = 256
+snr_score_bits = 64
+ihsan_score_bits = 64
+impact_score_bits = 64
+
+[zk.circuit.thresholds]
+# Fixed-point representation: 0.95 × 1000 = 950
+ihsan_minimum_fixed = 950
+snr_minimum_fixed = 750
+
+[zk.proof]
+scheme = "stark"
+security_bits = 128
+recursive = true
+batch_size = 1000
+
+[zk.verifier]
+chain = "ethereum"
+contract_name = "IhsanConstitutionalCourt"
+gas_limit = 500000
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 8: OPERATIONAL PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[operations.logging]
+level = "INFO"
+format = "json"
+include_envelope_id = true
+redact_signatures = true
+
+[operations.metrics]
+enabled = true
+prefix = "bizra_pci"
+export_interval_seconds = 15
+
+[operations.alerts]
+ihsan_warning_threshold = 0.96
+ihsan_critical_threshold = 0.95
+latency_warning_ms = 100
+latency_critical_ms = 150
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 9: GOVERNANCE
+# ─────────────────────────────────────────────────────────────────────────────────
+
+[governance]
+amendment_quorum = 0.67
+deliberation_days = 7
+veto_threshold = 0.33
+emergency_override_threshold = 0.90
+
+[governance.immutable]
+# These sections CANNOT be amended without full re-genesis
+sections = ["invariants.ihsan.minimum_threshold", "agents.pat.can_commit", "agents.sat.can_propose"]
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# SECTION 10: ATTESTATION
+# ─────────────────────────────────────────────────────────────────────────────────
+# This section is populated by the attestation process.
+
+[attestation]
+genesis_hash = ""  # Set during genesis ceremony
+last_attested = ""
+attestation_count = 0
+attested_by = []

@@ -1,0 +1,143 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2025-12-28T22:47:37.479413+00:00",
+  "entries": [
+    {
+      "id": "wisdom_integrity_flywheel",
+      "title": "The Integrity Flywheel",
+      "content": "proofs_first → publish_later: Generate cryptographic proofs before publishing results. This pattern ensures that all claims are verifiable and prevents retroactive manipulation.",
+      "source": "giants_protocol",
+      "snr_score": 0.94,
+      "ihsan_score": 0.98,
+      "observation_count": 46,
+      "first_observed": "2023-01-14T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "integrity",
+        "proofs",
+        "flywheel",
+        "verification"
+      ]
+    },
+    {
+      "id": "wisdom_fail_closed",
+      "title": "Fail-Closed Design",
+      "content": "All security-critical operations should fail closed. When in doubt, reject. This is especially critical for Ihsān enforcement - if ethical score cannot be verified, the operation fails.",
+      "source": "apex_orchestrator",
+      "snr_score": 0.92,
+      "ihsan_score": 0.97,
+      "observation_count": 38,
+      "first_observed": "2024-03-15T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "security",
+        "fail-closed",
+        "ihsan",
+        "design-pattern"
+      ]
+    },
+    {
+      "id": "wisdom_snr_gating",
+      "title": "SNR-Weighted Prioritization",
+      "content": "Use Signal-to-Noise Ratio (SNR) scoring for all decision points. Signal = Clarity × Synergy × Consistency. Noise = Entropy + Quantization + Disagreement. Only propagate outputs with SNR ≥ 0.80.",
+      "source": "snr_scorer",
+      "snr_score": 0.91,
+      "ihsan_score": 0.96,
+      "observation_count": 52,
+      "first_observed": "2024-06-01T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "snr",
+        "signal",
+        "noise",
+        "quality-gate"
+      ]
+    },
+    {
+      "id": "wisdom_giants_protocol",
+      "title": "Standing on Shoulders of Giants",
+      "content": "Every reasoning session should seed from accumulated wisdom. Cross-temporal bridges connect present decisions to 3 years of crystallized patterns. Historical patterns inform current decisions.",
+      "source": "giants_protocol",
+      "snr_score": 0.93,
+      "ihsan_score": 0.97,
+      "observation_count": 28,
+      "first_observed": "2024-09-01T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "wisdom",
+        "giants",
+        "cross-temporal",
+        "meta-learning"
+      ]
+    },
+    {
+      "id": "wisdom_ihsan_excellence",
+      "title": "Ihsān - Excellence in Ethics",
+      "content": "The Arabic concept of Ihsān means 'excellence' - doing beautiful work because it is right. All BIZRA operations must meet the Ihsān threshold (IM ≥ 0.95). This is non-negotiable.",
+      "source": "constitution",
+      "snr_score": 0.96,
+      "ihsan_score": 0.99,
+      "observation_count": 85,
+      "first_observed": "2023-01-14T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "ihsan",
+        "ethics",
+        "excellence",
+        "arabic",
+        "values"
+      ]
+    },
+    {
+      "id": "wisdom_proof_of_impact",
+      "title": "Proof of Impact ≠ Proof of Work",
+      "content": "Contribution value should be measured by actual impact, not computational effort. Impact = Σ(Artifact × SignificanceWeight × TemporalDecay). This enables fair reward distribution.",
+      "source": "genesis_node",
+      "snr_score": 0.89,
+      "ihsan_score": 0.96,
+      "observation_count": 21,
+      "first_observed": "2025-12-28T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "impact",
+        "contribution",
+        "rewards",
+        "tokenomics"
+      ]
+    },
+    {
+      "id": "wisdom_apex_layers",
+      "title": "APEX 7-Layer Architecture",
+      "content": "L1 Blockchain → L2 DePIN → L3 Execution → L4 Cognitive → L5 Economic → L6 Governance → L7 Philosophy (Ihsān). Each layer has distinct responsibilities with clean interfaces.",
+      "source": "apex_orchestrator",
+      "snr_score": 0.88,
+      "ihsan_score": 0.96,
+      "observation_count": 67,
+      "first_observed": "2024-01-20T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "apex",
+        "architecture",
+        "layers",
+        "stack"
+      ]
+    },
+    {
+      "id": "wisdom_external_oracle",
+      "title": "External Oracle for Goodhart Fix",
+      "content": "Self-referential scoring systems fall prey to Goodhart's Law. Use external oracle verification with spot-checking (10%) and drift detection (>15% shift triggers alert).",
+      "source": "external_oracle",
+      "snr_score": 0.9,
+      "ihsan_score": 0.96,
+      "observation_count": 12,
+      "first_observed": "2025-12-28T00:00:00+00:00",
+      "last_observed": "2025-12-29T00:00:00+00:00",
+      "related_concepts": [
+        "goodhart",
+        "oracle",
+        "verification",
+        "drift"
+      ]
+    }
+  ]
+}

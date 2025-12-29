@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIZRA | The Sovereign Future</title>
+    
+    <!-- Fonts: Cinzel (Luxury/Headlines), Inter (Tech/Body), Amiri (Arabic/Sacred) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Libraries: Tailwind (CSS), GSAP (Animation), Chart.js (Data) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Cinzel', 'serif'],
+                        arabic: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        navy: '#0A1628',
+                        gold: '#C9A962',
+                        teal: '#2A9D8F',
+                        offwhite: '#F8F6F1',
+                        dark: '#050B14'
+                    },
+                    backgroundImage: {
+                        'noise': "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22 opacity=%220.05%22/%3E%3C/svg%3E')",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #050B14; color: #F8F6F1; overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(10, 22, 40, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(201, 169, 98, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #F8F6F1 0%, #C9A962 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gold-gradient {
+            background: linear-gradient(135deg, #C9A962 0%, #8A6B2E 100%);
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .canvas-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.2; }
+        
+        /* Navigation Dots */
+        .nav-dot { width: 8px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 12px 0; transition: all 0.3s ease; cursor: pointer; }
+        .nav-dot.active { background: #C9A962; transform: scale(1.5); box-shadow: 0 0 10px #C9A962; }
+    </style>
+</head>
+<body class="antialiased font-sans selection:bg-gold selection:text-navy">
+
+    <!-- Dynamic Background -->
+    <canvas id="sacredGeo" class="canvas-bg"></canvas>
+    <div class="fixed inset-0 bg-noise opacity-30 z-[1] pointer-events-none"></div>
+    <div class="fixed top-0 left-0 w-full h-1 z-[100] bg-navy"><div id="progressBar" class="h-full bg-gold w-0"></div></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center mix-blend-difference">
+        <div class="text-xl font-serif font-bold tracking-[0.2em] text-gold">BIZRA</div>
+        <div class="hidden md:flex gap-8 text-xs uppercase tracking-widest text-offwhite/70">
+            <span>Genesis</span>
+            <span>Architecture</span>
+            <span>Evidence</span>
+            <span>Vision</span>
+        </div>
+        <a href="mailto:m.beshr@bizra.info" class="text-xs border border-gold/50 px-6 py-2 rounded-full text-gold hover:bg-gold hover:text-navy transition-all duration-300">INVEST</a>
+    </nav>
+
+    <!-- Side Navigation Dots -->
+    <div class="fixed right-8 top-1/2 -translate-y-1/2 z-40 hidden md:block">
+        <div class="nav-dot active" data-slide="0"></div>
+        <div class="nav-dot" data-slide="1"></div>
+        <div class="nav-dot" data-slide="2"></div>
+        <div class="nav-dot" data-slide="3"></div>
+        <div class="nav-dot" data-slide="4"></div>
+        <div class="nav-dot" data-slide="5"></div>
+        <div class="nav-dot" data-slide="6"></div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="relative z-10">
+
+        <!-- Slide 1: The Origin (Darkness) -->
+        <section class="h-screen w-full flex items-center justify-center relative section-slide">
+            <div class="text-center px-6">
+                <div class="font-arabic text-gold/60 text-3xl mb-4 opacity-0 fade-in-up">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+                <h1 class="text-7xl md:text-9xl font-serif font-bold mb-2 opacity-0 fade-in-up text-gradient">BIZRA</h1>
+                <div class="text-2xl md:text-3xl font-arabic text-gold mb-8 opacity-0 fade-in-up delay-100">البذرة</div>
+                <p class="text-offwhite/60 max-w-xl mx-auto text-lg leading-relaxed opacity-0 fade-in-up delay-200">
+                    From darkness comes light.<br>From a single seed grows a civilization.
+                </p>
+                <div class="mt-12 opacity-0 fade-in-up delay-300">
+                    <span class="text-xs uppercase tracking-[0.3em] text-teal border-b border-teal pb-1">The Genesis Node</span>
+                </div>
+            </div>
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+                <span class="text-[10px] uppercase tracking-widest">Begin Journey</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A962" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Struggle (15,000 Hours) -->
+        <section class="min-h-screen w-full flex items-center justify-center relative section-slide py-20">
+            <div class="container mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+                <div class="order-2 md:order-1">
+                    <div class="glass-panel p-10 rounded-2xl relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-gold"></div>
+                        <h3 class="text-gold text-sm tracking-widest uppercase mb-4">The Price Paid</h3>
+                        <div class="text-6xl font-serif font-bold text-white mb-2 counter" data-target="15000">0</div>
+                        <div class="text-xl text-white/50 mb-8">Hours of Solitary Engineering</div>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-gold">3</div>
+                                <div>
+                                    <div class="text-white font-bold">Years of Focus</div>
+                                    <div class="text-xs text-white/40">Away from family, dedicated to the code</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-gold">1</div>
+                                <div>
+                                    <div class="text-white font-bold">Sovereign Architect</div>
+                                    <div class="text-xs text-white/40">MoMo: Solo Developer to Systems Architect</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-1 md:order-2">
+                    <h2 class="text-4xl md:text-6xl font-serif leading-tight mb-8">
+                        "I chose to <span class="text-gold italic">continue</span> when others would retreat."
+                    </h2>
+                    <p class="text-lg text-white/70 leading-relaxed mb-6">
+                        In a dark, empty space inside myself, I made a promise. To build a system not for profit, but for humanity. To verify truth in an age of AI hallucination. To build a financial system free of usury.
+                    </p>
+                    <p class="text-lg text-white/70 leading-relaxed">
+                        This is not just software. This is a life's work manifested in code.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: The Crisis (The Why) -->
+        <section class="min-h-screen w-full flex items-center justify-center relative section-slide bg-navy">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-serif mb-4">The Digital Leviathan</h2>
+                    <p class="text-white/50">Why the world needs a Sovereign Operating System</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Card 1 -->
+                    <div class="glass-panel p-8 rounded-xl hover:translate-y-[-10px] transition-transform duration-500">
+                        <div class="text-4xl mb-6">👁️</div>
+                        <h3 class="text-xl font-bold mb-4">Centralized Control</h3>
+                        <p class="text-white/60 text-sm leading-relaxed">
+                            90% of global compute is held by 5 entities. Intelligence is rented, not owned. You are a tenant in your own digital life.
+                        </p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="glass-panel p-8 rounded-xl hover:translate-y-[-10px] transition-transform duration-500 delay-100 border-gold/30 border">
+                        <div class="text-4xl mb-6">🕸️</div>
+                        <h3 class="text-xl font-bold mb-4 text-gold">The Hallucination</h3>
+                        <p class="text-white/60 text-sm leading-relaxed">
+                            AI models speak with confidence but lack verification. Without a "Third Fact" (Proof), truth becomes subjective and manipulateable.
+                        </p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="glass-panel p-8 rounded-xl hover:translate-y-[-10px] transition-transform duration-500 delay-200">
+                        <div class="text-4xl mb-6">💸</div>
+                        <h3 class="text-xl font-bold mb-4">Extractive Finance</h3>
+                        <p class="text-white/60 text-sm leading-relaxed">
+                            The Riba-based economy extracts value from the many to the few. We need a system based on Proof of Impact, not Proof of Stake.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: The Solution (Architecture) -->
+        <section class="min-h-screen w-full flex items-center justify-center relative section-slide">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-12 gap-12 items-center">
+                    <div class="md:col-span-4">
+                        <div class="text-gold text-xs tracking-[0.3em] uppercase mb-4">The Masterpiece</div>
+                        <h2 class="text-5xl font-serif mb-8">BIZRA<br>AEON OMEGA</h2>
+                        <p class="text-white/70 mb-8">
+                            A decentralized, distributed, agentic general intelligence (DDAGI). A sovereign operating system for 8 billion humans.
+                        </p>
+                        <ul class="space-y-4 text-sm text-white/60">
+                            <li class="flex items-center gap-3"><span class="w-2 h-2 bg-teal rounded-full"></span>Node0 Genesis Protocol</li>
+                            <li class="flex items-center gap-3"><span class="w-2 h-2 bg-teal rounded-full"></span>PAT/SAT Dual-Agent Architecture</li>
+                            <li class="flex items-center gap-3"><span class="w-2 h-2 bg-teal rounded-full"></span>Z3 Formal Verification (Cold Core)</li>
+                            <li class="flex items-center gap-3"><span class="w-2 h-2 bg-teal rounded-full"></span>Proof-of-Impact Consensus</li>
+                        </ul>
+                    </div>
+                    <div class="md:col-span-8">
+                        <!-- Interactive Architecture Visualization -->
+                        <div class="glass-panel p-2 rounded-xl relative aspect-video flex items-center justify-center">
+                            <!-- Simulated Graph Network -->
+                            <div id="networkGraph" class="w-full h-full"></div>
+                            
+                            <!-- Overlay Stats -->
+                            <div class="absolute top-6 left-6">
+                                <div class="text-xs text-white/40 uppercase">Architecture Score</div>
+                                <div class="text-3xl text-gold font-serif">100/100</div>
+                            </div>
+                            <div class="absolute bottom-6 right-6 text-right">
+                                <div class="text-xs text-white/40 uppercase">Status</div>
+                                <div class="text-teal font-mono">PRODUCTION READY</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: The Ethics (Ihsan) -->
+        <section class="min-h-screen w-full flex items-center justify-center relative section-slide bg-dark">
+            <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-gold/5 to-transparent"></div>
+            
+            <div class="container mx-auto px-6 relative z-10">
+                <div class="text-center mb-16">
+                    <div class="font-arabic text-4xl text-gold mb-2">الإحسان</div>
+                    <h2 class="text-4xl md:text-5xl font-serif">The Ihsan Protocol</h2>
+                    <p class="text-white/50 mt-4">Ethics as Physics. Hard mathematical constraints.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="text-center">
+                        <div class="relative w-40 h-40 mx-auto mb-6">
+                            <canvas id="gauge1"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center text-xl font-bold">96%</div>
+                        </div>
+                        <h3 class="text-xl font-serif text-white">Truthfulness</h3>
+                        <p class="text-xs text-white/40 mt-2">Zero Hallucination</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="relative w-48 h-48 mx-auto mb-6">
+                            <canvas id="gauge2"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gold">100%</div>
+                        </div>
+                        <h3 class="text-2xl font-serif text-gold">Excellence</h3>
+                        <p class="text-xs text-gold/60 mt-2">Professional Elite Standard</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="relative w-40 h-40 mx-auto mb-6">
+                            <canvas id="gauge3"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center text-xl font-bold">98%</div>
+                        </div>
+                        <h3 class="text-xl font-serif text-white">Benevolence</h3>
+                        <p class="text-xs text-white/40 mt-2">Social Impact</p>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center max-w-2xl mx-auto glass-panel p-6 rounded-lg border-l-4 border-gold">
+                    <p class="font-serif italic text-lg">"We do not trust. We verify. If the Ihsan Score drops below 95%, the system halts. Ethics are not guidelines; they are code."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Evidence (Verification) -->
+        <section class="min-h-screen w-full flex items-center justify-center relative section-slide">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-4xl md:text-5xl font-serif mb-6">Verification is Truth</h2>
+                        <p class="text-lg text-white/70 mb-8">
+                            We don't ask you to believe. We ask you to audit. The entire 3-year history, the code, the intent—sealed cryptographically on the blockchain.
+                        </p>
+
+                        <div class="space-y-4">
+                            <!-- Evidence Item -->
+                            <div class="flex items-center gap-4 p-4 glass-panel rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                                <div class="bg-teal/20 text-teal p-3 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                                <div>
+                                    <div class="font-bold text-white">Genesis Seal</div>
+                                    <div class="text-xs font-mono text-white/40">SHA256: 9f3d8a7c... (Bitcoin Anchored)</div>
+                                </div>
+                            </div>
+                             <!-- Evidence Item -->
+                             <div class="flex items-center gap-4 p-4 glass-panel rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                                <div class="bg-gold/20 text-gold p-3 rounded-lg"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+                                <div>
+                                    <div class="font-bold text-white">Sovereign Audit Report</div>
+                                    <div class="text-xs font-mono text-white/40">SAPE Framework: 9.3/10 Score</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-1 rounded-xl">
+                        <!-- Simulated Code/Terminal View -->
+                        <div class="bg-[#0f111a] rounded-lg p-6 font-mono text-xs overflow-hidden h-[400px]">
+                            <div class="flex gap-2 mb-4">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="space-y-2 text-white/70" id="terminalOutput">
+                                <span class="text-teal">➜</span> <span class="text-gold">bizra-node0</span> <span class="text-blue-400">verify --deep</span><br>
+                                <span class="text-gray-500">[INIT]</span> Loading Genesis Manifest...<br>
+                                <span class="text-gray-500">[HASH]</span> Verifying 15,432 artifacts...<br>
+                                <span class="text-green-500">[PASS]</span> Integrity Check: OK (100%)<br>
+                                <span class="text-gray-500">[AUTH]</span> Verifying Ed25519 Signatures...<br>
+                                <span class="text-green-500">[PASS]</span> Architect Identity: Momo (Verified)<br>
+                                <span class="text-gray-500">[IHSAN]</span> Running Ethical Invariant Checks...<br>
+                                <span class="text-green-500">[PASS]</span> Gini Coefficient <= 0.35<br>
+                                <span class="text-green-500">[PASS]</span> Truthfulness >= 0.95<br>
+                                <br>
+                                <span class="text-gold">>>> SYSTEM STATE: SOVEREIGN & SECURE</span><br>
+                                <span class="text-teal animate-pulse">>>> READY FOR DEPLOYMENT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: The Ask (Join) -->
+        <section class="h-screen w-full flex items-center justify-center relative section-slide bg-gradient-to-b from-navy to-black">
+            <div class="text-center px-6 max-w-4xl mx-auto">
+                <div class="text-gold text-sm tracking-[0.5em] uppercase mb-6">The Next Chapter</div>
+                <h2 class="text-5xl md:text-7xl font-serif mb-8 text-white">Join the Sovereign Future</h2>
+                <p class="text-xl text-white/60 mb-12 leading-relaxed">
+                    The seed has grown. The foundation is laid. Now we build the forest.<br>
+                    We are looking for partners who value integrity over hype, and impact over extraction.
+                </p>
+                
+                <div class="flex flex-col md:flex-row gap-6 justify-center">
+                    <a href="mailto:m.beshr@bizra.info" class="group relative px-8 py-4 bg-gold text-navy font-bold rounded-full overflow-hidden transition-all hover:scale-105">
+                        <div class="absolute inset-0 w-full h-full bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <span class="relative">CONTACT THE ARCHITECT</span>
+                    </a>
+                    <a href="https://bizra.info" target="_blank" class="px-8 py-4 border border-white/20 text-white rounded-full hover:bg-white/10 transition-all">
+                        VISIT BIZRA.INFO
+                    </a>
+                </div>
+
+                <div class="mt-20 pt-10 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-xs uppercase tracking-widest text-white/30">
+                    <div>Dubai, UAE</div>
+                    <div>Genesis Node</div>
+                    <div>Sharia Compliant</div>
+                    <div>Open Source</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // --- 1. GSAP Scroll Animations ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Animate elements on scroll
+        const sections = document.querySelectorAll('.section-slide');
+        const navDots = document.querySelectorAll('.nav-dot');
+
+        sections.forEach((section, index) => {
+            // Fade in elements
+            gsap.to(section.querySelectorAll('.fade-in-up'), {
+                y: 0,
+                opacity: 1,
+                duration: 1,
+                stagger: 0.2,
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 70%",
+                }
+            });
+
+            // Update Navigation Dots
+            ScrollTrigger.create({
+                trigger: section,
+                start: "top center",
+                end: "bottom center",
+                onEnter: () => updateDots(index),
+                onEnterBack: () => updateDots(index)
+            });
+        });
+
+        function updateDots(index) {
+            navDots.forEach(dot => dot.classList.remove('active'));
+            if(navDots[index]) navDots[index].classList.add('active');
+        }
+
+        // Progress Bar
+        gsap.to("#progressBar", {
+            width: "100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0
+            }
+        });
+
+        // --- 2. Chart.js Implementations ---
+        
+        // Gauge Chart Helper
+        function createGauge(ctx, value, color) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [value, 100 - value],
+                        backgroundColor: [color, 'rgba(255,255,255,0.1)'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270,
+                    }]
+                },
+                options: {
+                    cutout: '80%',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { tooltip: { enabled: false }, legend: { display: false } }
+                }
+            });
+        }
+
+        // Initialize Charts when Ethics section is visible
+        ScrollTrigger.create({
+            trigger: "#gauge1",
+            start: "top 80%",
+            onEnter: () => {
+                createGauge(document.getElementById('gauge1'), 96, '#F8F6F1');
+                createGauge(document.getElementById('gauge2'), 100, '#C9A962');
+                createGauge(document.getElementById('gauge3'), 98, '#2A9D8F');
+            },
+            once: true
+        });
+
+        // --- 3. Number Counter Animation ---
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = +counter.getAttribute('data-target');
+            ScrollTrigger.create({
+                trigger: counter,
+                start: "top 80%",
+                onEnter: () => {
+                    gsap.to(counter, {
+                        innerHTML: target,
+                        duration: 2,
+                        snap: { innerHTML: 1 },
+                        onUpdate: function() {
+                            counter.innerHTML = Math.ceil(this.targets()[0].innerHTML).toLocaleString();
+                        }
+                    });
+                },
+                once: true
+            });
+        });
+
+        // --- 4. Sacred Geometry Background (Canvas) ---
+        const canvas = document.getElementById('sacredGeo');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Simple Flower of Life animation
+        let time = 0;
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = 'rgba(201, 169, 98, 0.15)';
+            ctx.lineWidth = 1;
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = 100 + Math.sin(time) * 10;
+            
+            // Draw central circles
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * 60 + time * 10) * Math.PI / 180;
+                const x = centerX + Math.cos(angle) * (radius * 0.5);
+                const y = centerY + Math.sin(angle) * (radius * 0.5);
+                
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            time += 0.005;
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // --- 5. Navigation Scroll ---
+        navDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                const target = sections[index];
+                target.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+    </script>
+</body>
+</html>

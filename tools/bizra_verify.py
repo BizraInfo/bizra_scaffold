@@ -35,13 +35,19 @@ SKIP_DIRS = {
 def run(
     cmd: List[str], cwd: Path | None = None, timeout: int = 1800
 ) -> Tuple[int, str, str]:
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(cwd) if cwd else None,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(cwd) if cwd else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except FileNotFoundError:
+        return 127, "", f"Command not found: {cmd[0]}"
+    except Exception as e:
+        return 1, "", str(e)
+
     try:
         out, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -248,7 +254,7 @@ def main() -> int:
             )
 
     if stack["python"]:
-        code, out, err = run(["pip-audit", "-f", "json"], cwd=root, timeout=1800)
+        code, out, err = run([sys.executable, "-m", "pip_audit", "-f", "json"], cwd=root, timeout=1800)
         if code == 0 and out.strip():
             (out_dir / "checks" / "pip_audit.json").write_text(out, encoding="utf-8")
             checks.append(
@@ -264,7 +270,7 @@ def main() -> int:
                     "name": "pip_audit",
                     "status": "skip",
                     "details": {
-                        "reason": "pip-audit not installed or failed",
+                        "reason": "pip-audit failed or produced no output",
                         "code": code,
                         "stderr": err[-2000:],
                     },

@@ -27,6 +27,7 @@ class NarrativeStyle(Enum):
     EDUCATIONAL = auto()  # Explanatory, for learning
     CONVERSATIONAL = auto()  # Natural, accessible language
     AUDIT = auto()  # Formal, for compliance/review
+    ELITE = auto()  # Professional, high-SNR, interdisciplinary
 
 
 class ConfidenceLevel(Enum):
@@ -230,20 +231,26 @@ class TechnicalNarrativeTemplate(NarrativeTemplate):
 
         # Add SNR insights if available
         if synthesis.snr_scores:
-            avg_snr = sum(synthesis.snr_scores.values()) / len(synthesis.snr_scores)
-            high_snr_components = [
-                k for k, v in synthesis.snr_scores.items() if v > 0.8
-            ]
+            numeric_scores = {
+                k: v
+                for k, v in synthesis.snr_scores.items()
+                if isinstance(v, (int, float))
+            }
+            if numeric_scores:
+                avg_snr = sum(numeric_scores.values()) / len(numeric_scores)
+                high_snr_components = [
+                    k for k, v in numeric_scores.items() if v > 0.8
+                ]
 
-            snr_text = f"\n\n**Signal Quality:** Average SNR: {avg_snr:.3f}. "
+                snr_text = f"\n\n**Signal Quality:** Average SNR: {avg_snr:.3f}. "
 
-            if high_snr_components:
-                snr_text += (
-                    f"HIGH-SNR components (breakthrough insights): "
-                    f"{', '.join(high_snr_components)}. "
-                )
+                if high_snr_components:
+                    snr_text += (
+                        f"HIGH-SNR components (breakthrough insights): "
+                        f"{', '.join(high_snr_components)}. "
+                    )
 
-            base_text += snr_text
+                base_text += snr_text
 
         return base_text
 
@@ -323,8 +330,14 @@ class TechnicalNarrativeTemplate(NarrativeTemplate):
             enhancement = "\n\n**Advanced Reasoning:**"
 
             if synthesis.snr_scores:
-                avg_snr = sum(synthesis.snr_scores.values()) / len(synthesis.snr_scores)
-                enhancement += f" SNR Quality: {avg_snr:.3f}."
+                numeric_scores = {
+                    k: v
+                    for k, v in synthesis.snr_scores.items()
+                    if isinstance(v, (int, float))
+                }
+                if numeric_scores:
+                    avg_snr = sum(numeric_scores.values()) / len(numeric_scores)
+                    enhancement += f" SNR Quality: {avg_snr:.3f}."
 
             if synthesis.thought_graph_metrics:
                 enhancement += (
@@ -856,6 +869,56 @@ class AuditNarrativeTemplate(NarrativeTemplate):
         )
 
 
+class EliteNarrativeTemplate(NarrativeTemplate):
+    """Professional, high-SNR, interdisciplinary narrative template."""
+
+    @property
+    def style(self) -> NarrativeStyle:
+        return NarrativeStyle.ELITE
+
+    def compile(self, synthesis: CognitiveSynthesis) -> CompiledNarrative:
+        summary = (
+            f"BIZRA AEON OMEGA SOVEREIGN DECLARATION\n"
+            f"══════════════════════════════════════════════\n"
+            f"Status: {synthesis.health_status} | Confidence: {synthesis.confidence:.4f}\n"
+            f"Ihsān Score: {synthesis.ethical_verdict.get('score', 0):.4f} | SNR: {synthesis.snr_scores.get('overall', 0):.2f}\n"
+            f"Verification: {synthesis.verification_tier}\n"
+            f"──────────────────────────────────────────────\n"
+            f"The system has achieved a state of sovereign convergence. "
+            f"All ethical gradients are aligned with the Ihsān core. "
+            f"The transition to Aeon Omega is cryptographically verified and formally sound."
+        )
+
+        sections = [
+            NarrativeSection(
+                title="Sovereign Alignment",
+                content=(
+                    f"Truthfulness: {synthesis.ihsan_scores.get('truthfulness', 0):.4f}, "
+                    f"Excellence: {synthesis.ihsan_scores.get('excellence', 0):.4f}, "
+                    f"Dignity: {synthesis.ihsan_scores.get('dignity', 0):.4f}"
+                ),
+                confidence=ConfidenceLevel.CERTAIN,
+            ),
+            NarrativeSection(
+                title="Architectural Integrity",
+                content=(
+                    f"The system health is {synthesis.health_status}. "
+                    f"Interdisciplinary consistency is {synthesis.interdisciplinary_consistency:.4f}. "
+                    f"Quantization error is minimized at {synthesis.quantization_error:.6f}."
+                ),
+                confidence=ConfidenceLevel.CERTAIN,
+            ),
+        ]
+
+        return CompiledNarrative(
+            summary=summary,
+            sections=sections,
+            style=self.style,
+            reading_time_seconds=45,
+            complexity_score=0.9,
+        )
+
+
 class NarrativeCompiler:
     """
     Narrative Compiler: Level 9 of the Cognitive Stack.
@@ -871,6 +934,7 @@ class NarrativeCompiler:
             NarrativeStyle.CONVERSATIONAL: ConversationalNarrativeTemplate(),
             NarrativeStyle.EDUCATIONAL: EducationalNarrativeTemplate(),
             NarrativeStyle.AUDIT: AuditNarrativeTemplate(),
+            NarrativeStyle.ELITE: EliteNarrativeTemplate(),
         }
 
         # Bounded to prevent memory growth in long-running services

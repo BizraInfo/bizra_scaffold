@@ -222,6 +222,12 @@ class GraphOfThoughtsEngine:
         self.min_snr_threshold = min_snr_threshold
         self.novelty_bonus = novelty_bonus
 
+        # Caching and Performance Scaffolding
+        self._chain_cache: Dict[str, List[ThoughtChain]] = {}
+        self._cache_ttl = 3600  # 1 hour
+        self._cache_timestamps: Dict[str, float] = {}
+        self._cache_max_entries = 1000  # P2 FIX: Prevent unbounded cache growth
+
         # Statistics
         self.total_thoughts_generated = 0
         self.total_bridges_discovered = 0
@@ -232,6 +238,53 @@ class GraphOfThoughtsEngine:
             f"max_depth={max_depth}, min_snr={min_snr_threshold}"
         )
 
+    def _adaptive_beam_width(self, query: str, resource_budget: float = 1.0) -> int:
+        """
+        Compute adaptive beam width based on query complexity and resource budget.
+        
+        Complexity factors:
+        - Query length
+        - Presence of interdisciplinary keywords
+        
+        Returns:
+            Beam width >= 1 (P3 FIX: never 0)
+        """
+        base_width = self.beam_width
+        
+        # Complexity estimation
+        complexity = 1.0
+        if len(query) > 100: 
+            complexity += 0.2
+        
+        keywords = ["bridge", "connect", "interdisciplinary", "cross-domain", "synthesis"]
+        if any(kw in query.lower() for kw in keywords):
+            complexity += 0.3
+            
+        # Resource factor (0.5 to 2.0)
+        resource_factor = max(0.5, min(2.0, resource_budget))
+        
+        # P3 FIX: Ensure minimum beam width of 1 to prevent search termination
+        return max(1, int(base_width * complexity * resource_factor))
+    
+    def _evict_cache_if_needed(self) -> None:
+        """P2 FIX: Evict oldest cache entries if cache exceeds max size."""
+        if len(self._chain_cache) <= self._cache_max_entries:
+            return
+        
+        # Sort by timestamp and remove oldest entries
+        sorted_keys = sorted(
+            self._cache_timestamps.keys(),
+            key=lambda k: self._cache_timestamps[k]
+        )
+        
+        # Remove oldest 10% of entries
+        num_to_remove = max(1, len(sorted_keys) // 10)
+        for key in sorted_keys[:num_to_remove]:
+            del self._chain_cache[key]
+            del self._cache_timestamps[key]
+        
+        logger.info(f"Cache eviction: removed {num_to_remove} entries")
+
     async def reason(
         self,
         query: str,
@@ -239,30 +292,40 @@ class GraphOfThoughtsEngine:
         hypergraph_query_fn: Callable[[str], Any],
         convergence_fn: Callable[[str, Dict], Any],
         top_k_chains: int = 5,
+        resource_budget: float = 1.0,
     ) -> List[ThoughtChain]:
         """
-        Execute graph-of-thoughts reasoning.
+        Execute graph-of-thoughts reasoning with adaptive beam search and caching.
 
         Args:
             query: Natural language query/prompt
             seed_concepts: Initial concepts to start exploration
             hypergraph_query_fn: Function to query knowledge graph
-                                 Signature: (node_id) -> List[neighbor_info]
             convergence_fn: Function to compute convergence metrics
-                           Signature: (concept, context) -> ConvergenceResult
             top_k_chains: Number of top chains to return
+            resource_budget: Computational budget factor [0.5, 2.0]
 
         Returns:
             List of top-K thought chains ranked by SNR
         """
-        start_time = time.perf_counter()
+        # P2 FIX: Cache key now includes resource_budget and adaptive beam width
+        adaptive_width = self._adaptive_beam_width(query, resource_budget)
+        cache_key = f"{query}:{','.join(sorted(seed_concepts))}:budget={resource_budget}:width={adaptive_width}"
+        
+        # 1. Check Cache
+        if cache_key in self._chain_cache:
+            if time.time() - self._cache_timestamps[cache_key] < self._cache_ttl:
+                logger.info(f"Returning cached thought chains for query: '{query}'")
+                return self._chain_cache[cache_key][:top_k_chains]
 
-        logger.info(f"Starting graph-of-thoughts reasoning for query: '{query}'")
-        logger.info(f"Seed concepts: {seed_concepts}")
+        start_time = time.perf_counter()
+        
+        # 2. Use pre-calculated adaptive beam width from cache key computation
+        logger.info(f"Starting graph-of-thoughts reasoning. Adaptive beam_width: {adaptive_width}")
 
         # Initialize beam search
         beam_state = BeamSearchState(
-            beam=[], beam_width=self.beam_width, visited=set(), max_depth=self.max_depth
+            beam=[], beam_width=adaptive_width, visited=set(), max_depth=self.max_depth
         )
 
         # Seed beam with initial concepts
@@ -331,14 +394,16 @@ class GraphOfThoughtsEngine:
                     heapq.heappush(new_beam, (-path_score, new_path))
                     beam_state.visited.add(neighbor_id)
 
+            if not new_beam:
+                logger.warning(
+                    f"No new thoughts found at depth {depth}. Stopping exploration."
+                )
+                break
+
             # Prune to beam width (keep top-K)
             beam_state.beam = heapq.nsmallest(
-                self.beam_width, new_beam, key=lambda x: x[0]
+                beam_state.beam_width, new_beam, key=lambda x: x[0]
             )
-
-            if not beam_state.beam:
-                logger.warning(f"Beam empty at depth {depth}. Stopping exploration.")
-                break
 
         # Convert top beam paths to thought chains
         chains = self._construct_chains(
@@ -348,9 +413,12 @@ class GraphOfThoughtsEngine:
         self.total_chains_constructed += len(chains)
 
         # Rank and return top-K chains
-        ranked_chains = sorted(chains, key=lambda c: c.total_snr, reverse=True)[
-            :top_k_chains
-        ]
+        ranked_chains = sorted(chains, key=lambda c: c.total_snr, reverse=True)
+
+        # Update Cache (with P2 FIX: eviction policy)
+        self._evict_cache_if_needed()
+        self._chain_cache[cache_key] = ranked_chains
+        self._cache_timestamps[cache_key] = time.time()
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000
 
@@ -359,7 +427,7 @@ class GraphOfThoughtsEngine:
             f"{len(all_thoughts)} thoughts, {len(all_bridges)} bridges in {elapsed_ms:.1f}ms"
         )
 
-        return ranked_chains
+        return ranked_chains[:top_k_chains]
 
     async def _create_thought(
         self,

@@ -1,0 +1,46 @@
+{
+  "checkpoint_id": "cp_34_090a6802",
+  "checkpoint_type": "FIBONACCI",
+  "state": {
+    "l1_buffer": [
+      {
+        "item": "perception_34"
+      }
+    ],
+    "l2_summaries": [
+      "summary_34"
+    ],
+    "l3_episodes": [
+      {
+        "id": "episode_34"
+      }
+    ],
+    "current_step": 34,
+    "steps_since_fold": 3,
+    "active_context": [
+      "context_34"
+    ],
+    "goal": "Complete the complex task",
+    "completed_subtasks": [
+      "subtask_0",
+      "subtask_1",
+      "subtask_2"
+    ],
+    "pending_subtasks": [
+      "final_subtask"
+    ],
+    "timestamp": "2025-12-27T17:39:16.499928+00:00"
+  },
+  "state_hash": "898e3132ef62122162eff70fd31919c1e8ae43660ddd695bd4d513d933ec923a",
+  "step_number": 34,
+  "episode_id": null,
+  "lessons_learned": [
+    "Parsing failed on malformed input",
+    "Failed at step 40: TASK_FAILURE"
+  ],
+  "failed_strategies": [
+    "Attempted aggressive parsing"
+  ],
+  "previous_checkpoint_id": "cp_21_70764ccc",
+  "created_at": "2025-12-27T17:39:16.500007+00:00"
+}

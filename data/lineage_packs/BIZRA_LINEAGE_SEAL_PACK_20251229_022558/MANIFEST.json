@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "pack_id": "pack_7aeeac9f292e",
+  "created_at": "2025-12-28T22:25:58.173273+00:00",
+  "created_by": "genesis_architect",
+  "items": [
+    {
+      "filename": "GENESIS_SEAL.json",
+      "relative_path": "seal/GENESIS_SEAL.json",
+      "size_bytes": 1081,
+      "content_hash": "ddf8a44a79f4ad4a0e59df925831abde2899fd565591d4ffe73150712b1fe471",
+      "hash_algorithm": "blake3",
+      "item_type": "attestation",
+      "description": "The cryptographic anchor binding the BIZRA ecosystem"
+    },
+    {
+      "filename": "NODE_ZERO_IDENTITY.json",
+      "relative_path": "identity/NODE_ZERO_IDENTITY.json",
+      "size_bytes": 2152,
+      "content_hash": "fe55e459d7a45d87c1d126c1cc01dedf2bcfb66c330f54672c79d8d1487999d8",
+      "hash_algorithm": "blake3",
+      "item_type": "attestation",
+      "description": "Genesis Node machine and owner identity"
+    },
+    {
+      "filename": "PROOF_OF_IMPACT.json",
+      "relative_path": "impact/PROOF_OF_IMPACT.json",
+      "size_bytes": 823,
+      "content_hash": "cd483cd322cfd0a9e207e6b47ce5cc779923a57fd206167673df68e5d6d94a73",
+      "hash_algorithm": "blake3",
+      "item_type": "attestation",
+      "description": "First Architect contribution proof"
+    },
+    {
+      "filename": "constitution.toml",
+      "relative_path": "constitution/constitution.toml",
+      "size_bytes": 40031,
+      "content_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+      "hash_algorithm": "blake3",
+      "item_type": "governance",
+      "description": "Genesis constitution defining network rules"
+    },
+    {
+      "filename": "ARCHITECTURE_DIAGRAMS.md",
+      "relative_path": "docs/ARCHITECTURE_DIAGRAMS.md",
+      "size_bytes": 13999,
+      "content_hash": "edf0ecef90c9b2dd548784bb84ec6b8c839e4fe52141905be4f9ffc8b93e204d",
+      "hash_algorithm": "blake3",
+      "item_type": "documentation",
+      "description": "Technical architecture diagrams"
+    },
+    {
+      "filename": "SECURITY_MODEL.md",
+      "relative_path": "docs/SECURITY_MODEL.md",
+      "size_bytes": 591,
+      "content_hash": "3b55bdd6da4dc421f804111c2ade8d12d9205ce270c6014e1be14629f432efba",
+      "hash_algorithm": "blake3",
+      "item_type": "documentation",
+      "description": "Security model documentation"
+    },
+    {
+      "filename": "PROTOCOL.md",
+      "relative_path": "docs/PROTOCOL.md",
+      "size_bytes": 15833,
+      "content_hash": "41e2bbf2068584508fd8a15e96b1c49e7ef1cc12bb02bac49fa31ff6accd3e1f",
+      "hash_algorithm": "blake3",
+      "item_type": "specification",
+      "description": "Protocol specification"
+    },
+    {
+      "filename": "AUDIT_LOG.json",
+      "relative_path": "AUDIT_LOG.json",
+      "size_bytes": 1003,
+      "content_hash": "caa51f3fcb2547c4f3d431f9461cc94f9ce281760a8e3ba50b5d6e6c12623f5c",
+      "hash_algorithm": "blake3",
+      "item_type": "audit",
+      "description": "Audit log with verification steps"
+    },
+    {
+      "filename": "README.md",
+      "relative_path": "README.md",
+      "size_bytes": 1657,
+      "content_hash": "7c03187163f551ff314047c1bf9a9c15b3801fec1ebc6d920ca8c4861823daad",
+      "hash_algorithm": "blake3",
+      "item_type": "documentation",
+      "description": "Pack documentation and verification guide"
+    }
+  ],
+  "total_items": 9,
+  "total_bytes": 77170,
+  "manifest_hash": "958fe3d435c00324ef71747ebbe30ac93de203bfb7056100286dd3f5d25448d4",
+  "signature": "107cf42ae61eecde2bf1c86cb6e61f7fdb99ff0844f372b1bccbdf5c8852f7b6174e227108f9b8d8bc898c3309668800d0bb7ff5ee1422a790a28a48d8fbb40e"
+}

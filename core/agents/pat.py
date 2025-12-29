@@ -22,12 +22,25 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from core.pci.envelope import Metadata, Payload, PCIEnvelope, Sender, compute_digest
 from core.pci.reject_codes import RejectCode, RejectionResponse
+
+# Lazy import to avoid circular dependencies
+_AgentMemorySystem = None
+
+
+def _get_memory_class():
+    """Lazy import of AgentMemorySystem to avoid circular dependencies."""
+    global _AgentMemorySystem
+    if _AgentMemorySystem is None:
+        from core.memory.agent_memory import AgentMemorySystem
+        _AgentMemorySystem = AgentMemorySystem
+    return _AgentMemorySystem
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +57,7 @@ class PATConfig:
     ihsan_threshold: float = IHSAN_THRESHOLD
     auto_sign: bool = True  # Automatically sign on create
     validate_ihsan: bool = True  # Pre-validate Ihsān before signing
+    memory_snapshot_path: Optional[str] = None  # Path to memory snapshot for persistence
 
 
 @dataclass
@@ -81,6 +95,7 @@ class PATAgent:
         config: PATConfig,
         private_key: Optional[ed25519.Ed25519PrivateKey] = None,
         ihsan_scorer: Optional[Callable[[Dict[str, Any]], float]] = None,
+        memory_system: Optional[Any] = None,
     ):
         """
         Initialize PAT agent.
@@ -89,9 +104,17 @@ class PATAgent:
             config: Agent configuration
             private_key: Ed25519 private key for signing (generated if None)
             ihsan_scorer: Optional callback to compute Ihsān score from payload
+            memory_system: Optional AgentMemorySystem for context retrieval
         """
         self._config = config
         self._ihsan_scorer = ihsan_scorer
+        self._memory_system = memory_system
+
+        # Load memory from snapshot if configured and no memory provided
+        if self._memory_system is None and config.memory_snapshot_path:
+            self._memory_system = self._load_memory_from_snapshot(
+                config.memory_snapshot_path
+            )
 
         # Generate or use provided key
         if private_key is None:
@@ -272,13 +295,233 @@ class PATAgent:
 
     def stats(self) -> Dict[str, Any]:
         """Get agent statistics."""
+        memory_stats = {}
+        if self._memory_system:
+            try:
+                memory_stats = self._memory_system.get_statistics()
+            except Exception:
+                memory_stats = {"error": "failed to get memory stats"}
+
         return {
             "agent_id": self._config.agent_id,
             "agent_type": "PAT",
             "proposals_created": self._proposals_created,
             "proposals_rejected": self._proposals_rejected,
             "public_key": self._public_key_bytes.hex(),
+            "memory_enabled": self._memory_system is not None,
+            "memory_stats": memory_stats,
         }
+
+    def _load_memory_from_snapshot(self, snapshot_path: str) -> Optional[Any]:
+        """Load memory system from a persisted snapshot."""
+        AgentMemorySystem = _get_memory_class()
+        from core.snr_scorer import SNRScorer
+        
+        path = Path(snapshot_path)
+        snr_scorer = SNRScorer()
+        
+        if not path.exists():
+            logger.info(f"No memory snapshot at {path}, starting fresh.")
+            return AgentMemorySystem(snr_scorer=snr_scorer)
+
+        try:
+            memory = AgentMemorySystem(snr_scorer=snr_scorer)
+            memory.import_from_json(str(path))
+            stats = memory.get_statistics()
+            logger.info(
+                f"PAT loaded memory: {stats.get('total_memories', 0)} items from {path}"
+            )
+            return memory
+        except Exception as e:
+            logger.warning(f"Failed to load memory snapshot: {e}")
+            return AgentMemorySystem(snr_scorer=snr_scorer)
+
+    def retrieve_context(
+        self,
+        query: str,
+        top_k: int = 5,
+        min_snr: Optional[float] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve relevant context from memory for a query.
+
+        Uses semantic similarity to find relevant memories that can inform
+        proposal creation and decision-making.
+
+        Args:
+            query: The query to search for relevant context
+            top_k: Maximum number of memories to retrieve
+            min_snr: Optional minimum SNR score filter
+
+        Returns:
+            List of relevant memory items with content and metadata
+        """
+        if self._memory_system is None:
+            logger.debug("Memory system not available for context retrieval.")
+            return []
+
+        try:
+            import asyncio
+            
+            # Use the memory system's async recall method
+            # Run synchronously for PAT compatibility
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Create a new event loop in a thread for nested async
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        asyncio.run,
+                        self._memory_system.recall(
+                            query_text=query,
+                            min_snr=min_snr or 0.0,
+                            max_results=top_k,
+                        )
+                    )
+                    search_results = future.result()
+            else:
+                search_results = loop.run_until_complete(
+                    self._memory_system.recall(
+                        query_text=query,
+                        min_snr=min_snr or 0.0,
+                        max_results=top_k,
+                    )
+                )
+
+            results = []
+            for result in search_results:
+                mem = result.item  # MemorySearchResult.item is MemoryItem
+                results.append({
+                    "content": mem.content,
+                    "metadata": mem.metadata or {},
+                    "snr_score": mem.snr_score,
+                    "tier": mem.tier.name,
+                    "created_at": mem.created_at.isoformat(),
+                    "relevance": result.relevance_score,
+                })
+
+            logger.debug(f"Retrieved {len(results)} memories for query: {query[:50]}...")
+            return results
+
+        except Exception as e:
+            logger.warning(f"Failed to retrieve context: {e}")
+            return []
+
+    async def remember_async(
+        self,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        domains: Optional[Set[str]] = None,
+        tags: Optional[Set[str]] = None,
+    ) -> bool:
+        """
+        Store a new memory in the system (async version).
+
+        Args:
+            content: The content to remember
+            metadata: Optional metadata dict
+            domains: Optional knowledge domains
+            tags: Optional user-defined tags
+
+        Returns:
+            True if successfully stored, False otherwise
+        """
+        if self._memory_system is None:
+            return False
+
+        try:
+            await self._memory_system.remember(
+                content=content,
+                metadata=metadata or {},
+                domains=domains,
+                tags=tags,
+            )
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to store memory: {e}")
+            return False
+
+    def remember(
+        self,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        domains: Optional[Set[str]] = None,
+        tags: Optional[Set[str]] = None,
+    ) -> bool:
+        """
+        Store a new memory in the system (sync wrapper).
+
+        Args:
+            content: The content to remember
+            metadata: Optional metadata dict
+            domains: Optional knowledge domains
+            tags: Optional user-defined tags
+
+        Returns:
+            True if successfully stored, False otherwise
+        """
+        if self._memory_system is None:
+            return False
+
+        try:
+            import asyncio
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        asyncio.run,
+                        self._memory_system.remember(
+                            content=content,
+                            metadata=metadata or {},
+                            domains=domains,
+                            tags=tags,
+                        )
+                    )
+                    future.result()
+            else:
+                loop.run_until_complete(
+                    self._memory_system.remember(
+                        content=content,
+                        metadata=metadata or {},
+                        domains=domains,
+                        tags=tags,
+                    )
+                )
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to store memory: {e}")
+            return False
+
+    def save_memory(self, path: Optional[str] = None) -> bool:
+        """
+        Persist memory to disk.
+
+        Args:
+            path: Optional override path (uses config path if None)
+
+        Returns:
+            True if saved successfully, False otherwise
+        """
+        if self._memory_system is None:
+            return False
+
+        save_path = path or self._config.memory_snapshot_path
+        if save_path is None:
+            logger.warning("No memory snapshot path configured.")
+            return False
+
+        try:
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            self._memory_system.export_to_json(save_path)
+            stats = self._memory_system.get_statistics()
+            logger.info(
+                f"PAT saved memory: {stats.get('total_memories', 0)} items to {save_path}"
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save memory: {e}")
+            return False
 
 
 def create_pat_agent(
@@ -286,6 +529,8 @@ def create_pat_agent(
     ihsan_threshold: float = IHSAN_THRESHOLD,
     private_key: Optional[ed25519.Ed25519PrivateKey] = None,
     ihsan_scorer: Optional[Callable[[Dict[str, Any]], float]] = None,
+    memory_snapshot_path: Optional[str] = None,
+    memory_system: Optional[Any] = None,
 ) -> PATAgent:
     """
     Factory function to create a PAT agent.
@@ -295,9 +540,11 @@ def create_pat_agent(
         ihsan_threshold: Minimum Ihsān score for proposals
         private_key: Ed25519 private key (generated if None)
         ihsan_scorer: Optional callback to compute Ihsān score
+        memory_snapshot_path: Path to memory snapshot for persistence
+        memory_system: Optional pre-initialized AgentMemorySystem
 
     Returns:
-        Configured PATAgent instance
+        Configured PATAgent instance with memory integration
     """
     if agent_id is None:
         agent_id = f"pat-{uuid.uuid4().hex[:8]}"
@@ -305,12 +552,14 @@ def create_pat_agent(
     config = PATConfig(
         agent_id=agent_id,
         ihsan_threshold=ihsan_threshold,
+        memory_snapshot_path=memory_snapshot_path,
     )
 
     return PATAgent(
         config=config,
         private_key=private_key,
         ihsan_scorer=ihsan_scorer,
+        memory_system=memory_system,
     )
 
 

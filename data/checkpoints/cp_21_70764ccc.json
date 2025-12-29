@@ -1,0 +1,40 @@
+{
+  "checkpoint_id": "cp_21_70764ccc",
+  "checkpoint_type": "FIBONACCI",
+  "state": {
+    "l1_buffer": [
+      {
+        "item": "perception_21"
+      }
+    ],
+    "l2_summaries": [
+      "summary_21"
+    ],
+    "l3_episodes": [
+      {
+        "id": "episode_21"
+      }
+    ],
+    "current_step": 21,
+    "steps_since_fold": 3,
+    "active_context": [
+      "context_21"
+    ],
+    "goal": "Complete the complex task",
+    "completed_subtasks": [
+      "subtask_0",
+      "subtask_1"
+    ],
+    "pending_subtasks": [
+      "final_subtask"
+    ],
+    "timestamp": "2025-12-27T17:39:16.499097+00:00"
+  },
+  "state_hash": "232bb835a50a8eeb08f2c9c309de0e60bd0605722a505ac329d3265add5c9da9",
+  "step_number": 21,
+  "episode_id": null,
+  "lessons_learned": [],
+  "failed_strategies": [],
+  "previous_checkpoint_id": "cp_13_cb3f5fc2",
+  "created_at": "2025-12-27T17:39:16.499191+00:00"
+}

@@ -1,0 +1,90 @@
+{
+  "receipt_id": "4d15c1339d13c8ea014432b79d4faf77bf947f7b572e1574829153f21183267e",
+  "created_at_utc": "2025-12-27T18:27:13Z",
+  "artifact": {
+    "name": "bizra_scaffold",
+    "version": "local",
+    "commit": "b5584e108a2831bb778e44e33342a9e01523a24c",
+    "path": "C:\\bizra_scaffold.worktrees\\worktree-2025-12-27T10-16-13"
+  },
+  "checks": [
+    {
+      "name": "repo_tree_hash",
+      "status": "pass",
+      "details": {
+        "repo_tree_sha256": "5eee8cc748308fb516215168c47f80dbe76cb6d1efc0a2733c1051d977ca6ed1"
+      }
+    },
+    {
+      "name": "python_unittest",
+      "status": "pass",
+      "details": {
+        "code": 0,
+        "stdout": "",
+        "stderr": "[2025-12-27 22:27:11,791] INFO: Loading faiss with AVX2 support.\n[2025-12-27 22:27:11,811] INFO: Successfully loaded faiss with AVX2 support.\n..C:\\bizra_scaffold.worktrees\\worktree-2025-12-27T10-16-13\\tests\\test_value_oracle_elite.py:42: DeprecationWarning: There is no current event loop\n  return asyncio.get_event_loop().run_until_complete(coro)\n............................\n----------------------------------------------------------------------\nRan 30 tests in 0.010s\n\nOK\n"
+      }
+    },
+    {
+      "name": "pip_audit",
+      "status": "skip",
+      "details": {
+        "reason": "pip-audit not installed or failed",
+        "code": 127,
+        "stderr": "Command not found: pip-audit"
+      }
+    }
+  ],
+  "policy": {
+    "decision": "deny",
+    "engine": "placeholder",
+    "ruleset_hash": "unconfigured"
+  },
+  "metrics": {
+    "snr": 2.0,
+    "ihsan_vector": {
+      "correctness": 0.75,
+      "safety": 0.5,
+      "user_benefit": 0.6,
+      "efficiency": 0.6,
+      "auditability": 1.0,
+      "anti_centralization": 0.5,
+      "robustness": 0.6,
+      "adl_fairness": 0.5,
+      "threshold": 0.9,
+      "score": 0.6470000000000001
+    },
+    "latency_ms": {
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "error_rate": 0.0,
+    "policy_denies": 1,
+    "receipt_completeness": 1.0,
+    "coverage": 0.0
+  },
+  "hashes": {
+    "repo_tree_sha256": "5eee8cc748308fb516215168c47f80dbe76cb6d1efc0a2733c1051d977ca6ed1"
+  },
+  "environment": {
+    "os": "Windows-11-10.0.28020-SP0",
+    "python": "3.13.5",
+    "node": "unknown",
+    "rust": "unknown",
+    "cpu": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "memory_gb": 0.0
+  },
+  "result": {
+    "overall": "fail",
+    "confidence": 0.75,
+    "notes": [
+      "Ihsan and SNR are heuristic until wired to real benchmarks and policies.",
+      "Policy directory missing; failing closed on policy enforcement."
+    ],
+    "risks": [
+      "Policy engine is placeholder",
+      "Ihsan scoring is heuristic",
+      "Latency and coverage are not measured yet"
+    ]
+  }
+}

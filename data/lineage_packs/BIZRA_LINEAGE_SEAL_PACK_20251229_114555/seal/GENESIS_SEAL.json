@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "ecosystem_root_hash": "aeebad4a796fcc2e15dc4c6061b45ed9b373f26adfc798ca7d2d8cc58182718e",
+  "node_id": "node0_fec6475901bb",
+  "owner_id": "owner_e31284695278",
+  "owner_alias": "Momo",
+  "owner_public_key": "e91d477ada403c141db7ed1b4db2024aaeeeda9e95cba84808328f7bbf53b7c5",
+  "proof_of_impact_hash": "5bc73580fd57873589e4c6f90687f3ce58005028ea0e7a86c6bf0e4405d0bf92",
+  "total_impact": 1577.495,
+  "artifact_count": 0,
+  "repository_count": 0,
+  "timeline_start": "2023-01-14T00:00:00+00:00",
+  "timeline_end": "2025-12-29T07:39:44.372004+00:00",
+  "constitution_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+  "machine_fingerprint": "e60e021a23df60a78973873cdcf6f24e61d03b654a19cff01f72df959d1f001e",
+  "sealed_at": "2025-12-29T07:39:48.779878+00:00",
+  "seal_hash": "cc6678ad6460dcdd30b599941e53d77416f3539904b13a63dcc207e6c98bbe8a",
+  "signature": "1d869c812bee910d406642660e3839a5816a9c203649b9613e13eedfc27e026cf1d3db8ee70920a07a9c3aef53fea7a016b3a829cffec0c1fb2d44ab3437b000",
+  "ots_proof": null
+}

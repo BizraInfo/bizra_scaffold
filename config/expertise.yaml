@@ -1,227 +1,191 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# BIZRA EXPERTISE FILE (L5 Mental Model)
-# ═══════════════════════════════════════════════════════════════════════════════
-# This file is the agent's "Mental Model" - agent-readable AND agent-writable.
-# It contains high-fidelity abstractions of the system the agent operates within.
-#
-# PROTOCOL: Plan-Build-Self-Improve
-# 1. Plan: Planner Agent reads this file to understand constraints
-# 2. Build: Builder Agent executes tasks, modifying codebase
-# 3. Self-Improve: Self-Improvement Agent diffs pre/post and updates this file
-#
-# VERSION: This file is versioned. Changes require SAT receipt.
-# ═══════════════════════════════════════════════════════════════════════════════
-
-version: "1.0.0"
-last_updated: "2025-12-27T00:00:00Z"
-updated_by: "SAT-GENESIS"
-schema_version: "2024.12"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ ARCHITECTURAL INVARIANTS (Never violate these)                              │
-# └─────────────────────────────────────────────────────────────────────────────┘
+version: 1.0.0
+last_updated: '2025-12-27T17:36:10.674421+00:00'
+updated_by: AATC-Reflector
+schema_version: '2024.12'
 invariants:
   ihsan_threshold: 0.95
   snr_minimum: 0.75
   receipt_first: true
   fail_closed: true
   secrets_never_persist: true
-
-  # Non-negotiable principles
   principles:
-    - name: "Deny by default"
-      description: "No tool call unless explicitly allowed by policy"
-      enforcement: "SAT gate"
-    - name: "Receipt-first mutation"
-      description: "No state mutation without SAT Receipt"
-      enforcement: "PCI envelope verification"
-    - name: "Evidence-first claims"
-      description: "No claims without Evidence Pack"
-      enforcement: "CLAIM_REGISTRY.yaml validation"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ DATA LINEAGE MAPS                                                           │
-# └─────────────────────────────────────────────────────────────────────────────┘
+  - name: Deny by default
+    description: No tool call unless explicitly allowed by policy
+    enforcement: SAT gate
+  - name: Receipt-first mutation
+    description: No state mutation without SAT Receipt
+    enforcement: PCI envelope verification
+  - name: Evidence-first claims
+    description: No claims without Evidence Pack
+    enforcement: CLAIM_REGISTRY.yaml validation
 data_lineage:
-  # How data flows between memory layers
   memory_flow:
     L1_to_L2:
-      trigger: "tool_success OR steps >= 3"
-      operation: "granular_condensation"
-      compression_target: 0.618  # Golden ratio
-    
+      trigger: tool_success OR steps >= 3
+      operation: granular_condensation
+      compression_target: 0.618
     L2_to_L3:
-      trigger: "subtask_complete OR retry_count >= 2"
-      operation: "deep_consolidation"
-      fibonacci_schedule: [13, 21, 34, 55, 89, 144]
-    
+      trigger: subtask_complete OR retry_count >= 2
+      operation: deep_consolidation
+      fibonacci_schedule:
+      - 13
+      - 21
+      - 34
+      - 55
+      - 89
+      - 144
     L3_to_L4:
-      trigger: "episode_verified AND novelty_score > 0.7"
-      operation: "hyperedge_creation"
+      trigger: episode_verified AND novelty_score > 0.7
+      operation: hyperedge_creation
       requires_neo4j: true
-    
     L4_to_L5:
-      trigger: "pattern_repeated >= 3 AND success_rate > 0.95"
-      operation: "crystallization"
+      trigger: pattern_repeated >= 3 AND success_rate > 0.95
+      operation: crystallization
       requires_sat_receipt: true
-
-  # Primary data stores
   stores:
     neo4j:
-      uri: "bolt://localhost:7687"
-      database: "bizra_knowledge"
-      purpose: "L4 HyperGraph semantic memory"
-    
+      uri: bolt://localhost:7687
+      database: bizra_knowledge
+      purpose: L4 HyperGraph semantic memory
     event_log:
-      path: "data/event_log.jsonl"
-      format: "append-only JSONL with hash chain"
-      purpose: "L3 episodic memory persistence"
-    
+      path: data/event_log.jsonl
+      format: append-only JSONL with hash chain
+      purpose: L3 episodic memory persistence
     expertise_store:
-      path: "data/expertise/"
-      format: "content-addressable SHA-256"
-      purpose: "L5 crystallized tools"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ VERIFIED SCHEMAS                                                            │
-# └─────────────────────────────────────────────────────────────────────────────┘
+      path: data/expertise/
+      format: content-addressable SHA-256
+      purpose: L5 crystallized tools
 schemas:
   pci_envelope:
-    version: "1.0"
+    version: '1.0'
     required_fields:
-      - proposal_hash
-      - state_before
-      - state_after
-      - ihsan_score
-      - signature
-    
+    - proposal_hash
+    - state_before
+    - state_after
+    - ihsan_score
+    - signature
   commit_receipt:
-    version: "1.0"
+    version: '1.0'
     required_fields:
-      - receipt_id
-      - envelope_digest
-      - verifier_set
-      - audit_digest
-      - timestamp
-
+    - receipt_id
+    - envelope_digest
+    - verifier_set
+    - audit_digest
+    - timestamp
   evidence_pack:
     structure:
-      - manifest.json
-      - run.json
-      - tool_calls.jsonl
-      - logs.txt
-      - diffs/
-      - artifacts/
-      - metrics.json
-      - sha256sums.txt
-      - receipts.jsonl
-      - replay.md
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ DOMAIN EXPERTISE (Learned from interactions)                                │
-# └─────────────────────────────────────────────────────────────────────────────┘
+    - manifest.json
+    - run.json
+    - tool_calls.jsonl
+    - logs.txt
+    - diffs/
+    - artifacts/
+    - metrics.json
+    - sha256sums.txt
+    - receipts.jsonl
+    - replay.md
 domain_knowledge:
   bizra_concepts:
-    - name: "Third Fact"
-      description: "The synthesis of opposing viewpoints into higher truth"
-      related: ["Ihsān", "Graph of Thoughts"]
-    
-    - name: "Dual-Agentic System"
-      description: "PAT executes, SAT verifies. No self-approval."
-      components: ["PAT", "SAT", "Router"]
-    
-    - name: "HyperGraph RAG"
-      description: "N-ary relationships via hyperedges, not binary triples"
-      implementation: "L4SemanticHyperGraph + Neo4j"
-    
-    - name: "FATE Engine"
-      description: "Formal Alignment & Transcendence Engine"
-      purpose: "Verify proposals against policy and Ihsān constraints"
-
+  - name: Third Fact
+    description: The synthesis of opposing viewpoints into higher truth
+    related:
+    - "Ihs\u0101n"
+    - Graph of Thoughts
+  - name: Dual-Agentic System
+    description: PAT executes, SAT verifies. No self-approval.
+    components:
+    - PAT
+    - SAT
+    - Router
+  - name: HyperGraph RAG
+    description: N-ary relationships via hyperedges, not binary triples
+    implementation: L4SemanticHyperGraph + Neo4j
+  - name: FATE Engine
+    description: Formal Alignment & Transcendence Engine
+    purpose: "Verify proposals against policy and Ihs\u0101n constraints"
   architectural_patterns:
-    - pattern: "Parent-child cascade delete"
-      applies_to: ["Episodes", "Hyperedges"]
-      constraint: "Deleting parent removes all children"
-    
-    - pattern: "Append-only with Merkle chain"
-      applies_to: ["event_log", "L3EpisodicMemory"]
-      constraint: "Never modify, only append. Verify chain integrity."
-    
-    - pattern: "Content-addressable storage"
-      applies_to: ["expertise_store", "L5 tools"]
-      constraint: "Hash-based addressing, immutable once stored"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ CRYSTALLIZED TOOLS (L5 Procedural Memory Index)                             │
-# └─────────────────────────────────────────────────────────────────────────────┘
+  - pattern: Parent-child cascade delete
+    applies_to:
+    - Episodes
+    - Hyperedges
+    constraint: Deleting parent removes all children
+  - pattern: Append-only with Merkle chain
+    applies_to:
+    - event_log
+    - L3EpisodicMemory
+    constraint: Never modify, only append. Verify chain integrity.
+  - pattern: Content-addressable storage
+    applies_to:
+    - expertise_store
+    - L5 tools
+    constraint: Hash-based addressing, immutable once stored
 crystallized_tools:
-  # Tools are stored in expertise_store with content-addressable hashes
-  # This index maps tool names to their fingerprints for quick lookup
-  
-  index: {}  # Populated by AATC Reflector
-  
-  # Schema for each tool entry:
-  # tool_name:
-  #   hash: "sha256..."
-  #   fingerprint: "contextual UI state hash for matching"
-  #   success_rate: 0.0-1.0
-  #   invocation_count: N
-  #   last_used: "ISO timestamp"
-  #   created_by: "session_id"
-  #   receipt_id: "SAT receipt binding"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ FOLDING STRATEGY CONFIG (AgentFold)                                         │
-# └─────────────────────────────────────────────────────────────────────────────┘
+  index:
+    login_to_corporate_portal:
+      hash: tool_60e81b43bde5
+      fingerprint: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+      success_rate: 1.0
+      invocation_count: 0
+      last_used: null
+      created_at: '2025-12-27T17:36:10.674410+00:00'
 folding_strategy:
-  # Granular Condensation (L1 → L2)
   granular:
     triggers:
-      - condition: "tool_success AND steps_since_last_fold >= 3"
-        action: "compress_latest_interaction"
-      - condition: "token_count > 3000"
-        action: "force_compression"
-    
-    compression_target: 0.618  # Golden ratio
-    min_entropy: 3.5  # Shannon entropy threshold
-  
-  # Deep Consolidation (L2 → L3)
+    - condition: tool_success AND steps_since_last_fold >= 3
+      action: compress_latest_interaction
+    - condition: token_count > 3000
+      action: force_compression
+    compression_target: 0.618
+    min_entropy: 3.5
   deep:
     triggers:
-      - condition: "subtask_complete"
-        action: "fuse_l2_sequence"
-      - condition: "tool_failure AND retry_count >= 2"
-        action: "prune_failed_branch"
-      - condition: "fibonacci_step_reached"
-        action: "scheduled_consolidation"
-    
+    - condition: subtask_complete
+      action: fuse_l2_sequence
+    - condition: tool_failure AND retry_count >= 2
+      action: prune_failed_branch
+    - condition: fibonacci_step_reached
+      action: scheduled_consolidation
     fibonacci_schedule:
       enabled: true
-      sequence: [13, 21, 34, 55, 89, 144, 233, 377]
-      purpose: "Non-linear checkpoints for long-horizon tasks"
-
-  # Safety constraints
+      sequence:
+      - 13
+      - 21
+      - 34
+      - 55
+      - 89
+      - 144
+      - 233
+      - 377
+      purpose: Non-linear checkpoints for long-horizon tasks
   safety:
-    max_compression_ratio: 0.90  # Never compress more than 90%
+    max_compression_ratio: 0.9
     preserve_safety_warnings: true
     preserve_error_lessons: true
     require_entropy_check: true
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ VALIDATION RULES                                                            │
-# └─────────────────────────────────────────────────────────────────────────────┘
 validation:
-  # Every update to this file must pass these checks
   before_commit:
-    - check: "schema_valid"
-      description: "YAML must parse and match schema"
-    - check: "invariants_preserved"
-      description: "Cannot modify invariants section without human approval"
-    - check: "sat_receipt_required"
-      description: "Changes require SAT signature"
-  
-  # Entropy check for any new knowledge
+  - check: schema_valid
+    description: YAML must parse and match schema
+  - check: invariants_preserved
+    description: Cannot modify invariants section without human approval
+  - check: sat_receipt_required
+    description: Changes require SAT signature
   knowledge_quality:
     min_entropy: 3.5
     max_similarity_to_existing: 0.85
     require_source_reference: true
+lessons_learned:
+  lesson_cc5c3434:
+    lesson: Self-improvement agents should run after every task
+    task: test_self_improvement
+    success: true
+    timestamp: '2025-12-27T17:40:57.943262+00:00'
+self_improvement:
+  last_updated: '2025-12-27T17:40:58.003487+00:00'
+  updates_applied: 1
+failure_patterns:
+  failure_e7a8e5f0:
+    error: 'AssertionError: Expected 5 but got 3'
+    strategy: Used greedy algorithm without backtracking
+    task: test_failed_task
+    timestamp: '2025-12-27T17:40:57.975192+00:00'

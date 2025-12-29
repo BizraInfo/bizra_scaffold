@@ -1,0 +1,78 @@
+[package]
+name = "bizra-crypto-native"
+version = "1.0.0"
+edition = "2021"
+authors = ["BIZRA Security Team <security@bizra.io>"]
+description = """
+BIZRA AEON OMEGA - Native Post-Quantum Cryptography Acceleration Layer (PQAL)
+Elite Performance FFI for Dilithium-5, Kyber-1024, and SHA3-512 operations.
+"""
+license = "MIT"
+repository = "https://github.com/BizraInfo/bizra_scaffold"
+keywords = ["post-quantum", "cryptography", "dilithium", "kyber", "ffi"]
+categories = ["cryptography", "api-bindings"]
+
+[lib]
+name = "bizra_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# PyO3 for Python FFI bindings
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
+
+# Post-Quantum Cryptography (NIST-approved algorithms)
+pqcrypto-dilithium = "0.5"
+pqcrypto-kyber = "0.8"
+pqcrypto-traits = "0.3"
+
+# Classical cryptography fallback
+ring = "0.17"
+ed25519-dalek = { version = "2.1", features = ["hazmat"] }
+
+# Hashing (SHA3-512)
+sha3 = "0.10"
+digest = "0.10"
+
+# Secure memory handling
+zeroize = { version = "1.8", features = ["derive"] }
+subtle = "2.6"  # Constant-time operations
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4"
+
+# Error handling
+thiserror = "1.0"
+
+# Random number generation (CSPRNG)
+rand = "0.8"
+getrandom = { version = "0.2", features = ["std"] }
+
+# Timing-safe operations
+constant_time_eq = "0.3"
+
+[dev-dependencies]
+criterion = "0.5"
+tempfile = "3.10"
+
+[[bench]]
+name = "pqc_benchmarks"
+harness = false
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+strip = false
+
+[features]
+default = ["pqc"]
+pqc = []  # Post-quantum cryptography enabled
+simd = []  # SIMD acceleration (AVX2/AVX512)

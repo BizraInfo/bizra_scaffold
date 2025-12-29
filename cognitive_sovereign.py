@@ -636,9 +636,9 @@ class HigherOrderLogicBridge(nn.Module):
 
 class MetaCognitiveOrchestrator:
     """
-    Learns optimal cognitive strategies via 47-dimensional task feature extraction.
+    Learns optimal cognitive strategies via 55-dimensional task feature extraction.
 
-    FEATURE DIMENSIONS (47 total):
+    FEATURE DIMENSIONS (55 total):
     ══════════════════════════════════════════════════════════════════════
     Category          │ Features (count) │ Description
     ──────────────────────────────────────────────────────────────────────
@@ -648,6 +648,7 @@ class MetaCognitiveOrchestrator:
     Temporal          │ 6                │ deadline, decay_rate, epoch_position
     Graph Topology    │ 7                │ clustering, centrality, rich_club
     Historical        │ 7                │ success_rate, strategy_entropy, drift
+    Graph-of-Thoughts │ 8                │ avg_snr, domain_diversity, bridge_rate, etc.
     ══════════════════════════════════════════════════════════════════════
     """
 
@@ -657,27 +658,36 @@ class MetaCognitiveOrchestrator:
         "consolidate": {"memory_load": 0.7, "coherence": 0.5},
         "prune": {"entropy": 0.8, "decay_pressure": 0.6},
         "transfer": {"similarity": 0.75, "domain_distance": 0.3},
+        "graph_of_thoughts_exploration": {"complexity": 0.8, "novelty": 0.6},
     }
 
     def __init__(self):
-        self.strategies = ["explore", "exploit", "consolidate", "prune", "transfer"]
+        self.strategies = [
+            "explore",
+            "exploit",
+            "consolidate",
+            "prune",
+            "transfer",
+            "graph_of_thoughts_exploration",
+        ]
         self.history: List[Dict[str, Any]] = []
         self._strategy_success: Dict[str, List[float]] = {
             s: [] for s in self.strategies
         }
-        self._feature_weights: np.ndarray = np.ones(47) / 47  # Uniform initial
+        self._feature_weights: np.ndarray = np.ones(55) / 55  # Uniform initial
 
     def extract_features(
         self,
         task: Dict[str, Any],
         context: Dict[str, Any],
         memory_state: Optional[Dict[str, float]] = None,
+        got_metrics: Optional[Dict[str, float]] = None,
     ) -> np.ndarray:
         """
-        Extract 47-dimensional feature vector from task, context, and memory state.
+        Extract 55-dimensional feature vector from task, context, memory state, and GoT metrics.
         Returns normalized feature vector suitable for strategy selection.
         """
-        features = np.zeros(47)
+        features = np.zeros(55)
 
         # ═══ Task Properties (0-7) ═══
         features[0] = self._compute_novelty(task)
@@ -738,6 +748,17 @@ class MetaCognitiveOrchestrator:
         features[44] = self._compute_recent_quality()
         features[45] = self._compute_adaptation_rate()
         features[46] = self._compute_stability_score()
+
+        # ═══ Graph-of-Thoughts (47-54) ═══
+        got = got_metrics or context.get("got_metrics", {})
+        features[47] = got.get("graph_complexity", 0.5)
+        features[48] = min(1.0, got.get("node_count", 0) / 100.0)
+        features[49] = min(1.0, got.get("edge_count", 0) / 200.0)
+        features[50] = min(1.0, got.get("avg_degree", 0) / 10.0)
+        features[51] = got.get("bridge_potential", 0.5)
+        features[52] = got.get("domain_diversity", 0.5)
+        features[53] = min(1.0, got.get("thought_depth", 0) / 10.0)
+        features[54] = got.get("snr", 0.5)
 
         # Normalize to [0, 1]
         return np.clip(features, 0.0, 1.0)
@@ -807,7 +828,7 @@ class MetaCognitiveOrchestrator:
         memory_state: Optional[Dict[str, float]] = None,
     ) -> Dict[str, Any]:
         """
-        Meta-learn and execute using 47-dimensional feature space.
+        Meta-learn and execute using 55-dimensional feature space.
         Implements adaptive strategy selection with Ihsān-weighted decision making.
         """
         features = self.extract_features(task, context, memory_state)
@@ -835,6 +856,12 @@ class MetaCognitiveOrchestrator:
                 score = (
                     features[14] * 0.4 + (1 - features[0]) * 0.3 + features[33] * 0.3
                 )
+            elif strategy == "graph_of_thoughts_exploration":
+                # High score if interdisciplinary bridge potential is high (f51)
+                # or if graph complexity is high (f47)
+                score = (
+                    features[51] * 0.5 + features[47] * 0.3 + features[54] * 0.2
+                )
             strategy_scores[strategy] = score
 
         # Select best strategy with ethical weighting
@@ -847,20 +874,24 @@ class MetaCognitiveOrchestrator:
 
         # Execute with quality estimation
         await asyncio.sleep(0.01)  # Simulate execution
-        base_quality = 0.7 + (features[40] * 0.2)  # Base on success rate
+        
+        # Quality estimation now includes GoT metrics
+        base_quality = 0.7 + (features[40] * 0.1) + (features[54] * 0.1)
         noise = (np.random.random() - 0.5) * 0.1
         quality = np.clip(base_quality + noise, 0.0, 1.0)
 
         result = {
             "strategy": strategy,
             "quality": float(quality),
-            "features": {f"f{i}": float(features[i]) for i in range(47)},
+            "features": {f"f{i}": float(features[i]) for i in range(55)},
             "feature_summary": {
                 "novelty": float(features[0]),
                 "urgency": float(features[2]),
                 "ethical_weight": float(features[8]),
                 "success_rate": float(features[40]),
                 "stability": float(features[46]),
+                "got_bridge_potential": float(features[51]),
+                "got_snr": float(features[54]),
             },
             "strategy_scores": {k: float(v) for k, v in strategy_scores.items()},
             "task_type": task.get("type", "unknown"),

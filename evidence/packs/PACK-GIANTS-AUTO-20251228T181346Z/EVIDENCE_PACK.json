@@ -1,0 +1,166 @@
+{
+  "protocol_version": "GIANTS_PROTOCOL_v1.0",
+  "timestamp": "2025-12-28T18:13:55.973939+00:00",
+  "statistics": {
+    "total_wisdom_extracted": 6,
+    "total_insights_synthesized": 6,
+    "total_flywheel_spins": 1,
+    "cached_wisdom_count": 6,
+    "hub_concepts_count": 6,
+    "edge_count": 7
+  },
+  "flywheels": {
+    "integrity": {
+      "momentum": 0.7153494441475525,
+      "is_active": true,
+      "phases": [
+        "integrity_proofs",
+        "ihsan_ethics",
+        "devops_gates",
+        "evidence_publication"
+      ]
+    }
+  },
+  "hub_concepts": [
+    {
+      "id": "hub_architecture",
+      "concept": "architecture",
+      "weight": 164,
+      "degree": 4,
+      "domains": [
+        "design",
+        "system"
+      ]
+    },
+    {
+      "id": "hub_security",
+      "concept": "security",
+      "weight": 164,
+      "degree": 3,
+      "domains": [
+        "safety",
+        "cryptography"
+      ]
+    },
+    {
+      "id": "hub_layer",
+      "concept": "layer",
+      "weight": 150,
+      "degree": 2,
+      "domains": [
+        "abstraction",
+        "structure"
+      ]
+    },
+    {
+      "id": "hub_key",
+      "concept": "key",
+      "weight": 78,
+      "degree": 2,
+      "domains": [
+        "identity",
+        "cryptography"
+      ]
+    },
+    {
+      "id": "hub_management",
+      "concept": "management",
+      "weight": 68,
+      "degree": 2,
+      "domains": [
+        "operations",
+        "governance"
+      ]
+    },
+    {
+      "id": "hub_infrastructure",
+      "concept": "infrastructure",
+      "weight": 39,
+      "degree": 1,
+      "domains": [
+        "platform",
+        "devops"
+      ]
+    }
+  ],
+  "term_signals": {
+    "pat": 46.9,
+    "bizra": 55.1,
+    "poi": 20.9,
+    "rag": 18.0,
+    "sat": 5.6,
+    "ihsan": 5.8,
+    "agentic": 6.98,
+    "token": 24.2,
+    "governance": 7.58
+  },
+  "wisdom_receipts": [
+    {
+      "wisdom_id": "wisdom_cffed237f37f_1766945635971",
+      "content_hash": "d4393314489862668bb088d4ecaf385f60d6cb715e9cbba01bcba010dd719343",
+      "snr_score": 0.9,
+      "ihsan_score": 0.95,
+      "confidence": 0.9,
+      "timestamp": "2025-12-28T18:13:55.973871+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    },
+    {
+      "wisdom_id": "wisdom_8e4c1daa1680_1766945635971",
+      "content_hash": "466f97ed7379d88ae115d1724180f41bb1c19c2b868f82a27cb45eda85b94cdd",
+      "snr_score": 0.8,
+      "ihsan_score": 0.95,
+      "confidence": 0.85,
+      "timestamp": "2025-12-28T18:13:55.973884+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    },
+    {
+      "wisdom_id": "wisdom_6d90a3c084d2_1766945635972",
+      "content_hash": "ab99cc76042e67c09d4c986ec96cc27ed1fdccb5b895c87aa87cb1a118ca0d79",
+      "snr_score": 0.95,
+      "ihsan_score": 0.95,
+      "confidence": 0.9,
+      "timestamp": "2025-12-28T18:13:55.973888+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    },
+    {
+      "wisdom_id": "wisdom_1837e01a4bfc_1766945635972",
+      "content_hash": "83ec1f859539eb9afc23c494cf185063421b7999d254bf103c628a0baf54d6b8",
+      "snr_score": 0.9,
+      "ihsan_score": 0.95,
+      "confidence": 0.95,
+      "timestamp": "2025-12-28T18:13:55.973911+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    },
+    {
+      "wisdom_id": "wisdom_39517d706c1f_1766945635972",
+      "content_hash": "ca1832f5fb4eb65105669e4c69605991b0c9c6a19977046054e2d308f064fb43",
+      "snr_score": 0.8400000000000001,
+      "ihsan_score": 0.95,
+      "confidence": 0.75,
+      "timestamp": "2025-12-28T18:13:55.973920+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    },
+    {
+      "wisdom_id": "wisdom_70db42dd3c6b_1766945635972",
+      "content_hash": "cb35c5457f6a15dfdfa8a1fc958a7f5cfc5a704d0bc643b2bfc2ed37bd351ca6",
+      "snr_score": 0.76,
+      "ihsan_score": 0.95,
+      "confidence": 0.7,
+      "timestamp": "2025-12-28T18:13:55.973924+00:00",
+      "attestation": "GIANTS_PROTOCOL_v1.0"
+    }
+  ],
+  "ihsan_threshold": 0.95,
+  "snr_threshold": 0.5,
+  "pack_hash": "93edebcba47416b3d4f4b362fe1c4e62d2e2ffb0d38537e5ea6dedb71b59526c",
+  "got_statistics": {
+    "total_thoughts_generated": 9,
+    "total_bridges_discovered": 0,
+    "total_chains_constructed": 1
+  },
+  "enhanced_statistics": {
+    "total_enhanced_runs": 1,
+    "total_wisdom_applications": 1,
+    "total_flywheel_activations": 1
+  }
+}

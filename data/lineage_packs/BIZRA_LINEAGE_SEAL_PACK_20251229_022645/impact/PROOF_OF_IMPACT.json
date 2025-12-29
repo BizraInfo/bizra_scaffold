@@ -1,0 +1,29 @@
+{
+  "contributor_id": "owner_f1588d6e786d",
+  "contributor_alias": "Momo",
+  "artifact_impacts": [],
+  "temporal_impact": {
+    "total_days": 1079,
+    "active_days": 500,
+    "consistency_ratio": 0.4634,
+    "longest_streak_days": 30,
+    "current_streak_days": 0,
+    "total_sessions": 1000,
+    "avg_session_hours": 0.5,
+    "total_hours": 500,
+    "temporal_impact": 157.7988
+  },
+  "structural_impact": {
+    "core_artifacts": 0,
+    "peripheral_artifacts": 0,
+    "total_artifacts": 0,
+    "core_ratio": 0.0,
+    "structural_impact": 0.0
+  },
+  "total_artifact_impact": 0,
+  "total_impact": 1577.988,
+  "impact_by_category": {},
+  "calculated_at": "2025-12-28T22:25:23.136834+00:00",
+  "proof_hash": "c8e744f833662badbb5fcb840cc7cf35bb6a1f97ef84a372741228034b1f91bf",
+  "signature": null
+}

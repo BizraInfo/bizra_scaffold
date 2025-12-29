@@ -1,0 +1,56 @@
+{
+  "node_id": "node0_32feeb91600a",
+  "node_role": "GENESIS",
+  "machine": {
+    "hostname_hash": "f936c64eb2f99967",
+    "platform_hash": "639f01b52836eec2",
+    "processor_hash": "86885702f40d1828",
+    "machine_hash": "558b624e3a60d3e4",
+    "fingerprint": "e60e021a23df60a78973873cdcf6f24e61d03b654a19cff01f72df959d1f001e",
+    "platform_type": "Windows",
+    "architecture": "AMD64"
+  },
+  "owner": {
+    "owner_id": "owner_d4b060ed492d",
+    "owner_alias": "Momo",
+    "owner_public_key": "92eb0dad6cbe459f0a1a153c56634dd1d80d0954c02d580bd72c9dd1e11d0670",
+    "role": "FIRST_ARCHITECT",
+    "capabilities": [
+      "GENESIS_AUTHORITY",
+      "CONSTITUTION_AMEND",
+      "NODE_PROVISION",
+      "ATTESTATION_ISSUE",
+      "REWARD_CLAIM",
+      "PROOF_OF_IMPACT"
+    ],
+    "attested_at": "2025-12-29T12:59:11.668352+00:00",
+    "attestation_hash": "36ea812a75b833ab370494bc09e015ddc8c3a00bbd3b20fba541df3776e942bc",
+    "signature": "cc4e23b42cd891c45348e0149c3c0742ed2016eeefdf686f640a6bd6c1718545ebcd9709e017b80e60e01b8a5717c978089c1675d56a2234b4da6e311f5b580b"
+  },
+  "constitution": {
+    "constitution_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+    "constitution_version": "1.0.0",
+    "binding_timestamp": "2025-12-29T12:59:11.681923+00:00",
+    "ihsan_threshold": 0.95,
+    "snr_high_threshold": 0.8,
+    "snr_medium_threshold": 0.5
+  },
+  "timeline": {
+    "genesis_epoch": "2023-01-14T00:00:00+00:00",
+    "current_timestamp": "2025-12-29T12:59:11.681962+00:00",
+    "earliest_chat": null,
+    "latest_chat": null,
+    "earliest_commit": null,
+    "latest_commit": null,
+    "total_days": 1080,
+    "active_months": 36
+  },
+  "ecosystem_root_hash": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e4fda813ed0228e41927ec6f1238b8a746be50deed39e68f76f1666d00e709a27",
+  "artifact_count": 931,
+  "repository_count": 6,
+  "system_manifest_path": "C:\\bizra_scaffold.worktrees\\worktree-2025-12-27T10-16-13\\data\\genesis\\GENESIS_SYSTEM_MANIFEST.json",
+  "system_manifest_hash": "9b75a3369e919be7b7a661379aab732986594b9f9e3cc9ce07c72fb0d9248a8f",
+  "sealed_at": "2025-12-29T12:59:11.682315+00:00",
+  "seal_hash": "dfd1df2d12932a5791dc2923b26036d4cb32bed8b73a8907e4fe56e710665476",
+  "seal_signature": "9caf5f7d398b3f3afd46c541d998d9a08d0a650454052f515998eedbcaf85a3c7bfdb1c3e908f5822feb46e4ead11e81605336a0816998e71addd05f55f83f01"
+}

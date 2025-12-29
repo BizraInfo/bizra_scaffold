@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, Tuple
 
+from core.snr_scorer import compute_snr
+
 
 class OracleType(Enum):
     """Types of value oracles."""
@@ -28,6 +30,7 @@ class OracleType(Enum):
     REPUTATION = auto()  # Social proof value
     FORMAL_VERIFICATION = auto()  # Mathematical proof value
     INFORMATION_THEORETIC = auto()  # Mutual information value
+    SNR = auto()  # Signal-to-noise ratio value
 
 
 @dataclass
@@ -415,6 +418,53 @@ class InformationTheoreticOracle(ValueOracle):
         )
 
 
+class SNRValueOracle(ValueOracle):
+    """
+    Value oracle based on Signal-to-Noise Ratio (SNR).
+
+    Higher SNR indicates a clearer, more valuable signal with less noise.
+    """
+
+    def __init__(self):
+        self._accuracy_history: deque = deque(maxlen=1000)
+        self._accuracy = 0.92  # High initial accuracy for SNR
+
+    @property
+    def oracle_type(self) -> OracleType:
+        return OracleType.SNR
+
+    @property
+    def historical_accuracy(self) -> float:
+        return self._accuracy
+
+    async def evaluate(self, convergence: Convergence) -> OracleSignal:
+        """Evaluate value based on SNR."""
+        # Compute SNR using the core utility
+        # Note: We use default consistency=0.8 and ihsan=0.95 for oracle evaluation
+        snr = compute_snr(
+            clarity=convergence.clarity_score,
+            synergy=convergence.synergy,
+            consistency=0.8,
+            entropy=convergence.entropy,
+            quantization_error=convergence.quantization_error,
+            disagreement=0.1,  # Baseline disagreement for oracle
+        )
+
+        # Map SNR to value [0, 1] using sigmoid
+        # SNR 0.5 -> Value 0.5, SNR 1.0 -> Value 0.99
+        value = 1.0 / (1.0 + math.exp(-10 * (snr - 0.5)))
+
+        # Confidence based on synergy and clarity
+        confidence = self._accuracy * (convergence.synergy * convergence.clarity_score)
+
+        return OracleSignal(
+            oracle_type=self.oracle_type,
+            value=value,
+            confidence=confidence,
+            reasoning=f"SNR-based value: SNR={snr:.3f}, synergy={convergence.synergy:.3f}",
+        )
+
+
 class PluralisticValueOracle:
     """
     Pluralistic Value Oracle: Ensemble of value signals.
@@ -430,6 +480,7 @@ class PluralisticValueOracle:
             ReputationOracle(),
             FormalVerificationOracle(),
             InformationTheoreticOracle(),
+            SNRValueOracle(),
         ]
 
         # Dynamic weights based on historical accuracy
@@ -610,7 +661,7 @@ async def self_test():
     assert (
         assessment1.value > 0.6
     ), f"High convergence should have high value, got {assessment1.value}"
-    assert len(assessment1.signals) == 5, "Should have 5 oracle signals"
+    assert len(assessment1.signals) == 6, f"Should have 6 oracle signals, got {len(assessment1.signals)}"
     print(
         f"✓ High convergence: value={assessment1.value:.3f}, "
         f"confidence={assessment1.confidence:.2%}, "
@@ -656,14 +707,14 @@ async def self_test():
 
     # Test 4: Oracle weights
     weights = oracle.get_oracle_weights()
-    assert len(weights) == 5
+    assert len(weights) == 6
     assert abs(sum(weights.values()) - 1.0) < 0.001, "Weights should sum to 1"
     print(f"✓ Oracle weights: {len(weights)} oracles, sum={sum(weights.values()):.3f}")
 
     # Test 5: Weight update with ground truth
     await oracle.update_weights(high_convergence, ground_truth=0.85)
     updated_weights = oracle.get_oracle_weights()
-    assert len(updated_weights) == 5
+    assert len(updated_weights) == 6
     print(f"✓ Weight update: weights adjusted based on ground truth")
 
     # Test 6: Disagreement measurement

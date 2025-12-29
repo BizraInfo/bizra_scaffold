@@ -1,0 +1,54 @@
+{
+  "node_id": "node0_462ad85b8d75",
+  "node_role": "GENESIS",
+  "machine": {
+    "hostname_hash": "f936c64eb2f99967",
+    "platform_hash": "639f01b52836eec2",
+    "processor_hash": "86885702f40d1828",
+    "machine_hash": "558b624e3a60d3e4",
+    "fingerprint": "e60e021a23df60a78973873cdcf6f24e61d03b654a19cff01f72df959d1f001e",
+    "platform_type": "Windows",
+    "architecture": "AMD64"
+  },
+  "owner": {
+    "owner_id": "owner_f1588d6e786d",
+    "owner_alias": "Momo",
+    "owner_public_key": "a16171dd646666020a2fff3f677398b857946d13a324af4060a9d0b99a21b530",
+    "role": "FIRST_ARCHITECT",
+    "capabilities": [
+      "GENESIS_AUTHORITY",
+      "CONSTITUTION_AMEND",
+      "NODE_PROVISION",
+      "ATTESTATION_ISSUE",
+      "REWARD_CLAIM",
+      "PROOF_OF_IMPACT"
+    ],
+    "attested_at": "2025-12-28T22:25:23.117737+00:00",
+    "attestation_hash": "a0819918a9448d4b6a24474ac7f8bd0deb78c5dfb7cd5e3474929300403173e8",
+    "signature": "ff85ea13c0c1c9f5f5dd760fff82fa66daf513f22b08d3b37c2b3710dea88bf10767fadffedc4ee137840a180ac0afe265960f482889e901e84d6ed28769160f"
+  },
+  "constitution": {
+    "constitution_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+    "constitution_version": "1.0.0",
+    "binding_timestamp": "2025-12-28T22:25:23.126704+00:00",
+    "ihsan_threshold": 0.95,
+    "snr_high_threshold": 0.8,
+    "snr_medium_threshold": 0.5
+  },
+  "timeline": {
+    "genesis_epoch": "2023-01-14T00:00:00+00:00",
+    "current_timestamp": "2025-12-28T22:25:23.126737+00:00",
+    "earliest_chat": null,
+    "latest_chat": null,
+    "earliest_commit": null,
+    "latest_commit": null,
+    "total_days": 1079,
+    "active_months": 35
+  },
+  "ecosystem_root_hash": "aeebad4a796fcc2e15dc4c6061b45ed9b373f26adfc798ca7d2d8cc58182718e",
+  "artifact_count": 0,
+  "repository_count": 0,
+  "sealed_at": "2025-12-28T22:25:23.126980+00:00",
+  "seal_hash": "dcbb0a57f9d838ed91f2871c6bafa9d7ae150d3a3f5a022599039a795f997d35",
+  "seal_signature": "be564789a916f1673431fa5a5a4dc3fc3eae5ed07eda10a39378218155de1c99901bf1d5cb5c0b08d1c96b24bc964197b7119566432dd21e9695adaa7d56ad00"
+}

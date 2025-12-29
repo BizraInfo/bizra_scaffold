@@ -463,7 +463,7 @@ class TestMetaCognitiveOrchestrator:
     """Test 47-dimensional meta-cognitive strategy selection."""
 
     def test_feature_extraction_dimensions(self):
-        """Feature vector should have exactly 47 dimensions."""
+        """Feature vector should have exactly 55 dimensions (enhanced with GoT metrics)."""
         orchestrator = MetaCognitiveOrchestrator()
 
         task = {"type": "test", "urgency": 0.5}
@@ -471,7 +471,7 @@ class TestMetaCognitiveOrchestrator:
 
         features = orchestrator.extract_features(task, context)
 
-        assert features.shape == (47,)
+        assert features.shape == (55,)
         assert np.all(features >= 0.0)
         assert np.all(features <= 1.0)
 

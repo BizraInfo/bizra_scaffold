@@ -51,8 +51,13 @@ neo4j==5.14.0               # Graph database
 faiss-cpu==1.10.0           # Similarity search (>=1.9 for numpy 2.x compat, pinned to latest)
 
 # Cryptography
-blake3==0.3.3               # Fast hashing
+blake3==1.0.0               # Fast hashing (aligned with production for API consistency)
 toml==0.10.2                # TOML parser for constitution.toml
+opentimestamps-client==0.7.1  # Bitcoin-anchored timestamps (court-grade provenance)
+
+# Terminal UI (Glass Cockpit)
+textual==3.2.0              # Modern terminal UI framework
+rich==14.0.0                # Terminal rendering (textual dependency, explicit pin)
 
 # ──────────────────────────────────────────────────────────────────────────
 # Security Fixes (direct dependencies with CVE patches)

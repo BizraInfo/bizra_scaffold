@@ -1,0 +1,18 @@
+[
+  {
+    "attestation_id": "attest_b9e047d79a2b",
+    "subject_hash": "70abb53be0c3b30adc760a47c2200c8c6720d7a44d78642f63f9a6654d52d6d0",
+    "subject_type": "ihsan_score",
+    "claimed_value": 0.97,
+    "claimed_at": "2025-12-28T22:27:06.813636+00:00",
+    "claimed_by": "unknown",
+    "verdict": "confirmed",
+    "verified_value": 0.97,
+    "confidence": 0.8,
+    "oracle_id": "local_e8e501ba",
+    "oracle_type": "local",
+    "verified_at": "2025-12-28T22:27:06.813636+00:00",
+    "attestation_hash": "80b81a46f02e0e70bbd4a1c124443cf4763f2bcbbe28d06fc074af8f73e1e16f",
+    "signature": null
+  }
+]

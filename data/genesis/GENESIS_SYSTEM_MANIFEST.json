@@ -1,0 +1,60 @@
+{
+  "artifact_count": 931,
+  "block_height": 0,
+  "constitution_ver": "1.0",
+  "ecosystem_root_hash": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e4fda813ed0228e41927ec6f1238b8a746be50deed39e68f76f1666d00e709a27",
+  "ecosystem_state": [
+    {
+      "item_count": 74,
+      "path": "C:\\bizra_scaffold",
+      "status": "ONLINE",
+      "territory_hash": "cc6073ee222a939c"
+    },
+    {
+      "item_count": 104,
+      "path": "C:\\award-winner-design",
+      "status": "ONLINE",
+      "territory_hash": "abf1e63e15254906"
+    },
+    {
+      "item_count": 109,
+      "path": "C:\\BIZRA-Dual-Agentic-system--main",
+      "status": "ONLINE",
+      "territory_hash": "27c8f814db192f39"
+    },
+    {
+      "item_count": 460,
+      "path": "C:\\BIZRA-NODE0",
+      "status": "ONLINE",
+      "territory_hash": "f79e8e78b0b7124f"
+    },
+    {
+      "item_count": 51,
+      "path": "C:\\BIZRA-OS",
+      "status": "ONLINE",
+      "territory_hash": "0ac5645a07e6449e"
+    },
+    {
+      "item_count": 133,
+      "path": "C:\\BIZRA-TaskMaster",
+      "status": "ONLINE",
+      "territory_hash": "9f5fdcd37211872b"
+    }
+  ],
+  "genesis_hash": "5bd65637f5b99bec531598c08c346c5c84bc5f2e300795aad905567d4e83a32e4fda813ed0228e41927ec6f1238b8a746be50deed39e68f76f1666d00e709a27",
+  "hash_algo": "blake2b-512",
+  "message": "Node0 host-centric attestation. The whole machine is the node.",
+  "node_type": "GENESIS_NODE_ZERO",
+  "repository_count": 6,
+  "sovereign_identity": {
+    "architect": "Momo",
+    "machine_fingerprint": {
+      "architecture": "AMD64",
+      "hardware_hash": "fdaa951cd6cdd28bb28f4a167765508a5bf8a09a6569efd7ad29713c97705668",
+      "hostname": "MSI",
+      "platform": "Windows"
+    }
+  },
+  "timestamp_human": "Mon Dec 29 11:35:25 2025",
+  "timestamp_unix": 1766993725
+}

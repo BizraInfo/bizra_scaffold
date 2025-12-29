@@ -1,0 +1,56 @@
+{
+  "node_id": "node0_fec6475901bb",
+  "node_role": "GENESIS",
+  "machine": {
+    "hostname_hash": "f936c64eb2f99967",
+    "platform_hash": "639f01b52836eec2",
+    "processor_hash": "86885702f40d1828",
+    "machine_hash": "558b624e3a60d3e4",
+    "fingerprint": "e60e021a23df60a78973873cdcf6f24e61d03b654a19cff01f72df959d1f001e",
+    "platform_type": "Windows",
+    "architecture": "AMD64"
+  },
+  "owner": {
+    "owner_id": "owner_e31284695278",
+    "owner_alias": "Momo",
+    "owner_public_key": "e91d477ada403c141db7ed1b4db2024aaeeeda9e95cba84808328f7bbf53b7c5",
+    "role": "FIRST_ARCHITECT",
+    "capabilities": [
+      "GENESIS_AUTHORITY",
+      "CONSTITUTION_AMEND",
+      "NODE_PROVISION",
+      "ATTESTATION_ISSUE",
+      "REWARD_CLAIM",
+      "PROOF_OF_IMPACT"
+    ],
+    "attested_at": "2025-12-29T07:39:48.760898+00:00",
+    "attestation_hash": "8743c053cc976e57a2bdd97dbfcca536bfc027352c60e0ded5824ebe64f58afc",
+    "signature": "1e469c649743dc0172e20e51aa7a8d702c69197c101ae7e5c4d1e716a05c7850e01adc1711410d75b3badacd4d6cf2245828d9ee1070708146777dcc933fea03"
+  },
+  "constitution": {
+    "constitution_hash": "1bdc8fb13b090b2172b4533abc458091e235ad72b3bb5279262be03e8754e6b6",
+    "constitution_version": "1.0.0",
+    "binding_timestamp": "2025-12-29T07:39:48.772135+00:00",
+    "ihsan_threshold": 0.95,
+    "snr_high_threshold": 0.8,
+    "snr_medium_threshold": 0.5
+  },
+  "timeline": {
+    "genesis_epoch": "2023-01-14T00:00:00+00:00",
+    "current_timestamp": "2025-12-29T07:39:48.772163+00:00",
+    "earliest_chat": null,
+    "latest_chat": null,
+    "earliest_commit": null,
+    "latest_commit": null,
+    "total_days": 1080,
+    "active_months": 36
+  },
+  "ecosystem_root_hash": "aeebad4a796fcc2e15dc4c6061b45ed9b373f26adfc798ca7d2d8cc58182718e",
+  "artifact_count": 931,
+  "repository_count": 6,
+  "system_manifest_path": "C:\\bizra_scaffold.worktrees\\worktree-2025-12-27T10-16-13\\data\\genesis\\GENESIS_SYSTEM_MANIFEST.json",
+  "system_manifest_hash": "9b75a3369e919be7b7a661379aab732986594b9f9e3cc9ce07c72fb0d9248a8f",
+  "sealed_at": "2025-12-29T07:39:48.772499+00:00",
+  "seal_hash": "71d83d2ff7d5aa509fbff03caaf001e111aee9cfd724e0793baf7fb1ce8f7b6b",
+  "seal_signature": "00fbf348e2fa11b4bc9a6c7847e7c6ef334602f8375479f43e7381ac99b674428d046bb0ee83d1d4f478285597d580a39d02b8f3036cab3667f9f5b74bf1bf00"
+}

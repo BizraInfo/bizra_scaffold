@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "default_decision": "allow",
+  "rules": [
+    {
+      "id": "RULE-001",
+      "description": "Allow all internal PAT/SAT communication",
+      "condition": "sender.agent_type == 'PAT' or sender.agent_type == 'SAT'",
+      "decision": "allow"
+    }
+  ]
+}

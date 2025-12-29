@@ -1293,6 +1293,194 @@ class AgentMemorySystem:
             json.dump(data, f, indent=2, default=str)
         logger.info(f"Memories exported to {filepath}")
 
+    def import_from_dict(
+        self,
+        data: Dict[str, Any],
+        validate_snr: bool = True,
+        validate_ihsan: bool = True,
+        min_snr: float = 0.3,
+        min_ihsan: float = 0.95,
+    ) -> Dict[str, Any]:
+        """
+        Import memories from dictionary.
+        
+        Args:
+            data: Exported memory dict (from export_to_dict())
+            validate_snr: Whether to validate SNR thresholds
+            validate_ihsan: Whether to validate Ihsān thresholds
+            min_snr: Minimum SNR score for import (default: 0.3)
+            min_ihsan: Minimum Ihsān score for import (default: 0.95)
+            
+        Returns:
+            Import statistics dict
+        """
+        imported = {"working": 0, "episodic": 0, "semantic": 0, "procedural": 0}
+        rejected = {"low_snr": 0, "low_ihsan": 0, "duplicate": 0, "invalid": 0}
+        
+        memories_data = data.get("memories", {})
+        
+        tier_mapping = {
+            "working": (MemoryTier.WORKING, self._working),
+            "episodic": (MemoryTier.EPISODIC, self._episodic),
+            "semantic": (MemoryTier.SEMANTIC, self._semantic),
+            "procedural": (MemoryTier.PROCEDURAL, self._procedural),
+        }
+        
+        for tier_name, (tier_enum, storage) in tier_mapping.items():
+            tier_data = memories_data.get(tier_name, [])
+            
+            for item_dict in tier_data:
+                try:
+                    # Validate thresholds
+                    snr_score = item_dict.get("snr_score", 0.5)
+                    ihsan_score = item_dict.get("ihsan_score", 0.95)
+                    
+                    if validate_snr and snr_score < min_snr:
+                        rejected["low_snr"] += 1
+                        continue
+                        
+                    if validate_ihsan and ihsan_score < min_ihsan:
+                        rejected["low_ihsan"] += 1
+                        continue
+                    
+                    # Check for duplicate
+                    memory_id = item_dict.get("id", f"mem_{uuid.uuid4().hex[:12]}")
+                    if memory_id in storage:
+                        rejected["duplicate"] += 1
+                        continue
+                    
+                    # Reconstruct MemoryItem
+                    item = self._reconstruct_memory_item(item_dict, tier_enum)
+                    
+                    # Store
+                    storage[item.id] = item
+                    if item.signature:
+                        self._signature_index[item.signature.content_hash] = item.id
+                    
+                    imported[tier_name] += 1
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to import memory: {e}")
+                    rejected["invalid"] += 1
+        
+        # Enforce limits after bulk import
+        for tier in [MemoryTier.WORKING, MemoryTier.EPISODIC, MemoryTier.SEMANTIC, MemoryTier.PROCEDURAL]:
+            self._enforce_limits(tier)
+        
+        total_imported = sum(imported.values())
+        total_rejected = sum(rejected.values())
+        
+        logger.info(
+            f"Memory import complete: {total_imported} imported, "
+            f"{total_rejected} rejected (snr={rejected['low_snr']}, "
+            f"ihsan={rejected['low_ihsan']}, dup={rejected['duplicate']}, "
+            f"invalid={rejected['invalid']})"
+        )
+        
+        return {
+            "imported": imported,
+            "rejected": rejected,
+            "total_imported": total_imported,
+            "total_rejected": total_rejected,
+        }
+
+    def _reconstruct_memory_item(
+        self,
+        item_dict: Dict[str, Any],
+        tier: MemoryTier,
+    ) -> MemoryItem:
+        """Reconstruct MemoryItem from serialized dict."""
+        # Parse datetime fields
+        created_at = item_dict.get("created_at")
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        elif created_at is None:
+            created_at = datetime.now(timezone.utc)
+            
+        last_accessed = item_dict.get("last_accessed")
+        if isinstance(last_accessed, str):
+            last_accessed = datetime.fromisoformat(last_accessed.replace("Z", "+00:00"))
+        elif last_accessed is None:
+            last_accessed = datetime.now(timezone.utc)
+        
+        # Parse SNR level
+        snr_level_str = item_dict.get("snr_level", "MEDIUM")
+        try:
+            snr_level = SNRLevel[snr_level_str]
+        except KeyError:
+            snr_level = SNRLevel.MEDIUM
+        
+        # Parse state
+        state_str = item_dict.get("state", "ACTIVE")
+        try:
+            state = MemoryState[state_str]
+        except KeyError:
+            state = MemoryState.ACTIVE
+        
+        # Create signature if content available
+        content = item_dict.get("content", "")
+        signature = MemorySignature.from_content(content)
+        
+        # Recompute embedding
+        embedding = self.embedding_fn(content)
+        
+        return MemoryItem(
+            id=item_dict.get("id", f"mem_{uuid.uuid4().hex[:12]}"),
+            content=content,
+            tier=tier,
+            state=state,
+            snr_score=item_dict.get("snr_score", 0.5),
+            snr_level=snr_level,
+            ihsan_score=item_dict.get("ihsan_score", 0.95),
+            embedding=embedding,
+            signature=signature,
+            source=item_dict.get("source", "imported"),
+            session_id=item_dict.get("session_id"),
+            parent_ids=item_dict.get("parent_ids", []),
+            child_ids=item_dict.get("child_ids", []),
+            domains=set(item_dict.get("domains", [])),
+            tags=set(item_dict.get("tags", [])),
+            created_at=created_at,
+            last_accessed=last_accessed,
+            access_count=item_dict.get("access_count", 0),
+            consolidation_count=item_dict.get("consolidation_count", 0),
+            priority=item_dict.get("priority", 1.0),
+            metadata=item_dict.get("metadata", {}),
+        )
+
+    def import_from_json(
+        self,
+        filepath: str,
+        validate_snr: bool = True,
+        validate_ihsan: bool = True,
+        min_snr: float = 0.3,
+        min_ihsan: float = 0.95,
+    ) -> Dict[str, Any]:
+        """
+        Import memories from JSON file.
+        
+        Args:
+            filepath: Path to JSON file (from export_to_json())
+            validate_snr: Whether to validate SNR thresholds
+            validate_ihsan: Whether to validate Ihsān thresholds
+            min_snr: Minimum SNR score for import
+            min_ihsan: Minimum Ihsān score for import
+            
+        Returns:
+            Import statistics dict
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        logger.info(f"Loading memories from {filepath}")
+        return self.import_from_dict(
+            data,
+            validate_snr=validate_snr,
+            validate_ihsan=validate_ihsan,
+            min_snr=min_snr,
+            min_ihsan=min_ihsan,
+        )
+
 
 # =============================================================================
 # FACTORY FUNCTIONS

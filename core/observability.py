@@ -367,6 +367,7 @@ class Tracer:
         kind: SpanKind = SpanKind.INTERNAL,
         parent: Optional[TraceContext] = None,
         ihsan_score: float = 0.95,
+        snr_score: float = 0.5,
         apex_layer: str = "UNKNOWN",
         attributes: Optional[Attributes] = None,
     ) -> Span:
@@ -396,6 +397,9 @@ class Tracer:
             attributes=attributes,
         )
 
+        # Add SNR score to attributes
+        span.set_attribute("bizra.snr_score", snr_score)
+
         # Add service name
         span.set_attribute("service.name", self.service_name)
 
@@ -415,6 +419,7 @@ class Tracer:
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
         ihsan_score: float = 0.95,
+        snr_score: float = 0.5,
         apex_layer: str = "UNKNOWN",
         attributes: Optional[Attributes] = None,
     ) -> Generator[Span, None, None]:
@@ -430,6 +435,7 @@ class Tracer:
             name=name,
             kind=kind,
             ihsan_score=ihsan_score,
+            snr_score=snr_score,
             apex_layer=apex_layer,
             attributes=attributes,
         )
@@ -463,6 +469,7 @@ class Tracer:
         name: str,
         kind: SpanKind = SpanKind.INTERNAL,
         ihsan_score: float = 0.95,
+        snr_score: float = 0.5,
         apex_layer: str = "UNKNOWN",
         attributes: Optional[Attributes] = None,
     ):
@@ -471,6 +478,7 @@ class Tracer:
             name=name,
             kind=kind,
             ihsan_score=ihsan_score,
+            snr_score=snr_score,
             apex_layer=apex_layer,
             attributes=attributes,
         )

@@ -1,0 +1,371 @@
+{
+  "timestamp": "2025-12-28T18:12:53.153314+00:00",
+  "query": "Unify power, knowledge, and progress with high-SNR interdisciplinary reasoning.",
+  "profile_summary": {
+    "total_messages_analyzed": 13287,
+    "top_topics": {
+      "bizra": 3559,
+      "pat_sat": 3554,
+      "architecture": 3164,
+      "optimization": 2642,
+      "python": 2039,
+      "security": 1941,
+      "interdisciplinary": 1022,
+      "rust": 748
+    },
+    "top_keywords": {
+      "self": 18211,
+      "system": 15658,
+      "data": 12899,
+      "bizra": 11747,
+      "from": 11232,
+      "agent": 10903,
+      "all": 9306,
+      "none": 8991
+    }
+  },
+  "seed_concepts": [
+    "bizra",
+    "pat_sat",
+    "architecture",
+    "optimization",
+    "python",
+    "security",
+    "layer",
+    "key"
+  ],
+  "domains": [
+    "abstraction",
+    "agentic",
+    "cryptography",
+    "design",
+    "governance",
+    "identity",
+    "mission",
+    "performance",
+    "programming",
+    "safety",
+    "software",
+    "structure",
+    "system",
+    "systems"
+  ],
+  "enhanced_chains": [
+    {
+      "enhanced_snr": 0.08400000000000002,
+      "giants_boost": 0.126,
+      "cross_temporal_bridges": 1,
+      "flywheel_momentum": 0,
+      "chain": {
+        "id": "chain_0",
+        "total_snr": 0.0,
+        "avg_snr": 0.0,
+        "max_depth": 1,
+        "domain_diversity": 0.0,
+        "thought_count": 0,
+        "bridge_count": 0,
+        "thoughts": [],
+        "bridges": []
+      },
+      "wisdom_augmentations": [
+        {
+          "id": "wisdom_39517d706c1f_1766945573151",
+          "wisdom_type": "BRIDGE_INSIGHT",
+          "title": "Bridge: architecture \u2192 security",
+          "snr_score": 0.8400000000000001,
+          "confidence": 0.75,
+          "domains": [
+            "architecture",
+            "security"
+          ]
+        }
+      ]
+    },
+    {
+      "enhanced_snr": 0.08400000000000002,
+      "giants_boost": 0.126,
+      "cross_temporal_bridges": 1,
+      "flywheel_momentum": 0,
+      "chain": {
+        "id": "chain_1",
+        "total_snr": 0.0,
+        "avg_snr": 0.0,
+        "max_depth": 1,
+        "domain_diversity": 0.0,
+        "thought_count": 0,
+        "bridge_count": 0,
+        "thoughts": [],
+        "bridges": []
+      },
+      "wisdom_augmentations": [
+        {
+          "id": "wisdom_39517d706c1f_1766945573151",
+          "wisdom_type": "BRIDGE_INSIGHT",
+          "title": "Bridge: architecture \u2192 security",
+          "snr_score": 0.8400000000000001,
+          "confidence": 0.75,
+          "domains": [
+            "architecture",
+            "security"
+          ]
+        }
+      ]
+    },
+    {
+      "enhanced_snr": 0.08400000000000002,
+      "giants_boost": 0.126,
+      "cross_temporal_bridges": 1,
+      "flywheel_momentum": 0,
+      "chain": {
+        "id": "chain_2",
+        "total_snr": 0.0,
+        "avg_snr": 0.0,
+        "max_depth": 1,
+        "domain_diversity": 0.0,
+        "thought_count": 0,
+        "bridge_count": 0,
+        "thoughts": [],
+        "bridges": []
+      },
+      "wisdom_augmentations": [
+        {
+          "id": "wisdom_39517d706c1f_1766945573151",
+          "wisdom_type": "BRIDGE_INSIGHT",
+          "title": "Bridge: architecture \u2192 security",
+          "snr_score": 0.8400000000000001,
+          "confidence": 0.75,
+          "domains": [
+            "architecture",
+            "security"
+          ]
+        }
+      ]
+    },
+    {
+      "enhanced_snr": 0.08400000000000002,
+      "giants_boost": 0.126,
+      "cross_temporal_bridges": 1,
+      "flywheel_momentum": 0,
+      "chain": {
+        "id": "chain_3",
+        "total_snr": 0.0,
+        "avg_snr": 0.0,
+        "max_depth": 1,
+        "domain_diversity": 0.0,
+        "thought_count": 0,
+        "bridge_count": 0,
+        "thoughts": [],
+        "bridges": []
+      },
+      "wisdom_augmentations": [
+        {
+          "id": "wisdom_39517d706c1f_1766945573151",
+          "wisdom_type": "BRIDGE_INSIGHT",
+          "title": "Bridge: architecture \u2192 security",
+          "snr_score": 0.8400000000000001,
+          "confidence": 0.75,
+          "domains": [
+            "architecture",
+            "security"
+          ]
+        }
+      ]
+    },
+    {
+      "enhanced_snr": 0.08400000000000002,
+      "giants_boost": 0.126,
+      "cross_temporal_bridges": 1,
+      "flywheel_momentum": 0,
+      "chain": {
+        "id": "chain_4",
+        "total_snr": 0.0,
+        "avg_snr": 0.0,
+        "max_depth": 1,
+        "domain_diversity": 0.0,
+        "thought_count": 0,
+        "bridge_count": 0,
+        "thoughts": [],
+        "bridges": []
+      },
+      "wisdom_augmentations": [
+        {
+          "id": "wisdom_39517d706c1f_1766945573151",
+          "wisdom_type": "BRIDGE_INSIGHT",
+          "title": "Bridge: architecture \u2192 security",
+          "snr_score": 0.8400000000000001,
+          "confidence": 0.75,
+          "domains": [
+            "architecture",
+            "security"
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_pack": {
+    "protocol_version": "GIANTS_PROTOCOL_v1.0",
+    "timestamp": "2025-12-28T18:12:53.153087+00:00",
+    "statistics": {
+      "total_wisdom_extracted": 6,
+      "total_insights_synthesized": 6,
+      "total_flywheel_spins": 1,
+      "cached_wisdom_count": 6,
+      "hub_concepts_count": 6,
+      "edge_count": 7
+    },
+    "flywheels": {
+      "integrity": {
+        "momentum": 0,
+        "is_active": false,
+        "phases": [
+          "integrity_proofs",
+          "ihsan_ethics",
+          "devops_gates",
+          "evidence_publication"
+        ]
+      }
+    },
+    "hub_concepts": [
+      {
+        "id": "hub_architecture",
+        "concept": "architecture",
+        "weight": 164,
+        "degree": 4,
+        "domains": [
+          "system",
+          "design"
+        ]
+      },
+      {
+        "id": "hub_security",
+        "concept": "security",
+        "weight": 164,
+        "degree": 3,
+        "domains": [
+          "safety",
+          "cryptography"
+        ]
+      },
+      {
+        "id": "hub_layer",
+        "concept": "layer",
+        "weight": 150,
+        "degree": 2,
+        "domains": [
+          "structure",
+          "abstraction"
+        ]
+      },
+      {
+        "id": "hub_key",
+        "concept": "key",
+        "weight": 78,
+        "degree": 2,
+        "domains": [
+          "cryptography",
+          "identity"
+        ]
+      },
+      {
+        "id": "hub_management",
+        "concept": "management",
+        "weight": 68,
+        "degree": 2,
+        "domains": [
+          "operations",
+          "governance"
+        ]
+      },
+      {
+        "id": "hub_infrastructure",
+        "concept": "infrastructure",
+        "weight": 39,
+        "degree": 1,
+        "domains": [
+          "devops",
+          "platform"
+        ]
+      }
+    ],
+    "term_signals": {
+      "pat": 46.9,
+      "bizra": 55.1,
+      "poi": 20.9,
+      "rag": 18.0,
+      "sat": 5.6,
+      "ihsan": 5.8,
+      "agentic": 6.98,
+      "token": 24.2,
+      "governance": 7.58
+    },
+    "wisdom_receipts": [
+      {
+        "wisdom_id": "wisdom_cffed237f37f_1766945573151",
+        "content_hash": "419474e7014e67efb6263b11b62a4026b82cd0eabaf6bbca8b21a1fb277e4702",
+        "snr_score": 0.9,
+        "ihsan_score": 0.95,
+        "confidence": 0.9,
+        "timestamp": "2025-12-28T18:12:53.152999+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      },
+      {
+        "wisdom_id": "wisdom_8e4c1daa1680_1766945573151",
+        "content_hash": "7a89ba0038566aee4f9fe780b2507b185721b1aabd381db69be4c11663cd9995",
+        "snr_score": 0.8,
+        "ihsan_score": 0.95,
+        "confidence": 0.85,
+        "timestamp": "2025-12-28T18:12:53.153023+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      },
+      {
+        "wisdom_id": "wisdom_6d90a3c084d2_1766945573151",
+        "content_hash": "521f4d5d1ac5d312cadc274aa6ec796ded4a8bd1627519a861a11d983a7673a7",
+        "snr_score": 0.95,
+        "ihsan_score": 0.95,
+        "confidence": 0.9,
+        "timestamp": "2025-12-28T18:12:53.153034+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      },
+      {
+        "wisdom_id": "wisdom_1837e01a4bfc_1766945573151",
+        "content_hash": "68611770c825a8c63c60172b12cdd0796abbe6790395f4cd99faee04cbed82ab",
+        "snr_score": 0.9,
+        "ihsan_score": 0.95,
+        "confidence": 0.95,
+        "timestamp": "2025-12-28T18:12:53.153043+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      },
+      {
+        "wisdom_id": "wisdom_39517d706c1f_1766945573151",
+        "content_hash": "17c68e95bbaa2a175ef1a0a099e865219b9020101926f063e5c7bd0c164ab1d9",
+        "snr_score": 0.8400000000000001,
+        "ihsan_score": 0.95,
+        "confidence": 0.75,
+        "timestamp": "2025-12-28T18:12:53.153053+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      },
+      {
+        "wisdom_id": "wisdom_70db42dd3c6b_1766945573151",
+        "content_hash": "094d9a06a219ab0165a79c2e5e0d19539a6705360117b9b5c0d6edd37b249626",
+        "snr_score": 0.76,
+        "ihsan_score": 0.95,
+        "confidence": 0.7,
+        "timestamp": "2025-12-28T18:12:53.153063+00:00",
+        "attestation": "GIANTS_PROTOCOL_v1.0"
+      }
+    ],
+    "ihsan_threshold": 0.95,
+    "snr_threshold": 0.5,
+    "pack_hash": "8a9722aa77f2dfe20ad4122c73edb7b76d5438d554fedb6cab85c9073d072114",
+    "got_statistics": {
+      "total_thoughts_generated": 0,
+      "total_bridges_discovered": 0,
+      "total_chains_constructed": 8
+    },
+    "enhanced_statistics": {
+      "total_enhanced_runs": 1,
+      "total_wisdom_applications": 5,
+      "total_flywheel_activations": 0
+    }
+  }
+}

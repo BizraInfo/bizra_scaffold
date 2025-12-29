@@ -545,7 +545,7 @@ class TestValueOracleComprehensive:
 
         assert assessment.value >= 0.0
         assert assessment.confidence >= 0.0
-        assert len(assessment.signals) == 5  # All 5 oracles
+        assert len(assessment.signals) == 6  # All 6 oracles (including SNR)
         assert hasattr(assessment, "disagreement_score")
 
         # Verify oracle weights are valid
