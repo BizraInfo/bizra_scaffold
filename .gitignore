@@ -130,6 +130,11 @@ package-lock.json
 logs/
 *.log.*
 
+# Evidence artifacts (hash-only; raw outputs must stay outside repo)
+evidence/**/*.md
+/RECOVERED_MASTERPIECE.md
+/PEAK_IMPLEMENTATION_EVIDENCE.md
+
 # Neo4j local data
 neo4j_data/
 data/neo4j/

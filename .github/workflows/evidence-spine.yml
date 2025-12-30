@@ -127,6 +127,23 @@ jobs:
           echo "✅ No hardcoded secrets detected"
 
   # ────────────────────────────────────────────────────────────────────────────
+  # GATE 2b: EVIDENCE HYGIENE (CHEAP TIER)
+  evidence-hygiene:
+    name: Evidence Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run evidence guard
+        run: |
+          python tools/evidence_guard.py
+
   # GATE 3: DEPENDENCY AUDIT (MEDIUM TIER)
   # ────────────────────────────────────────────────────────────────────────────
   dependency-audit:
@@ -355,7 +372,7 @@ jobs:
   evidence-compilation:
     name: 📚 Evidence Compilation
     runs-on: ubuntu-latest
-    needs: [constitution-integrity, secret-scanning, dependency-audit, code-quality, test-suite, ihsan-verification]
+    needs: [constitution-integrity, secret-scanning, evidence-hygiene, dependency-audit, code-quality, test-suite, ihsan-verification]
     if: always()
     steps:
       - name: Checkout
@@ -387,6 +404,7 @@ jobs:
           |------|--------|------|
           | Constitution Integrity | ${{ needs.constitution-integrity.result }} | CHEAP |
           | Secret Scanning | ${{ needs.secret-scanning.result }} | CHEAP |
+          | Evidence Hygiene | ${{ needs.evidence-hygiene.result }} | CHEAP |
           | Dependency Audit | ${{ needs.dependency-audit.result }} | MEDIUM |
           | Code Quality | ${{ needs.code-quality.result }} | MEDIUM |
           | Test Suite | ${{ needs.test-suite.result }} | MEDIUM |
@@ -412,6 +430,7 @@ jobs:
       - name: Final status check
         run: |
           if [[ "${{ needs.constitution-integrity.result }}" == "failure" ]] || \
+             [[ "${{ needs.evidence-hygiene.result }}" == "failure" ]] || \
              [[ "${{ needs.test-suite.result }}" == "failure" ]] || \
              [[ "${{ needs.ihsan-verification.result }}" == "failure" ]]; then
             echo "❌ EVIDENCE SPINE FAILED - Merge blocked"
