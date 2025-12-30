@@ -108,6 +108,8 @@ class NodeType(Enum):
     FILE = auto()  # Source file reference
     TOPIC = auto()  # Topic cluster
     DOMAIN = auto()  # Knowledge domain
+    MESSAGE = auto()  # Chat message
+    CONVERSATION = auto()  # Chat conversation/session
     RELATIONSHIP = auto()  # Reified relationship
 
 
@@ -119,6 +121,7 @@ class EdgeType(Enum):
     DERIVED_FROM = auto()  # Derivation relationship
     SIMILAR_TO = auto()  # Similarity relationship
     PART_OF = auto()  # Composition relationship
+    NEXT = auto()  # Sequential order
     IMPLIES = auto()  # Logical implication
 
 
@@ -998,6 +1001,97 @@ class KnowledgeGraphBridge:
                 self._edges_created += 1
 
         self._files_processed += 1
+
+    def ingest_chat_nodes(
+        self,
+        chat_nodes: List[Dict[str, Any]],
+        conversation_id: str,
+        source_id: str,
+    ) -> None:
+        """
+        Ingest chat messages as graph nodes with deterministic sequencing.
+
+        Expected chat_nodes keys: stable_id, message_id, role, text_sha256, snr, ihsan.
+        """
+        if not chat_nodes:
+            return
+
+        conv_hash = hashlib.sha256(conversation_id.encode("utf-8")).hexdigest()[:16]
+        conv_node_id = f"conv:{conv_hash}"
+
+        conv_node = KnowledgeNode(
+            id=conv_node_id,
+            node_type=NodeType.CONVERSATION,
+            label=f"conversation:{conversation_id}",
+            source_file=source_id,
+            properties=frozenset(
+                [
+                    ("conversation_id", conversation_id),
+                    ("source_id", source_id),
+                ]
+            ),
+            signal_strength=1.0,
+        )
+
+        if self.graph.add_node(conv_node):
+            self._nodes_created += 1
+
+        sorted_nodes = sorted(
+            chat_nodes, key=lambda item: str(item.get("message_id", ""))
+        )
+
+        previous_id: Optional[str] = None
+        for record in sorted_nodes:
+            message_id = str(record.get("message_id", ""))
+            stable_id = str(record.get("stable_id", message_id))
+            role = str(record.get("role", "unknown"))
+            text_sha256 = str(record.get("text_sha256", ""))
+            snr = float(record.get("snr", 0.0))
+            ihsan = float(record.get("ihsan", 0.95))
+
+            msg_node = KnowledgeNode(
+                id=stable_id,
+                node_type=NodeType.MESSAGE,
+                label=f"message:{message_id}",
+                source_file=source_id,
+                properties=frozenset(
+                    [
+                        ("conversation_id", conversation_id),
+                        ("message_id", message_id),
+                        ("role", role),
+                        ("text_sha256", text_sha256),
+                        ("snr", f"{snr:.6f}"),
+                        ("ihsan", f"{ihsan:.6f}"),
+                    ]
+                ),
+                signal_strength=min(snr, 1.0),
+            )
+
+            if self.graph.add_node(msg_node):
+                self._nodes_created += 1
+
+            part_of = KnowledgeEdge(
+                source_id=conv_node_id,
+                target_id=stable_id,
+                edge_type=EdgeType.PART_OF,
+                weight=min(snr, 1.0),
+                evidence=f"source={source_id}",
+            )
+            if self.graph.add_edge(part_of):
+                self._edges_created += 1
+
+            if previous_id:
+                next_edge = KnowledgeEdge(
+                    source_id=previous_id,
+                    target_id=stable_id,
+                    edge_type=EdgeType.NEXT,
+                    weight=1.0,
+                    evidence=f"ordered_by=message_id source={source_id}",
+                )
+                if self.graph.add_edge(next_edge):
+                    self._edges_created += 1
+
+            previous_id = stable_id
 
     async def process_file(
         self, file_path: Path, snr_score: float = 0.5
