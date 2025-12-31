@@ -1,0 +1,38 @@
+INFO:core.snr_scorer:SNRScorer initialized: HIGH=0.8, MEDIUM=0.5, Ihs\u0101n_constraint=enabled
+INFO:core.graph_of_thoughts:GraphOfThoughtsEngine initialized: beam_width=5, max_depth=3, min_snr=0.3
+INFO:BIZRA_PEAK:
+[PEAK_CYCLE] Entry: Implement sovereign revenue module with zero ethic...
+INFO:BIZRA_GIANTS:[GIANTS] Grounding reasoning in elite axioms for context: ['ethics', 'sovereignty']
+INFO:BIZRA_PEAK:  [GIANTS] Signal Boost: Injected 2 elite axioms.
+INFO:core.graph_of_thoughts:Starting graph-of-thoughts reasoning for query: 'Implement sovereign revenue module with zero ethical debt.'
+INFO:core.graph_of_thoughts:Seed concepts: ['Implement sovereign revenue module with zero ethical debt.', 'Ihs\u0101n is the observation of Reality as if it were present before you.', 'Sovereignty is not granted; it is claimed through the evidence of non-violation.']
+INFO:core.graph_of_thoughts:Graph-of-thoughts reasoning complete: 3 chains, 9 thoughts, 0 bridges in 0.3ms
+INFO:BIZRA_PEAK:  [GoT] Reasoning Complete. Best Chain SNR: 1.8514
+INFO:BIZRA_SPINE:[SPINE][MOCK] Escalating peak_op_1767150942 (Sig: 0.98) to Virtual Brain
+INFO:BIZRA_PEAK:  [SPINE] Operation Committed. Latency: 18.4898ms
+INFO:BIZRA_PEAK:  [SNR_AUTO] Parameters Tuned: CognitiveParameters(beam_width=5, max_depth=3, attention_mask_sharpness=1.0, min_snr_threshold=0.39)
+INFO:BIZRA_PEAK:  [PHI] Integrated Information: 9.2571
+INFO:BIZRA_PEAK:
+[PEAK_CYCLE] Entry: Optimize system latency to sub-0.5ms while maintai...
+INFO:BIZRA_GIANTS:[GIANTS] Grounding reasoning in elite axioms for context: ['performance', 'sovereignty']
+INFO:BIZRA_PEAK:  [GIANTS] Signal Boost: Injected 2 elite axioms.
+INFO:core.graph_of_thoughts:Starting graph-of-thoughts reasoning for query: 'Optimize system latency to sub-0.5ms while maintaining 100yr legacy.'
+INFO:core.graph_of_thoughts:Seed concepts: ['Optimize system latency to sub-0.5ms while maintaining 100yr legacy.', 'Premature optimization is the root of all evil; but the architecture is the root of all performance.', 'Sovereignty is not granted; it is claimed through the evidence of non-violation.']
+INFO:core.graph_of_thoughts:Graph-of-thoughts reasoning complete: 3 chains, 9 thoughts, 0 bridges in 0.2ms
+INFO:BIZRA_PEAK:  [GoT] Reasoning Complete. Best Chain SNR: 1.8514
+INFO:BIZRA_SPINE:[SPINE][MOCK] Escalating peak_op_1767150943 (Sig: 0.98) to Virtual Brain
+INFO:BIZRA_PEAK:  [SPINE] Operation Committed. Latency: 11.5400ms
+INFO:BIZRA_PEAK:  [SNR_AUTO] Parameters Tuned: CognitiveParameters(beam_width=5, max_depth=3, attention_mask_sharpness=1.0, min_snr_threshold=0.38)
+INFO:BIZRA_PEAK:  [PHI] Integrated Information: 9.2571
+INFO:BIZRA_PEAK:
+[PEAK_CYCLE] Entry: Resolve cognitive dissonance between symbolic proo...
+INFO:BIZRA_GIANTS:[GIANTS] Grounding reasoning in elite axioms for context: ['systems', 'ethics']
+INFO:BIZRA_PEAK:  [GIANTS] Signal Boost: Injected 2 elite axioms.
+INFO:core.graph_of_thoughts:Starting graph-of-thoughts reasoning for query: 'Resolve cognitive dissonance between symbolic proofs and neural intuition.'
+INFO:core.graph_of_thoughts:Seed concepts: ['Resolve cognitive dissonance between symbolic proofs and neural intuition.', 'A complex system that works is invariably found to have evolved from a simple system that worked.', 'Ihs\u0101n is the observation of Reality as if it were present before you.']
+INFO:core.graph_of_thoughts:Graph-of-thoughts reasoning complete: 3 chains, 9 thoughts, 0 bridges in 0.3ms
+INFO:BIZRA_PEAK:  [GoT] Reasoning Complete. Best Chain SNR: 1.8514
+INFO:BIZRA_SPINE:[SPINE][MOCK] Escalating peak_op_1767150943 (Sig: 0.98) to Virtual Brain
+INFO:BIZRA_PEAK:  [SPINE] Operation Committed. Latency: 14.5256ms
+INFO:BIZRA_PEAK:  [SNR_AUTO] Parameters Tuned: CognitiveParameters(beam_width=5, max_depth=3, attention_mask_sharpness=1.0, min_snr_threshold=0.37)
+INFO:BIZRA_PEAK:  [PHI] Integrated Information: 9.2571

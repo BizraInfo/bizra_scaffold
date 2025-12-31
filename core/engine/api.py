@@ -57,36 +57,41 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _print_vanguard_diagnostics() -> None:
-    import importlib.util
-    import os
-
+def _print_vanguard_diagnostics(
+    l4_status: Optional[str] = None, l4_error: Optional[str] = None
+) -> None:
     try:
         from core import __version__ as core_version
     except Exception:
         core_version = "unknown"
 
-    has_numpy = importlib.util.find_spec("numpy") is not None
-    has_faiss = importlib.util.find_spec("faiss") is not None
-    has_neo4j = importlib.util.find_spec("neo4j") is not None
-    forced_lite = os.getenv("BIZRA_LITE", "").lower() in ("1", "true", "on")
+    from core.capabilities import detect_capabilities
 
-    l3_mode = "faiss" if (has_numpy and has_faiss and not forced_lite) else "basic"
-    l4_enabled = has_neo4j and not forced_lite
-    l4_mode = "neo4j" if l4_enabled else "disabled"
+    caps = detect_capabilities()
+    resolved_l4 = l4_status or caps.l4_mode
 
     print("\n" + "=" * 60)
     print(f"BIZRA NODE VANGUARD (v{core_version})")
     print("-" * 60)
     print(
-        "CAPABILITIES: numpy={np} | faiss={faiss} | neo4j={neo4j} | lite={lite}".format(
-            np="yes" if has_numpy else "no",
-            faiss="yes" if has_faiss else "no",
-            neo4j="yes" if has_neo4j else "no",
-            lite="on" if forced_lite else "off",
+        "CAPABILITIES: numpy={np} | faiss={faiss} | neo4j={neo4j} | z3={z3} | blake3={blake3} | lite={lite}".format(
+            np="yes" if caps.numpy_present else "no",
+            faiss="yes" if caps.faiss_present else "no",
+            neo4j="yes" if caps.neo4j_present else "no",
+            z3="yes" if caps.z3_present else "no",
+            blake3="yes" if caps.blake3_present else "no",
+            lite="on" if caps.force_lite else "off",
         )
     )
-    print(f"MODES: L3={l3_mode} | L4={l4_mode}")
+    print(
+        "NEO4J: configured={configured} | status={status}".format(
+            configured="yes" if caps.neo4j_configured else "no",
+            status=resolved_l4,
+        )
+    )
+    print(f"MODES: L3={caps.l3_mode} | L4={resolved_l4}")
+    if l4_error:
+        print(f"L4 ERROR: {l4_error}")
     print("=" * 60 + "\n")
 
 # Initialize config
@@ -282,7 +287,7 @@ class HealthResponse(BaseModel):
 # ============================================================================
 
 app = FastAPI(
-    title="BIZRA AEON OMEGA",
+    title="BIZRA Node Vanguard",
     description="Cognitive Sovereignty Platform API",
     version="10.0.0",
     docs_url="/docs" if config.enable_docs else None,
@@ -342,11 +347,13 @@ async def startup_event():
     print("=" * 60)
     print("BIZRA AEON OMEGA v10.0.0 - STARTING")
     print("=" * 60)
-    _print_vanguard_diagnostics()
+    from core.capabilities import detect_capabilities
+
+    caps = detect_capabilities()
 
     # Initialize security
     app.state.security = QuantumSecurityV2(key_storage_path=config.key_storage_path)
-    print("✓ Quantum security initialized")
+    print("OK Quantum security initialized")
 
     # Initialize L2
     app.state.l2 = L2WorkingMemoryV2(
@@ -354,24 +361,39 @@ async def startup_event():
         decay_rate=config.l2_decay_rate,
         target_ratio=config.compression_ratio_target,
     )
-    print("✓ L2 Working Memory initialized")
+    print("OK L2 Working Memory initialized")
 
     # Initialize L3
     app.state.l3 = L3EpisodicMemoryV2(
         embedding_dim=config.embedding_dim, index_type=config.faiss_index_type
     )
-    print("✓ L3 Episodic Memory initialized")
+    print("OK L3 Episodic Memory initialized")
 
     # Initialize L4
-    app.state.l4 = L4SemanticHyperGraphV2(
-        neo4j_uri=config.neo4j_uri,
-        neo4j_auth=(config.neo4j_user, config.neo4j_password),
-    )
-    await app.state.l4.initialize()
-    print("✓ L4 Semantic HyperGraph initialized")
+    l4_status = caps.l4_mode
+    l4_error: Optional[str] = None
+    if caps.l4_mode == "NEO4J":
+        app.state.l4 = L4SemanticHyperGraphV2(
+            neo4j_uri=config.neo4j_uri,
+            neo4j_auth=(config.neo4j_user, config.neo4j_password),
+        )
+        try:
+            await app.state.l4.initialize()
+            if not app.state.l4.driver:
+                raise RuntimeError("Neo4j driver not initialized")
+            print("OK L4 Semantic HyperGraph initialized")
+        except Exception as exc:
+            l4_status = "FAILED_INIT"
+            l4_error = str(exc)
+            app.state.l4 = None
+            print(f"ERROR L4 initialization failed: {exc}")
+    else:
+        app.state.l4 = None
+        print(f"OK L4 Semantic HyperGraph disabled: {caps.l4_mode}")
 
     app.state.initialized = True
-    print("✓ All systems operational")
+    _print_vanguard_diagnostics(l4_status=l4_status, l4_error=l4_error)
+    print("OK All systems operational")
     print("=" * 60)
 
 
@@ -382,9 +404,9 @@ async def shutdown_event():
 
     if app.state.l4:
         await app.state.l4.close()
-        print("✓ L4 connection closed")
+        print("OK L4 connection closed")
 
-    print("✓ Shutdown complete")
+    print("OK Shutdown complete")
 
 
 # ============================================================================
