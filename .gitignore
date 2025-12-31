@@ -182,3 +182,6 @@ temp/
 *.bak
 *.backup
 .cache/
+
+# Quarantine: unknown local artifact
+BIZRA BRAND idintiy.html
