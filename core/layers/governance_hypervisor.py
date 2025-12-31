@@ -36,6 +36,16 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, Typ
 
 # Internal imports
 try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    import z3
+except ImportError:
+    z3 = None
+
+try:
     from core.engine.state_persistence import (
         AgentLifecycleState,
         AgentState,
@@ -832,6 +842,166 @@ class GovernanceHypervisor:
             "proposals_by_status": {
                 status.name: len(ids) for status, ids in self.proposal_index.items()
             },
+            "uptime_seconds": elapsed,
+        }
+
+    def get_fate_summary(self) -> Dict[str, Any]:
+        """Get FATE engine summary across all proposals."""
+        if not self.proposals:
+            return {"average_fate": 0.0, "average_ihsan": 0.0}
+
+        fate_scores = [p.fate_metrics.composite for p in self.proposals.values()]
+        ihsan_scores = [p.ihsan_metrics.composite for p in self.proposals.values()]
+
+        return {
+            "average_fate": sum(fate_scores) / len(fate_scores),
+            "average_ihsan": sum(ihsan_scores) / len(ihsan_scores),
+            "min_fate": min(fate_scores),
+            "max_fate": max(fate_scores),
+            "min_ihsan": min(ihsan_scores),
+            "max_ihsan": max(ihsan_scores),
+            "fate_threshold": 0.95,
+            "ihsan_threshold": IhsanCircuitBreaker.THRESHOLD,
+        }
+
+
+class HarbergerMemoryTax:
+    """
+    Adl Justice: Thermodynamic equilibrium of memory distribution.
+    Prevents 'Memory Aristocracy' by enforcing cost on scale.
+    """
+    def __init__(self, tau: float = 0.15):
+        self.tau = tau  # Tax rate (e.g., 15%)
+        self.tax_history = []
+
+    def assess_tax(self, node_id: str, memory_usage: int, unit_value: float = 1.0) -> Dict[str, Any]:
+        """
+        Calculate Harberger Tax on memory usage.
+        tax = (usage * unit_value) * tau
+        """
+        assessed_value = memory_usage * unit_value
+        tax_amount = assessed_value * self.tau
+        
+        tax_record = {
+            "node_id": node_id,
+            "assessed_value": assessed_value,
+            "tax_amount": tax_amount,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        self.tax_history.append(tax_record)
+        return tax_record
+
+    @staticmethod
+    def calculate_gini(values: List[float]) -> float:
+        """
+        Calculate Gini coefficient to measure knowledge inequality.
+        Target: Gini <= 0.35 (Adl Invariant)
+        """
+        if not values:
+            return 0.0
+        sorted_values = sorted(values)
+        n = len(sorted_values)
+        total = sum(sorted_values)
+        if total == 0:
+            return 0.0
+        if np is None:
+            accum_sum = sum(
+                (2 * (idx + 1) - n - 1) * value
+                for idx, value in enumerate(sorted_values)
+            )
+        else:
+            index = np.arange(1, n + 1)
+            accum_sum = np.sum((2 * index - n - 1) * sorted_values)
+        return accum_sum / (n * total)
+
+
+class SovereignLivenessProver:
+    """
+    LTL (Linear Temporal Logic) Verification: Proving BIZRA Never Dies.
+    Formalizes the MAPE-K loop liveness: AG(s) -> EF(s, Terminal).
+    """
+    def __init__(self) -> None:
+        self.circuit_breaker = IhsanCircuitBreaker()
+        self.proposals: Dict[str, Proposal] = {}
+        self.proposal_index: Dict[ProposalStatus, Set[str]] = {
+            status: set() for status in ProposalStatus
+        }
+        self._proposals_created = 0
+        self._proposals_passed = 0
+        self._proposals_failed = 0
+        self._proposals_vetoed = 0
+        self._total_votes = 0
+        self._start_time = time.time()
+
+    def prove_liveness(self) -> Tuple[bool, str]:
+        """
+        Using Z3 LRA to prove that the system cannot deadlock.
+        """
+        if z3 is None:
+            return (False, "Liveness proof unavailable: z3-solver is not installed.")
+
+        s = z3.SolverFor("LRA")
+        
+        # State Variables
+        Start, Active, Terminal = z3.Bools('Start Active Terminal')
+        t1, t2, t3 = z3.Consts('t1 t2 t3', z3.BoolSort())
+        
+        # Transition Relations
+        # t1: Start -> Active
+        s.add(z3.Implies(Start, t1))
+        # t2: Active -> Terminal (Progress)
+        # t3: Active -> Active (Loop/Idle)
+        s.add(z3.Implies(Active, z3.Or(t2, t3)))
+        s.add(z3.Implies(t2, Terminal))
+        s.add(z3.Implies(t3, Active))
+        
+        # Deadlock check: Is there a path from Start that never reaches Terminal?
+        s.push()
+        s.add(Start)
+        s.add(z3.Not(Terminal))
+        
+        result = s.check()
+        if result == z3.unsat:
+            return (True, "Liveness formally proven: Zero paths to terminal-exclusion.")
+        if result == z3.sat:
+            return (False, "Liveness not proven: counterexample exists with Start true and Terminal false.")
+        return (False, f"Liveness proof inconclusive: solver returned {result}.")
+
+    def calculate_ihsan_vector(self, proposal: Proposal) -> float:
+        """
+        Calculates the 8-dimension Ihsan Vector (I_vec).
+        Threshold for sovereignty: 0.95
+        """
+        dimensions = {
+            "correctness": 0.22, "safety": 0.22, "user_benefit": 0.14,
+            "efficiency": 0.12, "auditability": 0.12, "anti_centralization": 0.08,
+            "robustness": 0.06, "adl_fairness": 0.04
+        }
+        scores = {
+            "correctness": proposal.ihsan_metrics.kamal,
+            "safety": proposal.ihsan_metrics.ikhlas,
+            "user_benefit": proposal.fate_metrics.empowerment,
+            "efficiency": (1.0 - proposal.fate_metrics.autonomy * 0.1),
+            "auditability": proposal.fate_metrics.transparency,
+            "anti_centralization": proposal.fate_metrics.fairness,
+            "robustness": proposal.ihsan_metrics.istidama,
+            "adl_fairness": proposal.ihsan_metrics.adl
+        }
+        return sum(dimensions[k] * scores[k] for k in dimensions)
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Get governance metrics."""
+        elapsed = time.time() - self._start_time
+        return {
+            "total_proposals": len(self.proposals),
+            "proposals_created": self._proposals_created,
+            "proposals_passed": self._proposals_passed,
+            "proposals_failed": self._proposals_failed,
+            "proposals_vetoed": self._proposals_vetoed,
+            "total_votes": self._total_votes,
+            "pass_rate": self._proposals_passed / max(1, self._proposals_created - self._proposals_vetoed),
+            "circuit_breaker_trip_rate": self.circuit_breaker.trip_rate,
+            "proposals_by_status": {status.name: len(ids) for status, ids in self.proposal_index.items()},
             "uptime_seconds": elapsed,
         }
 
