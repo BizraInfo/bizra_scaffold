@@ -5,8 +5,8 @@ Elite Practitioner Grade | Real Implementations
 
 Features:
 - L2: Real LZMA compression (45% ratio target)
-- L3: Real FAISS vector similarity search
-- L4: Real Neo4j async graph database
+- L3: FAISS vector similarity search (basic fallback)
+- L4: Neo4j async graph database (lazy loaded)
 
 No mocks. Production-ready. Evidence-based.
 """
@@ -18,11 +18,7 @@ import lzma
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
-
-import faiss
-import numpy as np
-from neo4j import AsyncDriver, AsyncGraphDatabase
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # ============================================================================
 # L2 CONSOLIDATION - REAL LZMA COMPRESSION
@@ -170,13 +166,23 @@ class L2WorkingMemoryV2:
         if not self.compression_history:
             return {"avg_ratio": 0.0, "min_ratio": 0.0, "max_ratio": 0.0}
 
+        try:
+            import numpy as np
+        except ImportError:
+            avg_ratio = sum(self.compression_history) / len(self.compression_history)
+            min_ratio = min(self.compression_history)
+            max_ratio = max(self.compression_history)
+        else:
+            avg_ratio = float(np.mean(self.compression_history))
+            min_ratio = float(np.min(self.compression_history))
+            max_ratio = float(np.max(self.compression_history))
+
         return {
-            "avg_ratio": float(np.mean(self.compression_history)),
-            "min_ratio": float(np.min(self.compression_history)),
-            "max_ratio": float(np.max(self.compression_history)),
+            "avg_ratio": avg_ratio,
+            "min_ratio": min_ratio,
+            "max_ratio": max_ratio,
             "target_ratio": self.target_ratio,
-            "meets_target": float(np.mean(self.compression_history))
-            <= self.target_ratio,
+            "meets_target": avg_ratio <= self.target_ratio,
         }
 
 
@@ -185,9 +191,99 @@ class L2WorkingMemoryV2:
 # ============================================================================
 
 
+class BasicVectorIndex:
+    """
+    Lightweight vector index fallback.
+
+    Uses cosine similarity with optional numpy acceleration.
+    """
+
+    def __init__(self, dimension: int):
+        self.dimension = dimension
+        self.vectors: List[List[float]] = []
+        self.ids: List[str] = []
+        self._np = None
+        self._use_numpy = False
+
+        try:
+            import numpy as np
+        except ImportError:
+            return
+
+        self._np = np
+        self._use_numpy = True
+
+    @property
+    def ntotal(self) -> int:
+        return len(self.vectors)
+
+    def add(self, vector: Sequence[float], doc_id: str) -> None:
+        packed = self._coerce_vector(vector)
+        if len(packed) != self.dimension:
+            raise ValueError(
+                f"Invalid vector length: {len(packed)} (expected {self.dimension})"
+            )
+        self.vectors.append(packed)
+        self.ids.append(doc_id)
+
+    def search(self, query: Sequence[float], k: int = 5) -> List[Tuple[str, float]]:
+        if not self.vectors:
+            return []
+
+        query_vec = self._coerce_vector(query)
+        if len(query_vec) != self.dimension:
+            raise ValueError(
+                f"Invalid query length: {len(query_vec)} (expected {self.dimension})"
+            )
+
+        if self._use_numpy:
+            return self._search_numpy(query_vec, k)
+        return self._search_python(query_vec, k)
+
+    def _coerce_vector(self, vector: Sequence[float]) -> List[float]:
+        if self._use_numpy and hasattr(vector, "tolist"):
+            return vector.tolist()
+        return list(vector)
+
+    def _search_numpy(self, query: List[float], k: int) -> List[Tuple[str, float]]:
+        q = self._np.array(query, dtype=self._np.float32)
+        q_norm = self._np.linalg.norm(q)
+        if q_norm == 0:
+            return []
+
+        mat = self._np.array(self.vectors, dtype=self._np.float32)
+        mat_norms = self._np.linalg.norm(mat, axis=1)
+        mat_norms[mat_norms == 0] = 1e-9
+        scores = self._np.dot(mat, q) / (mat_norms * q_norm)
+        top_indices = self._np.argsort(scores)[::-1][:k]
+        return [(self.ids[i], float(scores[i])) for i in top_indices]
+
+    def _search_python(self, query: List[float], k: int) -> List[Tuple[str, float]]:
+        def dot(v1: List[float], v2: List[float]) -> float:
+            return sum(x * y for x, y in zip(v1, v2))
+
+        def mag(v: List[float]) -> float:
+            return sum(x * x for x in v) ** 0.5
+
+        q_mag = mag(query)
+        if q_mag == 0:
+            return []
+
+        scores: List[Tuple[float, str]] = []
+        for i, vec in enumerate(self.vectors):
+            v_mag = mag(vec)
+            if v_mag == 0:
+                continue
+            score = dot(query, vec) / (q_mag * v_mag)
+            scores.append((score, self.ids[i]))
+
+        scores.sort(key=lambda item: item[0], reverse=True)
+        return [(doc_id, score) for score, doc_id in scores[:k]]
+
+
 class L3EpisodicMemoryV2:
     """
-    L3: Episodic memory with real FAISS vector similarity search.
+    L3: Episodic memory with FAISS vector similarity search.
 
     Features:
     - FAISS IndexFlatL2 for exact similarity search
@@ -195,49 +291,99 @@ class L3EpisodicMemoryV2:
     - Sub-5ms recall latency target
     """
 
-    def __init__(self, embedding_dim: int = 768, index_type: str = "Flat"):
+    def __init__(
+        self, embedding_dim: int = 768, index_type: str = "Flat", use_faiss: bool = True
+    ):
         """
-        Initialize L3 with FAISS index.
+        Initialize L3 with FAISS index, falling back to BasicVectorIndex.
 
         Args:
             embedding_dim: Dimensionality of embedding vectors
             index_type: FAISS index type ("Flat", "IVF", "HNSW")
+            use_faiss: Enable FAISS backend when available
         """
         self.embedding_dim = embedding_dim
         self.index_type = index_type
+        self.backend = "basic"
+        self._faiss = None
+        self._np = None
+        self._ivf_trained = True
+        self._training_buffer: List[Sequence[float]] = []
+        self._min_training_samples = 0
 
-        # Initialize FAISS index
-        if index_type == "Flat":
-            self.index = faiss.IndexFlatL2(embedding_dim)
-            self._ivf_trained = True  # Flat doesn't need training
-        elif index_type == "IVF":
-            quantizer = faiss.IndexFlatL2(embedding_dim)
-            # Use fewer clusters for IVF (will auto-train when enough data)
-            self.index = faiss.IndexIVFFlat(quantizer, embedding_dim, 100)
-            self.index.nprobe = 10
-            self._ivf_trained = False  # Track training state
-            self._training_buffer: List[np.ndarray] = []  # Buffer for training
-            self._min_training_samples = 256  # Min samples to train IVF (> nlist)
-        elif index_type == "HNSW":
-            self.index = faiss.IndexHNSWFlat(embedding_dim, 32)
-            self._ivf_trained = True  # HNSW doesn't need training
-        else:
-            raise ValueError(f"Unknown index type: {index_type}")
+        if use_faiss:
+            try:
+                import faiss
+                import numpy as np
+            except ImportError:
+                self.backend = "basic"
+            else:
+                self.backend = "faiss"
+                self._faiss = faiss
+                self._np = np
+                self._init_faiss_index()
+
+        if self.backend == "basic":
+            self.index = BasicVectorIndex(embedding_dim)
+            self._ivf_trained = True
+            self._training_buffer = []
+            self._min_training_samples = 0
 
         # Episode storage
         self.episodes: Dict[str, Dict[str, Any]] = {}
         self._episode_order: List[str] = []
-        self.embeddings: List[np.ndarray] = []
+        self.embeddings: List[Sequence[float]] = []
 
         # Merkle chain
         self.merkle_root: bytes = b"\x00" * 64
 
+    def _init_faiss_index(self) -> None:
+        """Initialize FAISS index based on type."""
+        if self.index_type == "Flat":
+            self.index = self._faiss.IndexFlatL2(self.embedding_dim)
+            self._ivf_trained = True
+            self._training_buffer = []
+            self._min_training_samples = 0
+        elif self.index_type == "IVF":
+            quantizer = self._faiss.IndexFlatL2(self.embedding_dim)
+            self.index = self._faiss.IndexIVFFlat(quantizer, self.embedding_dim, 100)
+            self.index.nprobe = 10
+            self._ivf_trained = False
+            self._training_buffer = []
+            self._min_training_samples = 256
+        elif self.index_type == "HNSW":
+            self.index = self._faiss.IndexHNSWFlat(self.embedding_dim, 32)
+            self._ivf_trained = True
+            self._training_buffer = []
+            self._min_training_samples = 0
+        else:
+            raise ValueError(f"Unknown index type: {self.index_type}")
+
+    def _prepare_numpy(self, embedding: Sequence[float]):
+        if self._np is None:
+            raise RuntimeError("FAISS backend requires numpy.")
+        vector = self._np.array(embedding, dtype=self._np.float32)
+        if vector.shape != (self.embedding_dim,):
+            raise ValueError(f"Invalid embedding shape: {vector.shape}")
+        return vector
+
+    def _prepare_list(self, embedding: Sequence[float]) -> List[float]:
+        if hasattr(embedding, "tolist"):
+            vector = embedding.tolist()
+        else:
+            vector = list(embedding)
+        if len(vector) != self.embedding_dim:
+            raise ValueError(
+                f"Invalid embedding length: {len(vector)} (expected {self.embedding_dim})"
+            )
+        return vector
+
     def _train_ivf_index(self) -> None:
         """Train IVF index with buffered samples."""
-        if not self._training_buffer:
+        if self.backend != "faiss" or not self._training_buffer:
             return
 
-        training_data = np.array(self._training_buffer, dtype=np.float32)
+        training_data = self._np.array(self._training_buffer, dtype=self._np.float32)
         self.index.train(training_data)
 
         # Add buffered embeddings to trained index
@@ -247,7 +393,7 @@ class L3EpisodicMemoryV2:
         self._training_buffer = []  # Clear buffer
 
     async def store_episode(
-        self, episode_id: str, content: Dict[str, Any], embedding: np.ndarray
+        self, episode_id: str, content: Dict[str, Any], embedding: Sequence[float]
     ) -> bytes:
         """
         Store episode with FAISS indexing and Merkle chain integrity.
@@ -259,9 +405,10 @@ class L3EpisodicMemoryV2:
 
         Returns: Updated Merkle root
         """
-        # Validate embedding
-        if embedding.shape != (self.embedding_dim,):
-            raise ValueError(f"Invalid embedding shape: {embedding.shape}")
+        if self.backend == "faiss":
+            vector = self._prepare_numpy(embedding)
+        else:
+            vector = self._prepare_list(embedding)
 
         # Compute content hash
         content_bytes = json.dumps(
@@ -279,15 +426,18 @@ class L3EpisodicMemoryV2:
         }
 
         # Add to FAISS index (handle IVF training if needed)
-        if self.index_type == "IVF" and not self._ivf_trained:
-            # Buffer embeddings until we have enough to train
-            self._training_buffer.append(embedding)
-            if len(self._training_buffer) >= self._min_training_samples:
-                self._train_ivf_index()
+        if self.backend == "faiss":
+            if self.index_type == "IVF" and not self._ivf_trained:
+                # Buffer embeddings until we have enough to train
+                self._training_buffer.append(vector)
+                if len(self._training_buffer) >= self._min_training_samples:
+                    self._train_ivf_index()
+            else:
+                self.index.add(vector.reshape(1, -1))
         else:
-            self.index.add(np.array([embedding], dtype=np.float32))
+            self.index.add(vector, episode_id)
 
-        self.embeddings.append(embedding)
+        self.embeddings.append(vector)
         self._episode_order.append(episode_id)
 
         # Update Merkle root
@@ -296,7 +446,7 @@ class L3EpisodicMemoryV2:
         return self.merkle_root
 
     async def recall_similar(
-        self, query_embedding: np.ndarray, k: int = 3
+        self, query_embedding: Sequence[float], k: int = 3
     ) -> List[Dict[str, Any]]:
         """
         Recall similar episodes using FAISS search.
@@ -307,6 +457,22 @@ class L3EpisodicMemoryV2:
 
         Returns: List of similar episodes with distances
         """
+        if self.backend != "faiss":
+            if not self.episodes:
+                return []
+            query_vec = self._prepare_list(query_embedding)
+            matches = self.index.search(query_vec, k)
+            results = []
+            for episode_id, score in matches:
+                episode = self.episodes.get(episode_id)
+                if not episode:
+                    continue
+                entry = episode.copy()
+                entry["similarity_distance"] = float(1.0 - score)
+                entry["episode_id"] = episode_id
+                results.append(entry)
+            return results
+
         # Handle IVF index that's not yet trained (data still in buffer)
         if self.index_type == "IVF" and not self._ivf_trained:
             if not self._training_buffer:
@@ -314,9 +480,9 @@ class L3EpisodicMemoryV2:
             # Force-train with available data if below threshold
             if len(self._training_buffer) >= 2:  # Min 2 for any search
                 # Use fewer clusters for small datasets
-                quantizer = faiss.IndexFlatL2(self.embedding_dim)
+                quantizer = self._faiss.IndexFlatL2(self.embedding_dim)
                 nlist = min(len(self._training_buffer) // 2, 100)
-                self.index = faiss.IndexIVFFlat(
+                self.index = self._faiss.IndexIVFFlat(
                     quantizer, self.embedding_dim, max(nlist, 1)
                 )
                 self.index.nprobe = min(10, nlist)
@@ -327,15 +493,10 @@ class L3EpisodicMemoryV2:
         if self.index.ntotal == 0:
             return []
 
-        # Validate query
-        if query_embedding.shape != (self.embedding_dim,):
-            raise ValueError(f"Invalid query shape: {query_embedding.shape}")
-
-        # Search FAISS index
-        query = np.array([query_embedding], dtype=np.float32)
+        query_vec = self._prepare_numpy(query_embedding)
+        query = query_vec.reshape(1, -1)
         distances, indices = self.index.search(query, min(k, self.index.ntotal))
 
-        # Retrieve episodes
         results = []
         for dist, idx in zip(distances[0], indices[0]):
             if idx != -1 and idx < len(self._episode_order):
@@ -379,10 +540,15 @@ class L3EpisodicMemoryV2:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get L3 statistics for monitoring."""
+        index_total = (
+            self.index.ntotal if hasattr(self.index, "ntotal") else len(self.episodes)
+        )
+        index_type = self.index_type if self.backend == "faiss" else "basic"
         return {
             "total_episodes": len(self.episodes),
-            "index_total": self.index.ntotal,
-            "index_type": self.index_type,
+            "index_total": index_total,
+            "index_type": index_type,
+            "index_backend": self.backend,
             "embedding_dim": self.embedding_dim,
             "merkle_integrity": self.verify_integrity(),
         }
@@ -413,17 +579,36 @@ class L4SemanticHyperGraphV2:
             neo4j_auth: (username, password) tuple
         """
         self.neo4j_uri = neo4j_uri
-        self.driver: Optional[AsyncDriver] = None
+        self.driver: Optional[Any] = None
         self.neo4j_auth = neo4j_auth
+        self._disabled_reason: Optional[str] = None
+        self._neo4j_factory = None
 
         # Topology cache
         self._topology_cache: Optional[Dict[str, float]] = None
         self._cache_timestamp: Optional[datetime] = None
         self._cache_ttl_seconds = 300  # 5 minutes
 
+        try:
+            from neo4j import AsyncGraphDatabase
+        except ImportError:
+            self._disabled_reason = "neo4j driver not installed"
+        else:
+            self._neo4j_factory = AsyncGraphDatabase
+
+    def _ensure_driver(self) -> None:
+        if self._disabled_reason:
+            raise RuntimeError(f"Neo4j unavailable: {self._disabled_reason}")
+        if not self.driver:
+            raise RuntimeError("Neo4j driver not initialized. Call initialize() first.")
+
     async def initialize(self) -> None:
         """Initialize Neo4j connection and create indexes."""
-        self.driver = AsyncGraphDatabase.driver(
+        if self._neo4j_factory is None:
+            return
+
+        self._disabled_reason = None
+        self.driver = self._neo4j_factory.driver(
             self.neo4j_uri,
             auth=self.neo4j_auth,
             max_connection_pool_size=50,
@@ -462,8 +647,7 @@ class L4SemanticHyperGraphV2:
 
         Returns: Hyperedge ID
         """
-        if not self.driver:
-            raise RuntimeError("Neo4j driver not initialized. Call initialize() first.")
+        self._ensure_driver()
 
         # Generate hyperedge ID
         edge_data = f"{nodes}_{relation}"
@@ -559,8 +743,7 @@ class L4SemanticHyperGraphV2:
 
         Returns: List of result records as dictionaries
         """
-        if not self.driver:
-            raise RuntimeError("Neo4j driver not initialized")
+        self._ensure_driver()
 
         parameters = parameters if parameters else {}
 
@@ -581,8 +764,7 @@ class L4SemanticHyperGraphV2:
             if age < self._cache_ttl_seconds:
                 return self._topology_cache
 
-        if not self.driver:
-            raise RuntimeError("Neo4j driver not initialized")
+        self._ensure_driver()
 
         metrics = {}
 
@@ -719,8 +901,7 @@ class L4SemanticHyperGraphV2:
 
         Returns: List of paths with domain crossing information
         """
-        if not self.driver:
-            raise RuntimeError("Neo4j driver not initialized")
+        self._ensure_driver()
 
         async with self.driver.session() as session:
             result = await session.run(
@@ -809,8 +990,7 @@ class L4SemanticHyperGraphV2:
 
         Returns: List of neighbor info dicts with domains, weights, relations
         """
-        if not self.driver:
-            raise RuntimeError("Neo4j driver not initialized")
+        self._ensure_driver()
 
         async with self.driver.session() as session:
             result = await session.run(
