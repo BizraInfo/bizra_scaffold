@@ -20,6 +20,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import blake3
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
@@ -296,6 +297,27 @@ class TestCanonicalJson:
         outputs = [canonical_json(data) for _ in range(10)]
         assert all(o == outputs[0] for o in outputs)
 
+    def test_rejects_non_string_keys(self):
+        """Non-string keys must fail closed."""
+        data = {"ok": 1, 2: "bad"}
+        with pytest.raises(TypeError):
+            canonical_json(data)
+
+    def test_rejects_non_json_types(self):
+        """Unsupported types must fail closed."""
+        data = {"ok": object()}
+        with pytest.raises(TypeError):
+            canonical_json(data)
+
+    def test_rejects_non_finite_floats(self):
+        """NaN/Infinity must fail closed."""
+        with pytest.raises(ValueError):
+            canonical_json({"bad": float("nan")})
+        with pytest.raises(ValueError):
+            canonical_json({"bad": float("inf")})
+        with pytest.raises(ValueError):
+            canonical_json({"bad": float("-inf")})
+
 
 class TestComputeDigest:
     """Tests for BLAKE3 digest computation."""
@@ -322,6 +344,12 @@ class TestComputeDigest:
         assert all(c in "0123456789abcdef" for c in digest)
         # BLAKE3 produces 64-character hex (32 bytes)
         assert len(digest) == 64
+
+    def test_digest_matches_blake3(self):
+        """Digest must match direct BLAKE3 output."""
+        data = b"pci-vector"
+        expected = blake3.blake3(DOMAIN_PREFIX + data).hexdigest()
+        assert compute_digest(data, domain_separated=True) == expected
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

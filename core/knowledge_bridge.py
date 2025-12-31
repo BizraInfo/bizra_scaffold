@@ -1036,9 +1036,16 @@ class KnowledgeGraphBridge:
         if self.graph.add_node(conv_node):
             self._nodes_created += 1
 
-        sorted_nodes = sorted(
-            chat_nodes, key=lambda item: str(item.get("message_id", ""))
-        )
+        def _chat_sort_key(item: Dict[str, Any]) -> Tuple[int, int | str]:
+            order_index = item.get("order_index")
+            if order_index is not None:
+                try:
+                    return (0, int(order_index))
+                except (TypeError, ValueError):
+                    return (0, 0)
+            return (1, str(item.get("message_id", "")))
+
+        sorted_nodes = sorted(chat_nodes, key=_chat_sort_key)
 
         previous_id: Optional[str] = None
         for record in sorted_nodes:
@@ -1049,21 +1056,24 @@ class KnowledgeGraphBridge:
             snr = float(record.get("snr", 0.0))
             ihsan = float(record.get("ihsan", 0.95))
 
+            order_index = record.get("order_index")
+            properties = [
+                ("conversation_id", conversation_id),
+                ("message_id", message_id),
+                ("role", role),
+                ("text_sha256", text_sha256),
+                ("snr", f"{snr:.6f}"),
+                ("ihsan", f"{ihsan:.6f}"),
+            ]
+            if order_index is not None:
+                properties.append(("order_index", str(order_index)))
+
             msg_node = KnowledgeNode(
                 id=stable_id,
                 node_type=NodeType.MESSAGE,
                 label=f"message:{message_id}",
                 source_file=source_id,
-                properties=frozenset(
-                    [
-                        ("conversation_id", conversation_id),
-                        ("message_id", message_id),
-                        ("role", role),
-                        ("text_sha256", text_sha256),
-                        ("snr", f"{snr:.6f}"),
-                        ("ihsan", f"{ihsan:.6f}"),
-                    ]
-                ),
+                properties=frozenset(properties),
                 signal_strength=min(snr, 1.0),
             )
 

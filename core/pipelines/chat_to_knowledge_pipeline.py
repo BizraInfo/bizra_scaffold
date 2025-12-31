@@ -32,6 +32,15 @@ class RawMessage:
     role: str
     content: str
     timestamp: float
+    parent_id: Optional[str]
+
+
+@dataclass(frozen=True)
+class FileMeta:
+    path: Path
+    rel_path: str
+    sha256: str
+    size_bytes: int
 
 
 @dataclass(frozen=True)
@@ -113,13 +122,25 @@ def _compute_file_sha256(path: Path, chunk_size: int = 8192) -> str:
     return digest.hexdigest()
 
 
-def _compute_dataset_digest(files: Sequence[Path], root_path: Path) -> str:
-    items = []
+def _collect_file_metadata(files: Sequence[Path], root_path: Path) -> List[FileMeta]:
+    metadata: List[FileMeta] = []
     for path in files:
         rel_path = path.relative_to(root_path).as_posix()
-        items.append((rel_path, _compute_file_sha256(path)))
+        sha256 = _compute_file_sha256(path)
+        size_bytes = path.stat().st_size
+        metadata.append(
+            FileMeta(
+                path=path,
+                rel_path=rel_path,
+                sha256=sha256,
+                size_bytes=size_bytes,
+            )
+        )
+    return metadata
 
-    items.sort(key=lambda item: item[0])
+
+def _compute_dataset_digest(files: Sequence[FileMeta]) -> str:
+    items = sorted((meta.rel_path, meta.sha256) for meta in files)
     digest = hashlib.sha256()
     for rel_path, file_hash in items:
         digest.update(rel_path.encode("utf-8"))
@@ -229,6 +250,9 @@ def _parse_conversation(
                 role=str(role),
                 content=text_content,
                 timestamp=timestamp,
+                parent_id=str(node_data.get("parent"))
+                if node_data.get("parent") is not None
+                else None,
             )
         )
 
@@ -236,6 +260,55 @@ def _parse_conversation(
         return None, [], "empty_messages"
 
     return conversation_id, messages, None
+
+
+def _order_messages(messages: Sequence[RawMessage]) -> List[RawMessage]:
+    if not messages:
+        return []
+
+    msg_by_id = {msg.message_id: msg for msg in messages}
+    children: Dict[str, List[str]] = {mid: [] for mid in msg_by_id}
+    roots: List[str] = []
+
+    for msg in messages:
+        parent_id = msg.parent_id
+        if parent_id and parent_id in msg_by_id and parent_id != msg.message_id:
+            children[parent_id].append(msg.message_id)
+        else:
+            roots.append(msg.message_id)
+
+    def sort_key(message_id: str) -> Tuple[float, str]:
+        msg = msg_by_id[message_id]
+        return (msg.timestamp or 0.0, msg.message_id)
+
+    roots.sort(key=sort_key)
+    for child_ids in children.values():
+        child_ids.sort(key=sort_key)
+
+    ordered: List[RawMessage] = []
+    visited: set[str] = set()
+
+    def walk(start_id: str) -> None:
+        stack = [start_id]
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            ordered.append(msg_by_id[current])
+            for child_id in reversed(children.get(current, [])):
+                if child_id not in visited:
+                    stack.append(child_id)
+
+    for root_id in roots:
+        walk(root_id)
+
+    remaining = [mid for mid in msg_by_id if mid not in visited]
+    remaining.sort(key=sort_key)
+    for message_id in remaining:
+        walk(message_id)
+
+    return ordered
 
 
 def _deterministic_embedding(text: str, dim: int) -> np.ndarray:
@@ -268,7 +341,8 @@ async def run_chat_to_knowledge_pipeline(
         raise FileNotFoundError(f"Chat root not found: {root_path}")
 
     files = _iter_chat_files(root_path)
-    dataset_digest = _compute_dataset_digest(files, root_path)
+    file_metadata = _collect_file_metadata(files, root_path)
+    dataset_digest = _compute_dataset_digest(file_metadata)
     thresholds = SNRThresholds()
 
     bridge = KnowledgeGraphBridge()
@@ -277,23 +351,26 @@ async def run_chat_to_knowledge_pipeline(
     conversation_ids: set[str] = set()
     skipped_files: List[Dict[str, str]] = []
 
-    for file_path in files:
-        source_rel_path = file_path.relative_to(root_path).as_posix()
+    for meta in file_metadata:
+        file_path = meta.path
+        source_rel_path = meta.rel_path
         conversation_id, raw_messages, error = _parse_conversation(file_path)
         if error or conversation_id is None:
             skipped_files.append(
                 {
                     "source_rel_path": source_rel_path,
                     "reason": error or "unknown_error",
+                    "sha256": meta.sha256,
+                    "size_bytes": meta.size_bytes,
                 }
             )
             continue
 
         conversation_ids.add(conversation_id)
-        raw_messages = sorted(raw_messages, key=lambda item: item.message_id)
+        ordered_messages = _order_messages(raw_messages)
 
         chat_nodes: List[Dict[str, Any]] = []
-        for raw in raw_messages:
+        for order_index, raw in enumerate(ordered_messages):
             text_sha256 = hashlib.sha256(raw.content.encode("utf-8")).hexdigest()
             snr, snr_level, ihsan = _compute_chat_snr(raw.content, thresholds)
 
@@ -318,7 +395,9 @@ async def run_chat_to_knowledge_pipeline(
                 source_rel_path=source_rel_path,
             )
             messages.append(record)
-            chat_nodes.append(record.to_graph_dict())
+            node_payload = record.to_graph_dict()
+            node_payload["order_index"] = order_index
+            chat_nodes.append(node_payload)
 
             embedding = _deterministic_embedding(raw.content, embedding_dim)
             await memory.store_episode(stable_id, record.to_memory_content(), embedding)
@@ -341,7 +420,9 @@ async def run_chat_to_knowledge_pipeline(
             "conversations": len(conversation_ids),
             "messages": len(messages_sorted),
         },
-        "skipped_files": skipped_files,
+        "skipped_files": sorted(
+            skipped_files, key=lambda item: item.get("source_rel_path", "")
+        ),
     }
     if include_generated_at:
         manifest["generated_at"] = datetime.now(timezone.utc).isoformat()

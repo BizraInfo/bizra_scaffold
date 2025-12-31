@@ -37,12 +37,12 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Set, Tuple, Typ
 # Internal imports
 try:
     import numpy as np
-except ImportError:
+except Exception:
     np = None
 
 try:
     import z3
-except ImportError:
+except Exception:
     z3 = None
 
 try:

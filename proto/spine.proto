@@ -1,0 +1,102 @@
+// BIZRA_OS_SPINE: THE NERVOUS SYSTEM SCHEMA (v1.0.0)
+// Resolves the polyglot disconnect between Neural (Python) and Symbolic (TS/Rust) layers.
+
+syntax = "proto3";
+
+package bizra.spine;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// --- CORE IDENTITY & SECURITY ---
+
+message Identity {
+    string agent_id = 1;      // Sovereign Agent ID
+    bytes public_key = 2;    // ML-KEM-768 or Ed25519 public key
+    string role = 3;         // e.g., "INGESTOR", "ORCHESTRATOR", "ARCHIVE"
+}
+
+message Signature {
+    bytes data = 1;
+    string algorithm = 2;    // e.g., "ML-KEM-768", "Ed25519"
+    bytes signer_key = 3;
+}
+
+// --- COGNITIVE PRIMITIVES ---
+
+message CognitiveEvent {
+    string event_id = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    Identity source = 3;
+    
+    // The actual payload can be raw text, a structured intent, or a result
+    oneof payload {
+        string raw_perception = 4;
+        google.protobuf.Struct intent = 5;
+        google.protobuf.Struct result = 6;
+    }
+    
+    double ihsan_score = 7;     // Initial target or result
+    bytes evidence_hash = 8;    // BLAKE3 or SHA3-512
+}
+
+message MemoryOperation {
+    enum Type {
+        STORE = 0;
+        RECALL = 1;
+        CONSOLIDATE = 2;
+        TAX = 3;
+    }
+    Type type = 1;
+    string target_layer = 2;    // e.g., "L2", "L4"
+    google.protobuf.Struct data = 3;
+    string query_vector_id = 4; // Used for FAISS/Neo4j lookup
+}
+
+// --- SOVEREIGN GOVERNANCE ---
+
+message FATEVerdict {
+    string request_id = 1;
+    bool constitutional = 2;
+    string reasoning = 3;       // Human-readable explanation
+    string z3_proof_hash = 4;   // Link to formal SMT proof
+    google.protobuf.Struct adherence_metrics = 5; // Adl, Kamal, Ikhlas scores
+}
+
+message PhiPulse {
+    double phi_value = 1;       // Integrated Information (Consciousness)
+    double entropy = 2;         // Noise Floor
+    google.protobuf.Timestamp timestamp = 3;
+}
+
+// --- THE SPINE SERVICE ---
+
+service BIZRASpine {
+    // Neural -> Symbolic link: Python sends perceptions, TS returns reasoning/vets
+    rpc RouteCycle(CognitiveEvent) returns (CycleResponse);
+    
+    // Memory Interface: Uniform access to L1-L7
+    rpc AccessMemory(MemoryOperation) returns (MemoryResponse);
+    
+    // Heartbeat: Continuous monitoring of system Φ
+    rpc StreamConsciousness(stream PhiPulse) returns (stream SystemHealth);
+}
+
+message CycleResponse {
+    string status = 1;         // "ACCEPTED", "REJECTED", "PENDING_VERIFICATION"
+    FATEVerdict verdict = 2;
+    google.protobuf.Struct reasoning_chain = 3; // The GoT output
+    bytes proof_of_impact = 4; // PoI receipt
+}
+
+message MemoryResponse {
+    repeated google.protobuf.Struct episodes = 1;
+    double snr_score = 2;
+    string audit_trail_id = 3;
+}
+
+message SystemHealth {
+    bool sovereign_integrity = 1;
+    string alert_level = 2;    // "IDLE", "VIGILANT", "THREAT_DETECTED"
+    double global_ihsan_score = 3;
+}

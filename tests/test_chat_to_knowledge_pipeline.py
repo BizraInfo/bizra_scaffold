@@ -6,13 +6,16 @@ import json
 import sys
 from pathlib import Path
 
+import hashlib
 import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from core.knowledge_bridge import EdgeType
 from core.pipelines.chat_to_knowledge_pipeline import (
     _deterministic_embedding,
+    _stable_message_id,
     run_chat_to_knowledge_pipeline,
 )
 
@@ -35,6 +38,20 @@ def _make_mapping(messages):
             "parent": parent_id,
         }
         parent_id = message_id
+    return mapping
+
+
+def _make_mapping_with_parents(messages):
+    mapping = {}
+    for message_id, role, content, create_time, parent_id in messages:
+        mapping[message_id] = {
+            "message": {
+                "author": {"role": role},
+                "content": {"parts": [content]},
+                "create_time": create_time,
+            },
+            "parent": parent_id,
+        }
     return mapping
 
 
@@ -90,3 +107,57 @@ async def test_recall_returns_expected_episode(tmp_path):
 
     assert results
     assert results[0]["episode_id"] == result.messages[0].stable_id
+
+
+@pytest.mark.asyncio
+async def test_parent_ordering_sets_next_edges(tmp_path):
+    root = tmp_path / "chat"
+    root.mkdir()
+
+    conversation_id = "conv_parent"
+    messages = [
+        ("m2", "user", "second node", 1700000002.0, "m1"),
+        ("m1", "user", "root node", 1700000001.0, None),
+        ("m3", "assistant", "third node", 1700000003.0, "m2"),
+    ]
+    mapping = _make_mapping_with_parents(messages)
+    payload = {"conversation_id": conversation_id, "mapping": mapping}
+    (root / "conv_parent.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    result = await run_chat_to_knowledge_pipeline(root)
+    source_rel_path = "conv_parent.json"
+
+    def stable_id(message_id: str, role: str, content: str) -> str:
+        text_sha256 = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        return _stable_message_id(
+            source_rel_path, conversation_id, message_id, role, text_sha256
+        )
+
+    m1_id = stable_id("m1", "user", "root node")
+    m2_id = stable_id("m2", "user", "second node")
+    m3_id = stable_id("m3", "assistant", "third node")
+
+    assert result.bridge.graph.get_edge(m1_id, m2_id, EdgeType.NEXT) is not None
+    assert result.bridge.graph.get_edge(m2_id, m3_id, EdgeType.NEXT) is not None
+    assert result.bridge.graph.get_edge(m2_id, m1_id, EdgeType.NEXT) is None
+
+
+@pytest.mark.asyncio
+async def test_skipped_files_include_hash_and_size(tmp_path):
+    root = tmp_path / "chat"
+    root.mkdir()
+
+    mapping = _make_mapping([("m1", "user", "ok", 1700000000.0)])
+    _write_chat_json(root / "conv_ok.json", mapping)
+    (root / "bad.json").write_text("[1, 2, 3]", encoding="utf-8")
+
+    result = await run_chat_to_knowledge_pipeline(root)
+    skipped = result.manifest["skipped_files"]
+    assert skipped
+
+    entry = next(
+        item for item in skipped if item["source_rel_path"] == "bad.json"
+    )
+    assert entry["reason"] == "non_object_json"
+    assert entry["sha256"]
+    assert entry["size_bytes"] > 0

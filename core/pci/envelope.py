@@ -15,6 +15,7 @@ Version: 1.0.0
 from __future__ import annotations
 
 import json
+import math
 import secrets
 import uuid
 from dataclasses import dataclass, field
@@ -25,15 +26,13 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
-# Use blake3 if available, fallback to hashlib
+# BLAKE3 is required for PCI digests (fail-closed if missing).
 try:
     import blake3
-
-    HAS_BLAKE3 = True
-except ImportError:
-    import hashlib
-
-    HAS_BLAKE3 = False
+except ImportError as exc:
+    raise RuntimeError(
+        "blake3 is required for PCI digest computation. Install 'blake3'."
+    ) from exc
 
 
 # Domain separation prefix per PROTOCOL.md Section 2.2
@@ -54,6 +53,38 @@ SIGNED_FIELDS = [
 ]
 
 
+def _validate_json_value(value: Any, path: str = "$") -> None:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise TypeError(
+                    f"Non-string key at {path}: {key!r} ({type(key).__name__})"
+                )
+            _validate_json_value(item, f"{path}.{key}")
+        return
+
+    if isinstance(value, (list, tuple)):
+        for index, item in enumerate(value):
+            _validate_json_value(item, f"{path}[{index}]")
+        return
+
+    if isinstance(value, bool) or value is None:
+        return
+
+    if isinstance(value, int):
+        return
+
+    if isinstance(value, float):
+        if math.isnan(value) or math.isinf(value):
+            raise ValueError(f"Non-finite float at {path}: {value!r}")
+        return
+
+    if isinstance(value, str):
+        return
+
+    raise TypeError(f"Unsupported JSON type at {path}: {type(value).__name__}")
+
+
 def canonical_json(data: Dict[str, Any]) -> bytes:
     """
     Produce canonical JSON matching RFC 8785 JCS.
@@ -61,13 +92,15 @@ def canonical_json(data: Dict[str, Any]) -> bytes:
     - Keys sorted lexicographically
     - No whitespace between tokens
     - UTF-8 encoded
+    - Fail-closed on non-JSON types or non-finite floats
     """
+    _validate_json_value(data)
     return json.dumps(
         data,
         separators=(",", ":"),
         sort_keys=True,
         ensure_ascii=False,
-        default=str,
+        allow_nan=False,
     ).encode("utf-8")
 
 
@@ -85,13 +118,7 @@ def compute_digest(data: bytes, domain_separated: bool = True) -> str:
     if domain_separated:
         data = DOMAIN_PREFIX + data
 
-    if HAS_BLAKE3:
-        return blake3.blake3(data).hexdigest()
-    else:
-        # Fallback to SHA-256 if blake3 not available
-        import hashlib
-
-        return hashlib.sha256(data).hexdigest()
+    return blake3.blake3(data).hexdigest()
 
 
 @dataclass

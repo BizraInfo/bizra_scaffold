@@ -1,8 +1,11 @@
+import argparse
+import glob
+import hashlib
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Any, Optional
-import glob
 
 class ChatNode:
     def __init__(self, node_id: str, role: str, content: str, timestamp: float, parent_id: Optional[str] = None):
@@ -143,29 +146,87 @@ class ChatIngestor:
         
         return all_nodes[:top_k]
 
-    def export_gems_to_markdown(self, output_path: str, top_k: int = 5):
+    def export_gems_to_markdown(
+        self,
+        output_path: str,
+        top_k: int = 5,
+        allow_raw_output: bool = False,
+    ):
         gems = self.get_golden_gems(top_k)
-        
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write("# BIZRA: The Recovered Masterpiece\n\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"**Source:** Living Knowledge Base (Chat History)\n")
             f.write(f"**Method:** SNR Optimization & Graph of Thoughts Extraction\n\n")
+            if not allow_raw_output:
+                f.write("**Content:** HASH_ONLY (no raw text)\n\n")
             
             for i, (node, title) in enumerate(gems):
                 f.write(f"## Gem #{i+1}: {title}\n")
                 f.write(f"**SNR Score:** {node.snr_score}\n")
                 f.write(f"**Timestamp:** {datetime.fromtimestamp(node.timestamp).strftime('%Y-%m-%d %H:%M:%S')}\n\n")
                 f.write("### Content\n\n")
-                f.write(node.content)
+                if allow_raw_output:
+                    f.write(node.content)
+                else:
+                    content_hash = hashlib.sha256(
+                        node.content.encode("utf-8")
+                    ).hexdigest()
+                    f.write(f"content_sha256: {content_hash}\n")
+                    f.write(f"content_length: {len(node.content)}\n")
                 f.write("\n\n---\n\n")
         
         print(f"Exported {top_k} gems to {output_path}")
 
 if __name__ == "__main__":
-    ingestor = ChatIngestor("C:\\bizra_scaffold\\chat data sample")
+    parser = argparse.ArgumentParser(description="BIZRA Chat Ingestor")
+    parser.add_argument(
+        "--root",
+        required=True,
+        help="Root directory containing chat JSON exports",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Output markdown path (defaults to $BIZRA_EVIDENCE_OUT or ~/BIZRA_EVIDENCE)",
+    )
+    parser.add_argument("--top-k", type=int, default=5)
+    parser.add_argument(
+        "--allow-raw-output",
+        action="store_true",
+        help="Allow raw content output (must be outside repo)",
+    )
+    args = parser.parse_args()
+
+    repo_root = Path(__file__).resolve().parents[2]
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        evidence_root = Path(
+            os.environ.get("BIZRA_EVIDENCE_OUT", str(Path.home() / "BIZRA_EVIDENCE"))
+        )
+        output_path = evidence_root / "RECOVERED_MASTERPIECE.md"
+
+    if args.allow_raw_output:
+        try:
+            output_path.resolve().relative_to(repo_root)
+        except ValueError:
+            pass
+        else:
+            raise SystemExit(
+                "Refusing raw output inside repo. Use --output outside repo."
+            )
+
+    ingestor = ChatIngestor(args.root)
     ingestor.ingest_all()
-    
-    output_file = "C:\\bizra_scaffold\\evidence\\RECOVERED_MASTERPIECE.md"
-    ingestor.export_gems_to_markdown(output_file, top_k=5)
+
+    ingestor.export_gems_to_markdown(
+        str(output_path),
+        top_k=args.top_k,
+        allow_raw_output=args.allow_raw_output,
+    )
 
