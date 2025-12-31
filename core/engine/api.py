@@ -52,6 +52,43 @@ from core.security.quantum_security_v2 import QuantumSecurityV2
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Vanguard capability banner
+# ---------------------------------------------------------------------------
+
+
+def _print_vanguard_diagnostics() -> None:
+    import importlib.util
+    import os
+
+    try:
+        from core import __version__ as core_version
+    except Exception:
+        core_version = "unknown"
+
+    has_numpy = importlib.util.find_spec("numpy") is not None
+    has_faiss = importlib.util.find_spec("faiss") is not None
+    has_neo4j = importlib.util.find_spec("neo4j") is not None
+    forced_lite = os.getenv("BIZRA_LITE", "").lower() in ("1", "true", "on")
+
+    l3_mode = "faiss" if (has_numpy and has_faiss and not forced_lite) else "basic"
+    l4_enabled = has_neo4j and not forced_lite
+    l4_mode = "neo4j" if l4_enabled else "disabled"
+
+    print("\n" + "=" * 60)
+    print(f"BIZRA NODE VANGUARD (v{core_version})")
+    print("-" * 60)
+    print(
+        "CAPABILITIES: numpy={np} | faiss={faiss} | neo4j={neo4j} | lite={lite}".format(
+            np="yes" if has_numpy else "no",
+            faiss="yes" if has_faiss else "no",
+            neo4j="yes" if has_neo4j else "no",
+            lite="on" if forced_lite else "off",
+        )
+    )
+    print(f"MODES: L3={l3_mode} | L4={l4_mode}")
+    print("=" * 60 + "\n")
+
 # Initialize config
 config = get_config()
 
@@ -305,6 +342,7 @@ async def startup_event():
     print("=" * 60)
     print("BIZRA AEON OMEGA v10.0.0 - STARTING")
     print("=" * 60)
+    _print_vanguard_diagnostics()
 
     # Initialize security
     app.state.security = QuantumSecurityV2(key_storage_path=config.key_storage_path)
