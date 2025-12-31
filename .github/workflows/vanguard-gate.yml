@@ -1,0 +1,25 @@
+name: Vanguard Sovereign Gate
+
+on: [push, pull_request]
+
+jobs:
+  ihsan-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install Physics
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+      - name: Bootloader Ignition Test (Fail-Closed)
+        run: |
+          python -m core.boot --dry-run
+      - name: API Telemetry Probe
+        run: |
+          nohup uvicorn core.engine.api:app --port 8000 &
+          sleep 5
+          python -c "import httpx; r=httpx.get('http://localhost:8000/status'); assert r.json()['physics']['gate_status'] == 'OPEN'"

@@ -72,6 +72,8 @@ def _construct(cls, **preferred_kwargs):
 
 def ignite():
     try:
+        dry_run = "--dry-run" in sys.argv
+
         # 1. Physics Check
         caps = detect_capabilities()
         i_score = _calculate_boot_vector(caps)
@@ -98,6 +100,10 @@ def ignite():
         # 4. Gate Enforcement
         if i_score < KernelLaws.IHSAN.MIN_SCORE_THRESHOLD:
             raise IhsanGateViolation(f"FATAL: Ihsan Score {i_score:.3f} Violation.")
+
+        if dry_run:
+            print(" [BOOT] Dry run complete.")
+            return
 
         # 5. Initialization
         from core.layers import L3EpisodicMemoryV2

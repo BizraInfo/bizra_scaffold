@@ -46,6 +46,7 @@ python-multipart>=0.0.18    # GHSA-59g5-xgcq-4qw3: File uploads (security patche
 # MONITORING & OBSERVABILITY
 # ──────────────────────────────────────────────────────────────────────────
 prometheus-client==0.19.0   # Prometheus metrics exporter
+psutil==5.9.8              # Process metrics for physics monitor
 python-json-logger==2.0.7   # Structured JSON logging
 opentelemetry-api==1.21.0   # Distributed tracing
 opentelemetry-sdk==1.21.0   # OpenTelemetry SDK

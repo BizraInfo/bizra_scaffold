@@ -1,61 +1,73 @@
-# BIZRA Unified Scaffold (v0.1)
+# BIZRA Vanguard Genesis
 
-This folder is a **starter kit** to help unify the scattered BIZRA components into a cohesive monorepo. It contains templates, analysis, and specifications you can use to bootstrap a single source of truth and structure your unified system.
+![Sovereign](https://img.shields.io/badge/sovereign-verified-0b3d2e)
+![Ihsan Gate](https://img.shields.io/badge/ihsan%20gate-0.95-0b3d2e)
 
-## Contents
+Golden Seed. Vanguard Node. Genesis-grade bootloader and API.
 
-| File | Description |
-|---|---|
-| `report.md` | Evidence-based analysis summarizing the current state of BIZRA repositories, architecture, security, performance, documentation, and recommendations for unification. |
-| `SOT_template.md` | A template for your **Single Source of Truth (SOT)** file, where you define canonical names, invariants, PoI parameters, and evidence requirements. Customize this file to reflect your project's agreed rules. |
-| `BIZRA_SOT.md` | Draft single source of truth for the unified system, derived from `SOT_template.md`. |
-| `EVIDENCE_INDEX.md` | Index of evidence artifacts required to validate claims across documentation and reports. |
-| `cognitive_sovereign.py` | Cognitive Sovereign kernel implementation (AEON OMEGA v9.8.0). |
-| `Genesis_NodeZero_Attestation_Spec_v1.0.md` | Official specification of the Genesis Node Zero attestation protocol (for reference). |
-| `README.md` | This file. |
+## What This Is
 
-## How to Use
+- Fail-closed bootloader with Ihsan gate enforcement
+- Canonical API surface at `core/engine/api.py`
+- Physics telemetry via `/status`
+- Genesis manifesto in `BLOCK0.md`
 
-1. **Create a new GitHub repository** (e.g. `bizra-unified`), and clone it to your machine.
+## How to Run
 
-2. **Copy the contents of this `bizra_scaffold` folder** into your new repository.
-
-3. **Set up a monorepo structure** using a workspace manager (Nx or Turborepo). For example:
-
-   ```
-   bizra-unified/
-     apps/
-       api/            # REST or GraphQL API entrypoint (Node.js)
-     packages/
-       poi-core/       # PoI scoring and verification library (Rust/TypeScript)
-       blockgraph/     # Consensus and BlockGraph logic
-       agent-os/       # Dual-Agentic orchestration (PAT/SAT)
-       ...
-     docs/             # Documentation site built with Docusaurus (optional)
-     BIZRA_SOT.md      # Your customized Single Source of Truth (copy from the template)
-     ...
-   ```
-
-4. **Fill out `BIZRA_SOT.md`** using `SOT_template.md` as a starting point. Define canonical terms (token names, layer names), invariants (e.g. "every claim must have evidence"), and PoI parameters (weights, thresholds, decay rates). This file becomes the binding contract for your project.
-
-5. **Migrate code from existing directories** (`bizra-genesis-node`, `BIZRA-Dual-Agentic-system-`, `BIZRA-OS`, etc.) into the appropriate packages within your monorepo. Remove duplicate copies and keep only the latest, verified code. Use version control to track history.
-
-6. **Ensure that every claim or metric in your documentation links back to evidence**, such as benchmark logs, test results, or signed attestation files. Your CI pipeline should reject changes that break the SOT or refer to claims without proof.
-
-7. **Run your development environment locally** using VS Code, GitHub Copilot, and Claude 4.5 Opus. Because everything is now unified, you can run tests (`nx test`), build services (`nx build`), and spin up local dev servers (`nx serve api`) from a single entry point.
-
-By following these steps you'll convert years of fragmented development into a cohesive, future-proof system.
-
-## Verification Kernel (BUILD-VERIFY-METRICS)
-
-This scaffold now includes a verification kernel that produces evidence receipts and metrics.
-
-### Quick start (local)
+Boot the node:
 
 ```bash
-python tools/bizra_verify.py --out evidence --artifact-name bizra_scaffold --artifact-version local
+python -m core.boot
 ```
 
-### CI
+Lite mode (no heavy subsystems):
 
-The workflow in `.github/workflows/verify.yml` runs the kernel and uploads evidence artifacts.
+```bash
+BIZRA_LITE=1 python -m core.boot
+```
+
+Run the API:
+
+```bash
+uvicorn core.engine.api:app --host 0.0.0.0 --port 8000
+```
+
+## API Endpoints
+
+- `GET /` identity
+- `GET /status` physics + capabilities + modes
+- `GET /health` liveness
+
+## Observability (Physics Monitor)
+
+`/status` returns real-time physics:
+
+- `boot_latency_ms`
+- `memory_usage_mb`
+- `cpu_usage_percent`
+- `ihsan_score`
+
+## Verification (BLOCK0)
+
+Expected SHA256:
+
+```
+07e796c0c66bddb8fd5250c75db54d51508a02889c41cbca79a1b7ea36a4e726
+```
+
+Verify locally:
+
+```bash
+sha256sum BLOCK0.md
+```
+
+PowerShell:
+
+```powershell
+Get-FileHash -Algorithm SHA256 BLOCK0.md
+```
+
+## CI Gate
+
+The Vanguard gate runs a boot dry-run and validates the API telemetry gate.
+See `.github/workflows/vanguard-gate.yml`.

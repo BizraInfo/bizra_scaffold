@@ -36,6 +36,7 @@ PyJWT>=2.10.1               # JWT tokens (mcp requires >=2.10.1)
 
 # Metrics & Monitoring
 prometheus_client==0.19.0   # Metrics exporter
+psutil==5.9.8               # Process metrics for physics monitor
 
 # Database Drivers
 neo4j==5.14.0               # Graph database
