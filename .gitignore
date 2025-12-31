@@ -185,3 +185,7 @@ temp/
 
 # Quarantine: unknown local artifact
 BIZRA BRAND idintiy.html
+
+_garbage/
+data/ops/
+*.vsix
