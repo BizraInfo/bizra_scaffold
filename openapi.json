@@ -1,0 +1,125 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BIZRA Node Vanguard",
+    "description": "Sovereign Agentic Node API (Genesis Edition)",
+    "version": "5.0.0-vanguard-genesis"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Get Sovereign Status",
+        "description": "Returns the real-time Ihsan/Physics state of the node.\nAligned with boot.py telemetry and new capabilities.py schema.",
+        "operationId": "get_sovereign_status_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StatusResponse": {
+        "properties": {
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "release": {
+            "type": "string",
+            "title": "Release"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "system",
+          "release",
+          "version",
+          "message"
+        ],
+        "title": "StatusResponse"
+      },
+      "TelemetryResponse": {
+        "properties": {
+          "physics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Physics"
+          },
+          "capabilities": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Capabilities"
+          },
+          "modes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Modes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "physics",
+          "capabilities",
+          "modes"
+        ],
+        "title": "TelemetryResponse"
+      }
+    }
+  }
+}
