@@ -49,11 +49,14 @@ The Ihsan Metric (IM) quantifies the ethical alignment of a contribution or syst
 
 | Dimension | Weight | Input Source | Metric |
 |---|---|---|---|
-| **Truthfulness** | 0.30 | `EVIDENCE_INDEX.md` | Ratio of `VERIFIED` claims vs total eligible claims. |
-| **Dignity** | 0.20 | Static Code Analysis | Inverse of detected "Dark Pattern" AST markers. |
-| **Fairness** | 0.20 | Token Ledger | `1.0 - (Gini_Coefficient / max_gini)`. Target Gini < 0.4. |
-| **Excellence** | 0.20 | CI/CD Reports | `(test_coverage * 0.5) + (1.0 if lint_clean else 0.0 * 0.5)`. |
-| **Sustainability** | 0.10 | Resource Monitor | `min(1.0, target_energy / actual_energy)`. |
+| **Correctness** | 0.22 | Formal Verification | Ratio of verified proofs vs total claims. |
+| **Safety** | 0.22 | Runtime Monitoring | Absence of unsafe operations in execution traces. |
+| **User Benefit** | 0.14 | Impact Assessment | Positive outcome metrics for end users. |
+| **Efficiency** | 0.12 | Performance Metrics | Resource utilization within sustainable bounds. |
+| **Auditability** | 0.12 | Evidence Integrity | Complete audit trails and reproducible logs. |
+| **Anti-Centralization** | 0.08 | Governance Metrics | Decentralized decision-making effectiveness. |
+| **Robustness** | 0.06 | Chaos Engineering | System resilience under failure conditions. |
+| **Fairness** | 0.04 | Equity Analysis | Equal access and outcome distribution. |
 
 **Evidence Requirements:**
 To attest an Ihsan Score, the validator must produce a signed bundle containing:

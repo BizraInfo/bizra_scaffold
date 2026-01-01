@@ -21,7 +21,8 @@ import numpy as np
 
 from core.knowledge_bridge import KnowledgeGraphBridge
 from core.layers.memory_layers_v2 import L3EpisodicMemoryV2
-from core.snr_scorer import SNRThresholds
+from core.snr_scorer import SNRThresholds, SNRScorer
+from core.kernel.pillars import KernelLaws
 
 _TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_]+")
 
@@ -155,30 +156,82 @@ def _tokenize(text: str) -> List[str]:
     return _TOKEN_PATTERN.findall(text.lower())
 
 
-def _compute_chat_snr(text: str, thresholds: SNRThresholds) -> Tuple[float, str, float]:
+def _compute_chat_snr(text: str, scorer: SNRScorer) -> Tuple[float, str, float]:
+    """
+    Compute SNR for chat messages using proper SNR scorer.
+
+    Uses simplified metrics for chat content and proper Ihsan calculation
+    aligned with kernel physics.
+    """
     if not text:
-        return 0.0, thresholds.classify(0.0, 0.0, 0.0).name, 0.0
+        return 0.0, "UNKNOWN", 0.0
 
     tokens = _tokenize(text)
     token_count = len(tokens)
-    unique_ratio = len(set(tokens)) / max(1, token_count)
+    if token_count == 0:
+        return 0.0, "UNKNOWN", 0.0
+
+    # Simplified signal components for chat messages
+    unique_ratio = len(set(tokens)) / token_count
     length_factor = min(len(text) / 400.0, 1.0)
 
+    # Content quality indicators
     has_code = "```" in text
-    has_list = "\n- " in text or "\n1. " in text or "\n* " in text
+    has_list = any(marker in text for marker in ["\n- ", "\n1. ", "\n* "])
     structure_bonus = (0.15 if has_code else 0.0) + (0.10 if has_list else 0.0)
 
-    signal = (0.45 * unique_ratio) + (0.35 * length_factor) + structure_bonus
-    repetition = 1.0 - unique_ratio
-    short_penalty = 0.4 if len(text) < 80 else 0.0
-    noise = (0.5 * repetition) + (0.5 * short_penalty)
+    # Simplified convergence-like metrics for SNR calculation
+    clarity = unique_ratio  # Information density
+    synergy = length_factor  # Content completeness
+    consistency = 0.8  # Assume reasonable interdisciplinary consistency for chat
 
-    snr = signal / (noise + 1e-6)
-    ihsan = 0.98
-    confidence = 0.9 if token_count >= 5 else 0.6
-    level = thresholds.classify(snr, ihsan, confidence)
+    entropy = 1.0 - unique_ratio  # Repetition as entropy
+    quantization_error = 0.1  # Low quantization error for text
+    disagreement = 0.0  # No oracle disagreement for chat content
 
-    return snr, level.name, ihsan
+    # Calculate Ihsan using kernel weights (simplified assessment)
+    # For chat content, use conservative but realistic Ihsan assessment
+    ihsan_weights = KernelLaws.IHSAN.WEIGHTS
+    ihsan_scores = {
+        "correctness": 0.9 if has_code else 0.7,  # Code content is more correct
+        "safety": 0.95,  # Chat content generally safe
+        "user_benefit": 0.8 if length_factor > 0.5 else 0.6,  # Longer content more beneficial
+        "efficiency": 0.85,  # Text is efficient medium
+        "auditability": 0.9,  # Chat logs are auditable
+        "anti_centralization": 0.7,  # Chat promotes decentralized knowledge
+        "robustness": 0.8,  # Text is robust medium
+        "fairness": 0.85,  # Chat content generally fair
+    }
+
+    ihsan = sum(ihsan_scores[k] * v for k, v in ihsan_weights.items())
+
+    # Use proper SNR scorer
+    from core.tiered_verification import ConvergenceResult, QuantizedConvergence
+
+    # Create simplified convergence result for SNR calculation
+    convergence = QuantizedConvergence(
+        quality="GOOD",
+        clarity=clarity,
+        synergy=synergy,
+        entropy=entropy,
+        quantization_error=quantization_error,
+    )
+
+    convergence_result = ConvergenceResult(
+        convergence=convergence,
+        verification_tier="incremental",
+        computational_cost=0.1,
+        confidence=0.8 if token_count >= 5 else 0.6,
+    )
+
+    snr_metrics = scorer.compute_from_convergence(
+        convergence_result,
+        consistency=consistency,
+        disagreement=disagreement,
+        ihsan_metric=ihsan
+    )
+
+    return snr_metrics.snr_score, snr_metrics.level.name, ihsan
 
 
 def _stable_message_id(
@@ -343,7 +396,7 @@ async def run_chat_to_knowledge_pipeline(
     files = _iter_chat_files(root_path)
     file_metadata = _collect_file_metadata(files, root_path)
     dataset_digest = _compute_dataset_digest(file_metadata)
-    thresholds = SNRThresholds()
+    snr_scorer = SNRScorer()  # Use proper SNR scorer instead of thresholds
 
     bridge = KnowledgeGraphBridge()
     memory = L3EpisodicMemoryV2(embedding_dim=embedding_dim)
@@ -372,7 +425,7 @@ async def run_chat_to_knowledge_pipeline(
         chat_nodes: List[Dict[str, Any]] = []
         for order_index, raw in enumerate(ordered_messages):
             text_sha256 = hashlib.sha256(raw.content.encode("utf-8")).hexdigest()
-            snr, snr_level, ihsan = _compute_chat_snr(raw.content, thresholds)
+            snr, snr_level, ihsan = _compute_chat_snr(raw.content, snr_scorer)
 
             stable_id = _stable_message_id(
                 source_rel_path=source_rel_path,
