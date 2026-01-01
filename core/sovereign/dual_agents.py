@@ -237,9 +237,10 @@ class SovereignDualAgents:
                     "ihsan_score": ihsan_score
                 }
             else:
+                reject_code = proposal_result.rejection.code if proposal_result.rejection else 'Unknown'
                 return {
                     "success": False,
-                    "reason": f"PAT proposal rejected: {proposal_result.rejection.reject_code if proposal_result.rejection else 'Unknown'}"
+                    "reason": f"PAT proposal rejected: {reject_code}"
                 }
 
         except Exception as e:
