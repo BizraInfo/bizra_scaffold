@@ -79,6 +79,10 @@ class SovereignOrchestrator:
     """
 
     def __init__(self):
+        # Import here to avoid circular imports
+        from .model_hub import SovereignModelHub
+
+        self.model_hub = SovereignModelHub()
         self.models: Dict[str, ModelResource] = {}
         self.hardware: Dict[str, HardwareResource] = {}
         self.data_resources: Dict[str, DataResource] = {}

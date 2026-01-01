@@ -24,6 +24,7 @@ from .boundary import SovereignBoundary, verify_sovereignty
 from .auth import LivingProof, verify_sovereign_identity
 from .orchestrator import SovereignOrchestrator
 from .dual_agents import SovereignDualAgents
+from .model_hub import SovereignModelHub, ModelRequest
 
 logger = logging.getLogger(__name__)
 
