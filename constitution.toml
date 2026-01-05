@@ -299,7 +299,6 @@ meaning = "O believers, do not consume Riba, doubled and multiplied"
 verse = "30:39"
 text = "وَمَا آتَيْتُم مِّن رِّبًا لِّيَرْبُوَ فِي أَمْوَالِ النَّاسِ فَلَا يَرْبُو عِندَ اللَّهِ"
 meaning = "Whatever you give in Riba to increase in people's wealth will not increase with Allah"
-
 bizra_role = "Provide the cryptographic and governance infrastructure for Riba-free value exchange"
 
 [genesis.universal_crises.ai_llm_system]
