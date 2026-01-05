@@ -79,7 +79,7 @@ locust==2.20.0              # Load testing
 # ──────────────────────────────────────────────────────────────────────────
 # CODE QUALITY & LINTING
 # ──────────────────────────────────────────────────────────────────────────
-black==23.12.1              # Code formatting
+black==24.3.0              # Code formatting
 ruff==0.1.9                 # Fast Python linter
 mypy==1.7.1                 # Static type checking
 bandit==1.7.6               # Security linting
