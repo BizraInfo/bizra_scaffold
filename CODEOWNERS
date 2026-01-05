@@ -1,0 +1,34 @@
+# CODEOWNERS
+# Define code owners for automated review requests
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - these users will be requested for review on all PRs
+* @BizraInfo
+
+# Security-critical files require security team review
+/SECURITY.md @BizraInfo
+/.github/workflows/security-secret-scan.yml @BizraInfo
+/core/security/ @BizraInfo
+
+# CI/CD workflows
+/.github/workflows/ @BizraInfo
+
+# Core Python modules
+/core/ @BizraInfo
+
+# Rust crates
+/crates/ @BizraInfo
+
+# Documentation
+/docs/ @BizraInfo
+*.md @BizraInfo
+
+# Configuration files
+*.toml @BizraInfo
+*.yml @BizraInfo
+*.yaml @BizraInfo
+
+# Dependencies
+requirements*.txt @BizraInfo
+Cargo.toml @BizraInfo
+Cargo.lock @BizraInfo

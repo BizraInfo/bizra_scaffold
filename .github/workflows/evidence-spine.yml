@@ -7,6 +7,11 @@
 
 name: 🏛️ Evidence Spine
 
+# Least-privilege permissions
+permissions:
+  contents: read
+  security-events: write  # For uploading security scan results
+
 on:
   push:
     branches: [main, develop]

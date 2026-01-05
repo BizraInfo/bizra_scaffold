@@ -109,7 +109,9 @@ coverage.xml
 # ═══════════════════════════════════════════════════════════════════════════════
 # Rust
 target/
-Cargo.lock
+# Note: Cargo.lock should be committed for applications (binaries)
+# Only exclude for libraries published to crates.io
+# For this project, we keep Cargo.lock to ensure reproducible builds
 **/*.rs.bk
 
 # Node.js (if any frontend)

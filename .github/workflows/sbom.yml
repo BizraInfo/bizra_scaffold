@@ -1,0 +1,97 @@
+# Software Bill of Materials (SBOM) Generation
+# See: https://cyclonedx.org/
+
+name: SBOM Generation
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# Least-privilege permissions
+permissions:
+  contents: write  # To upload SBOM artifacts
+  
+jobs:
+  generate-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install CycloneDX
+        run: |
+          pip install cyclonedx-bom
+          
+      - name: Generate Python SBOM
+        run: |
+          # Generate SBOM from requirements.txt
+          cyclonedx-py requirements \
+            -r requirements.txt \
+            -o sbom-python.json \
+            --format json
+            
+          # Also generate XML format
+          cyclonedx-py requirements \
+            -r requirements.txt \
+            -o sbom-python.xml \
+            --format xml
+            
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install cargo-cyclonedx
+        run: |
+          cargo install cargo-cyclonedx
+          
+      - name: Generate Rust SBOM (attestation-engine)
+        working-directory: crates/attestation-engine
+        run: |
+          cargo cyclonedx --format json --output-cdx
+          mv *.cdx.json ../../sbom-rust-attestation.json || true
+          
+      - name: Upload SBOM Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom-*.json
+            sbom-*.xml
+          retention-days: 90
+          
+      - name: Commit SBOM (on main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p evidence/sbom
+          mv sbom-*.json sbom-*.xml evidence/sbom/ || true
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add evidence/sbom/
+          
+          if git diff --cached --quiet; then
+            echo "No SBOM changes to commit"
+          else
+            git commit -m "chore(sbom): update software bill of materials [skip ci]"
+            git push
+          fi
+          
+      - name: SBOM Summary
+        run: |
+          echo "### 📦 SBOM Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Software Bill of Materials generated for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Python dependencies (requirements.txt)" >> $GITHUB_STEP_SUMMARY
+          echo "- Rust crates (attestation-engine)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Format: CycloneDX (JSON + XML)" >> $GITHUB_STEP_SUMMARY
