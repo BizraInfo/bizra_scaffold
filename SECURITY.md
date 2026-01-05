@@ -128,9 +128,8 @@ These are regularly updated to address security vulnerabilities. Monitor for upd
 
 Security-related changes and incidents will be documented here:
 
-- **2026-01**: Initial security policy established
-- **2025-12**: Security scanning workflows implemented
-- **2025-12**: Dependency pinning and vulnerability fixes applied
+- **Initial Release**: Security policy established with this repository version
+- Future updates will be tracked with dates and descriptions
 
 ## Additional Resources
 
@@ -141,4 +140,4 @@ Security-related changes and incidents will be documented here:
 
 ---
 
-*Last Updated: 2026-01-05*
+*Last Updated: January 2026*

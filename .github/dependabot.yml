@@ -39,8 +39,6 @@ updates:
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
-    # Re-run on security advisories
-    insecure-external-code-execution: deny
 
   # Rust dependencies (Cargo)
   - package-ecosystem: "cargo"
