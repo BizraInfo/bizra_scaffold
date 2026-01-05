@@ -4,6 +4,10 @@
 
 name: BIZRA CI/CD Pipeline
 
+# Least-privilege permissions at workflow level
+permissions:
+  contents: read
+
 on:
   push:
     branches:
