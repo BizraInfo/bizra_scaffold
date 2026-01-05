@@ -10,9 +10,10 @@ on:
     types: [published]
   workflow_dispatch:
 
-# Least-privilege permissions
+# Least-privilege permissions - artifacts only, no repository writes
 permissions:
-  contents: write  # To upload SBOM artifacts
+  contents: read  # Read-only access for checkout
+  actions: write  # To upload artifacts
   
 jobs:
   generate-sbom:
@@ -68,23 +69,12 @@ jobs:
             sbom-*.xml
           retention-days: 90
           
-      - name: Commit SBOM (on main branch)
-        if: github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p evidence/sbom
-          mv sbom-*.json sbom-*.xml evidence/sbom/ || true
-          
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          git add evidence/sbom/
-          
-          if git diff --cached --quiet; then
-            echo "No SBOM changes to commit"
-          else
-            git commit -m "chore(sbom): update software bill of materials [skip ci]"
-            git push
-          fi
+      # Note: Auto-commit disabled for security best practices
+      # SBOM files are available as workflow artifacts and can be downloaded
+      # If auto-commit is needed, enable 'contents: write' permission and ensure:
+      # 1. Workflow cannot be triggered from forks
+      # 2. Branch protection rules are in place
+      # 3. Commits are signed and verified
           
       - name: SBOM Summary
         run: |

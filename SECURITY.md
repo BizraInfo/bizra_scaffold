@@ -119,7 +119,7 @@ This repository implements several security features:
 
 This project uses:
 - `cryptography==45.0.7` for core cryptographic operations
-- `blake3==0.3.3` for fast hashing
+- `blake3==0.3.3` (development) / `blake3==1.0.0` (production) for fast hashing
 - `PyJWT>=2.10.1` for JWT token handling
 
 These are regularly updated to address security vulnerabilities. Monitor for updates.

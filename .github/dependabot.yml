@@ -31,11 +31,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Security updates always get individual PRs
-    ignore:
-      # Only ignore specific packages if needed
-      # Example: - dependency-name: "package-name"
-      #   versions: ["x.y.z"]
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
