@@ -289,8 +289,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 6. Push and create a pull request
 7. Wait for CI checks and code review
 
-By following these steps you'll convert years of fragmented development into a cohesive, future-proof system.
-
 ## Verification Kernel (BUILD-VERIFY-METRICS)
 
 This scaffold now includes a verification kernel that produces evidence receipts and metrics.
