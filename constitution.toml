@@ -269,14 +269,37 @@ THE SOLUTION EXISTS:
 - Real economic production, not financial engineering
 - The Quranic economic model is the alternative
 """
-quranic_evidence = [
-  { verse = "2:275", text = "الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ", meaning = "Those who consume Riba will stand like one driven to madness by Satan's touch" },
-  { verse = "2:276", text = "يَمْحَقُ اللَّهُ الرِّبَا وَيُرْبِي الصَّدَقَاتِ", meaning = "Allah destroys Riba and increases charity" },
-  { verse = "2:278", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا", meaning = "O believers, fear Allah and give up what remains of Riba" },
-  { verse = "2:279", text = "فَإِن لَّمْ تَفْعَلُوا فَأْذَنُوا بِحَرْبٍ مِّنَ اللَّهِ وَرَسُولِهِ", meaning = "If you do not, then be warned of war from Allah and His Messenger" },
-  { verse = "3:130", text = "يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَأْكُلُوا الرِّبَا أَضْعَافًا مُّضَاعَفَةً", meaning = "O believers, do not consume Riba, doubled and multiplied" },
-  { verse = "30:39", text = "وَمَا آتَيْتُم مِّن رِّبًا لِّيَرْبُوَ فِي أَمْوَالِ النَّاسِ فَلَا يَرْبُو عِندَ اللَّهِ", meaning = "Whatever you give in Riba to increase in people's wealth will not increase with Allah" }
-]
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "2:275"
+text = "الَّذِينَ يَأْكُلُونَ الرِّبَا لَا يَقُومُونَ إِلَّا كَمَا يَقُومُ الَّذِي يَتَخَبَّطُهُ الشَّيْطَانُ مِنَ الْمَسِّ"
+meaning = "Those who consume Riba will stand like one driven to madness by Satan's touch"
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "2:276"
+text = "يَمْحَقُ اللَّهُ الرِّبَا وَيُرْبِي الصَّدَقَاتِ"
+meaning = "Allah destroys Riba and increases charity"
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "2:278"
+text = "يَا أَيُّهَا الَّذِينَ آمَنُوا اتَّقُوا اللَّهَ وَذَرُوا مَا بَقِيَ مِنَ الرِّبَا"
+meaning = "O believers, fear Allah and give up what remains of Riba"
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "2:279"
+text = "فَإِن لَّمْ تَفْعَلُوا فَأْذَنُوا بِحَرْبٍ مِّنَ اللَّهِ وَرَسُولِهِ"
+meaning = "If you do not, then be warned of war from Allah and His Messenger"
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "3:130"
+text = "يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تَأْكُلُوا الرِّبَا أَضْعَافًا مُّضَاعَفَةً"
+meaning = "O believers, do not consume Riba, doubled and multiplied"
+
+[[genesis.universal_crises.financial_system.quranic_evidence]]
+verse = "30:39"
+text = "وَمَا آتَيْتُم مِّن رِّبًا لِّيَرْبُوَ فِي أَمْوَالِ النَّاسِ فَلَا يَرْبُو عِندَ اللَّهِ"
+meaning = "Whatever you give in Riba to increase in people's wealth will not increase with Allah"
+
 bizra_role = "Provide the cryptographic and governance infrastructure for Riba-free value exchange"
 
 [genesis.universal_crises.ai_llm_system]
