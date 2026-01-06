@@ -147,8 +147,7 @@ class ConversationGraph:
                 score *= self.snr_weights.get('short_penalty', 0.5)
             
             node.snr_score = score
-            if node.node_id:  # Defensive check for logging
-                logger.debug(f"Node {node.node_id[:8]}... SNR score: {score:.2f}")
+            logger.debug(f"Node {node.node_id[:8]}... SNR score: {score:.2f}")
 
 class ChatIngestor:
     """
