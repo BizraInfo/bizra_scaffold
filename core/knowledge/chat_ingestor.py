@@ -147,7 +147,8 @@ class ConversationGraph:
                 score *= self.snr_weights.get('short_penalty', 0.5)
             
             node.snr_score = score
-            logger.debug(f"Node {node.node_id[:8]}... SNR score: {score:.2f}")
+            if node.node_id:  # Defensive check for logging
+                logger.debug(f"Node {node.node_id[:8]}... SNR score: {score:.2f}")
 
 class ChatIngestor:
     """
@@ -332,7 +333,7 @@ class ChatIngestor:
             
             # Ensure output directory exists
             output_dir = os.path.dirname(output_path)
-            if output_dir and not os.path.exists(output_dir):
+            if output_dir and output_dir != '.' and not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
                 logger.info(f"Created output directory: {output_dir}")
             
@@ -370,7 +371,13 @@ if __name__ == "__main__":
     # Allow configuration via environment variables
     root_path = os.environ.get('CHAT_DATA_PATH', "C:\\bizra_scaffold\\chat data sample")
     output_file = os.environ.get('OUTPUT_PATH', "C:\\bizra_scaffold\\evidence\\RECOVERED_MASTERPIECE.md")
-    top_k = int(os.environ.get('TOP_K', '5'))
+    
+    # Parse TOP_K with error handling
+    try:
+        top_k = int(os.environ.get('TOP_K', '5'))
+    except ValueError as e:
+        logger.warning(f"Invalid TOP_K environment variable, using default: {e}")
+        top_k = 5
     
     try:
         ingestor = ChatIngestor(root_path)
