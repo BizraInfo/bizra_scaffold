@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import glob
 
 # Configure logging
@@ -119,11 +119,6 @@ class ConversationGraph:
             
             text = node.content
             length = len(text)
-            
-            # Edge case: empty content after stripping
-            if length == 0:
-                node.snr_score = 0.0
-                continue
 
             # Heuristic feature detection
             has_code = "```" in text
@@ -232,7 +227,8 @@ class ChatIngestor:
                     parts = []
                 text_content = "".join([str(p) for p in parts])
                 
-                create_time = message.get('create_time') or 0.0
+                raw_create_time = message.get('create_time')
+                create_time = raw_create_time if raw_create_time is not None else 0.0
                 parent_id = node_data.get('parent')
                 
                 node = ChatNode(node_id, role, text_content, create_time, parent_id)
@@ -281,7 +277,7 @@ class ChatIngestor:
         logger.info(f"Successfully ingested {len(self.conversations)} conversations")
         return len(self.conversations)
 
-    def get_golden_gems(self, top_k: int = 5) -> List[tuple]:
+    def get_golden_gems(self, top_k: int = 5) -> List[Tuple[ChatNode, str]]:
         """
         Get the top-k highest SNR nodes (golden gems).
         
@@ -332,7 +328,7 @@ class ChatIngestor:
             
             # Ensure output directory exists
             output_dir = os.path.dirname(output_path)
-            if output_dir and output_dir != '.' and not os.path.exists(output_dir):
+            if output_dir and not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
                 logger.info(f"Created output directory: {output_dir}")
             
@@ -368,8 +364,8 @@ if __name__ == "__main__":
     )
     
     # Allow configuration via environment variables
-    root_path = os.environ.get('CHAT_DATA_PATH', "C:\\bizra_scaffold\\chat data sample")
-    output_file = os.environ.get('OUTPUT_PATH', "C:\\bizra_scaffold\\evidence\\RECOVERED_MASTERPIECE.md")
+    root_path = os.environ.get('CHAT_DATA_PATH', os.path.join("bizra_scaffold", "chat data sample"))
+    output_file = os.environ.get('OUTPUT_PATH', os.path.join("bizra_scaffold", "evidence", "RECOVERED_MASTERPIECE.md"))
     
     # Parse TOP_K with error handling
     try:
