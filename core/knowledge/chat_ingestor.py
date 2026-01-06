@@ -60,12 +60,16 @@ class ConversationGraph:
             has_gems = "gem" in text.lower() or "key result" in text.lower() or "insight" in text.lower()
             
             score = 1.0
-            if has_code: score += 2.0
-            if has_lists: score += 1.5
-            if has_gems: score += 3.0
+            if has_code:
+                score += 2.0
+            if has_lists:
+                score += 1.5
+            if has_gems:
+                score += 3.0
             
             # Normalize by length (penalize very short or extremely verbose without structure)
-            if length < 50: score *= 0.5
+            if length < 50:
+                score *= 0.5
             
             node.snr_score = score
 
