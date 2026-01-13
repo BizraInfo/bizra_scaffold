@@ -29,7 +29,7 @@ faiss-cpu==1.7.4            # Vector similarity search (L3 Episodic Memory)
 neo4j==5.13.0               # Graph database driver (L4 Semantic HyperGraph)
 networkx==3.3               # Graph analysis and algorithms
 redis==5.0.0                # In-memory cache (temporal chain acceleration)
-filelock==3.20.1            # File locking (CVE-2025-68146: race condition fix)
+filelock==3.20.3            # File locking (CVE-2025-68146: race condition fix)
 
 # ──────────────────────────────────────────────────────────────────────────
 # WEB FRAMEWORK & API (FastAPI/ASGI stack - no Flask required)
