@@ -62,5 +62,5 @@ black>=24.3.0               # GHSA-fj7x-q9j7-g6q6: directory traversal vulnerabi
 # NOTE: These are pulled in by other packages. Pin here to force secure versions.
 # For production, consider using a constraints.txt file instead.
 fonttools==4.60.2           # CVE-2024-51652: XML parsing vulnerability (transitive via matplotlib)
-keras==3.12.0               # CVE-2025-66318: arbitrary code execution (transitive via torch)
+keras==3.13.1               # CVE-2025-66318: arbitrary code execution (transitive via torch)
 mcp==1.23.0                 # CVE-2025-65874: SSRF vulnerability (transitive via opentelemetry)
