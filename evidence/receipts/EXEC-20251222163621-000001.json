@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251222163621-000001",
+  "timestamp": "2025-12-22T16:36:21.171691800Z",
+  "task_summary": "Write unit tests for a sorting algorithm",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120008,
+  "total_latency_ms": 120008,
+  "synergy_score": 0.9342763830988832,
+  "ihsan_score": 0.9369381178080172,
+  "ihsan_threshold": 0.9,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:5cc3daaeb2eb1a27248fa796c2db1924de3aa4775212b55efa2f1c3c7f8e0d58"
+}

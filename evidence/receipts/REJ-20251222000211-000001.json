@@ -1,0 +1,25 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20251222000211-000001",
+  "timestamp": "2025-12-22T00:02:11.673483100Z",
+  "task_summary": "Run this command: rm -rf / --no-preserve-root",
+  "rejection_codes": [
+    "SECURITY_THREAT: Blocked pattern: rm -rf"
+  ],
+  "primary_reason": "SECURITY_THREAT: Blocked pattern: rm -rf",
+  "escalation_level": "CRITICAL",
+  "escalation_id": "FATE-000002",
+  "rejecting_validators": [
+    "security_guardian"
+  ],
+  "approving_validators": [
+    "ethics_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "BLOCK: Security threat detected. Do not execute under any circumstances.",
+  "integrity_hash": "sha256:1a532b656b8bfbec7cf4a4fb047e7c1a04ef9f7feb4aa424012bd46283aee165"
+}db4c0b87fec75cae9662f257d1e"
+}

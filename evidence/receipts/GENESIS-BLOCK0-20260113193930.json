@@ -1,0 +1,77 @@
+{
+  "receipt_id": "GENESIS-BLOCK0-20260113193930",
+  "receipt_type": "GENESIS_DEPLOYMENT",
+  "timestamp": "2026-01-13T19:39:30.168297+00:00",
+  "block": {
+    "block_number": 0,
+    "block_type": "GENESIS",
+    "timestamp": "2026-01-13T19:39:30.156506+00:00",
+    "network": "BIZRA_MAINNET_V1",
+    "constitution_hash": "2e54ad9678e56bec85b33542acaa02b192da3cd63261d333e51a594ebe88b7ac",
+    "sot_hash": "b8ff376b82542d3250de6d00d47ef0d1",
+    "transactions": [
+      {
+        "type": "genesis_mint",
+        "token": "SEED",
+        "total_supply": 1000000000,
+        "genesis_allocation": 175000,
+        "description": "Stable value token for BIZRA network"
+      },
+      {
+        "type": "genesis_mint",
+        "token": "BLOOM",
+        "total_supply": 100000000,
+        "genesis_allocation": 42500,
+        "description": "Growth governance token for BIZRA network"
+      },
+      {
+        "type": "allocation",
+        "category": "sweat_equity",
+        "recipient": "FOUNDER_WALLET_0x001",
+        "seed": 20000,
+        "bloom": 5000,
+        "vesting": "immediate"
+      },
+      {
+        "type": "allocation",
+        "category": "family_trust",
+        "recipient": "FAMILY_TRUST_0x002",
+        "seed": 5000,
+        "bloom": 2500,
+        "vesting": "4_year_linear"
+      },
+      {
+        "type": "allocation",
+        "category": "protocol_reserve",
+        "recipient": "PROTOCOL_RESERVE_0x003",
+        "seed": 100000,
+        "bloom": 25000,
+        "vesting": "dao_governed"
+      },
+      {
+        "type": "allocation",
+        "category": "network_bootstrap",
+        "recipient": "BOOTSTRAP_POOL_0x004",
+        "seed": 50000,
+        "bloom": 10000,
+        "vesting": "performance_based"
+      }
+    ],
+    "validators": {
+      "pat_agents": 7,
+      "sat_agents": 5,
+      "consensus": "SAT_VETO_Byzantine",
+      "ihsan_threshold": 0.95
+    },
+    "metadata": {
+      "node0_hardware": "MSI i9-14900HX / RTX 4090 / 62GB",
+      "sovereignty_tier": "T2+",
+      "hypervisor": "BIZRA_ZERO_PENDING",
+      "created_by": "Genesis Ceremony v1.0"
+    },
+    "block_hash": "084d0928f5fd5883c164114317b91cfca51bee62dfc1efd00ab940576ea6d95b"
+  },
+  "ihsan_score": 0.98,
+  "network": "BIZRA_MAINNET_V1",
+  "ceremony_status": "COMPLETE"
+}

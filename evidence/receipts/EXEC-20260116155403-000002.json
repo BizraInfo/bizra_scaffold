@@ -1,0 +1,19 @@
+{
+  "schema": "bizra-execution-receipt-v3",
+  "receipt_type": "Execution",
+  "hardware_anchor": "fc095b726fdba80dfdc8ad303f22b3e917aae3bf989b2fbeb3ec35872847c8ab",
+  "receipt_id": "EXEC-20260116155403-000002",
+  "request_id": "e5af0ad817de43c1b759c9419d48f188",
+  "timestamp": "2026-01-16T15:54:03.498605810Z",
+  "task_summary": "Analyze the key principles of BIZRA Genesis architecture and explain why decentralization matters fo...",
+  "sat_validation_ms": 14,
+  "pat_execution_ms": 6,
+  "total_latency_ms": 22,
+  "synergy_score": 0.9226175311487168,
+  "ihsan_score": 0.9215873435605317,
+  "ihsan_threshold": 0.7999999998137355,
+  "pat_agents_count": 8,
+  "sat_approvers_count": 6,
+  "harberger_tax": 0.00009999983012676239,
+  "integrity_hash": "sha256:9adb8022f8ce90e473821c94b5771f2c5724b1e8ee63980001873febd00ec690"
+}

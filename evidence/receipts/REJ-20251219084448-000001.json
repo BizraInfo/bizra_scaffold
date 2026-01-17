@@ -1,0 +1,25 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20251219084448-000001",
+  "timestamp": "2025-12-19T08:44:48.006370700Z",
+  "task_summary": "Process the payload from context",
+  "rejection_codes": [
+    "SECURITY_THREAT: Blocked pattern: rm -rf"
+  ],
+  "primary_reason": "SECURITY_THREAT: Blocked pattern: rm -rf",
+  "escalation_level": "CRITICAL",
+  "escalation_id": "FATE-000002",
+  "rejecting_validators": [
+    "security_guardian"
+  ],
+  "approving_validators": [
+    "ethics_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "BLOCK: Security threat detected. Do not execute under any circumstances.",
+  "integrity_hash": "sha256:d8c7ac0584b4166d2c76fa970ed857f61721cd8066a10278050b305ad89bf5d8"
+}ntegrity_hash": "sha256:bb13106ee0dd37ef81068387179cb8465f6819e67446e5f92c21777b30e54da9"
+}

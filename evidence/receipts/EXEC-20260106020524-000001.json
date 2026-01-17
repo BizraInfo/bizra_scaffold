@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20260106020524-000001",
+  "timestamp": "2026-01-06T02:05:24.717092280Z",
+  "task_summary": "Complete production deployment strategy",
+  "sat_validation_ms": 17,
+  "pat_execution_ms": 2,
+  "total_latency_ms": 19,
+  "synergy_score": 0.9346053447822232,
+  "ihsan_score": 0.9300142662036827,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 6,
+  "integrity_hash": "sha256:b4df661e51fea5ea0d6e8298fcca5a2a61677abeaf399453fbc19df61e8f9989"
+}

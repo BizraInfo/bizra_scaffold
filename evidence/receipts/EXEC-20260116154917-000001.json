@@ -1,0 +1,19 @@
+{
+  "schema": "bizra-execution-receipt-v3",
+  "receipt_type": "Execution",
+  "hardware_anchor": "fc095b726fdba80dfdc8ad303f22b3e917aae3bf989b2fbeb3ec35872847c8ab",
+  "receipt_id": "EXEC-20260116154917-000001",
+  "request_id": "cc593f9b5451485cb54956d39600c33c",
+  "timestamp": "2026-01-16T15:49:17.892755060Z",
+  "task_summary": "Calculate 2+2 and explain the answer",
+  "sat_validation_ms": 41,
+  "pat_execution_ms": 4,
+  "total_latency_ms": 47,
+  "synergy_score": 0.9178700800985098,
+  "ihsan_score": 0.9211842536460608,
+  "ihsan_threshold": 0.7999999998137355,
+  "pat_agents_count": 8,
+  "sat_approvers_count": 6,
+  "harberger_tax": 0.00009999983012676239,
+  "integrity_hash": "sha256:c1327d7864cef3413dbfab71ec1f149c09d51b41cd15722811b990cd33a6894e"
+}

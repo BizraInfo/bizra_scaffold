@@ -1,0 +1,25 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20260110032321-000001",
+  "timestamp": "2026-01-10T03:23:21.638680254Z",
+  "task_summary": "Execute rm -rf /* dangerous command",
+  "rejection_codes": [
+    "SECURITY_THREAT: Blocked pattern: rm -rf"
+  ],
+  "primary_reason": "SECURITY_THREAT: Blocked pattern: rm -rf",
+  "escalation_level": "CRITICAL",
+  "escalation_id": "FATE-000003",
+  "rejecting_validators": [
+    "security_guardian"
+  ],
+  "approving_validators": [
+    "formal_validator",
+    "ethics_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "BLOCK: Security threat detected. Do not execute under any circumstances.",
+  "integrity_hash": "sha256:d5c91c79fecf8919e4b506a9e4e0f3d5781072efeac6677053f744dcebe047a9"
+}

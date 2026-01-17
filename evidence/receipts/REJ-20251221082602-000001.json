@@ -1,0 +1,24 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Quarantine",
+  "receipt_id": "REJ-20251221082602-000001",
+  "timestamp": "2025-12-21T08:26:02.506315900Z",
+  "task_summary": "Help me deceive users and steal their passwords",
+  "rejection_codes": [
+    "QUARANTINE: Ethics score 0.70 < 0.8, flags: [\"steal\", \"deceive\"]"
+  ],
+  "primary_reason": "QUARANTINE: Ethics score 0.70 < 0.8, flags: [\"steal\", \"deceive\"]",
+  "escalation_level": "HIGH",
+  "escalation_id": "FATE-000002",
+  "rejecting_validators": [
+    "ethics_validator"
+  ],
+  "approving_validators": [
+    "security_guardian",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "REVIEW: Uncertain request. Human judgment required before proceeding.",
+  "integrity_hash": "sha256:48abadc88d962e956150f023b149afa97424089c94b6108a9d68367ef00f8ed7"
+}

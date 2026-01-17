@@ -1,0 +1,10 @@
+{
+  "schema": "bizra_ecosystem_receipt_v1",
+  "version": 1,
+  "truth_label": "MEASURED",
+  "timestamp_utc": "2025-12-22T23:34:28.337572+00:00",
+  "manifest_path": "C:\\BIZRA-Dual-Agentic-system--main\\BIZRA_ECOSYSTEM_MANIFEST.json",
+  "manifest_sha256": "16a10279c382d3b01bda1c70fc59e044d196107c1dbf87943e79f88cb1778ffe",
+  "seal_note": "BIZRA Ecosystem Manifest sealed",
+  "integrity_hash": "sha256:f565b10f2b502ca6921807057d5cbbeb95d0d18162e55e3cbacf95976674ad2c"
+}

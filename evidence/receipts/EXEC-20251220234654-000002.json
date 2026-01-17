@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251220234654-000002",
+  "timestamp": "2025-12-20T23:46:54.724427100Z",
+  "task_summary": "Concurrent task 1",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120018,
+  "total_latency_ms": 120018,
+  "synergy_score": 0.9322515400750196,
+  "ihsan_score": 0.9352598885802668,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:97cd76739e5b3904930eed3763e60a916d91f4a2a516f94d4227346377518e28"
+}

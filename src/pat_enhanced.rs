@@ -1,0 +1,644 @@
+// src/pat_enhanced.rs - PAT with all capabilities
+
+use crate::{
+    a2a::A2AServer, errors::PolicyError, fixed::Fixed64, ihsan, mcp::MCPClient,
+    pat::PATOrchestrator, reasoning::MultiMethodReasoning, types::*,
+};
+use std::{
+    collections::{BTreeMap, HashSet},
+    sync::Arc,
+    time::Instant,
+};
+use tokio::sync::RwLock;
+use tracing::{info, instrument};
+
+pub struct EnhancedPATOrchestrator {
+    // Base orchestrator
+    base: Arc<PATOrchestrator>,
+
+    // Enhanced capabilities
+    mcp_client: Arc<RwLock<MCPClient>>,
+    a2a_server: Arc<RwLock<A2AServer>>,
+    reasoning_engine: Arc<MultiMethodReasoning>,
+
+    // Sub-agent factory
+    sub_agent_count: Arc<RwLock<usize>>,
+    max_sub_agents: usize,
+}
+
+impl EnhancedPATOrchestrator {
+    pub async fn new() -> anyhow::Result<Self> {
+        info!("🎭 Initializing ENHANCED PAT with full arsenal");
+
+        let mut mcp = MCPClient::new();
+
+        // Register MCP servers
+        mcp.register_server(
+            "local_tools".to_string(),
+            "stdio://local".to_string(),
+            crate::mcp::MCPTransport::Stdio,
+        )
+        .await?;
+
+        let mut a2a = A2AServer::new();
+
+        // Register agent capabilities
+        a2a.register_agent(crate::a2a::AgentCard {
+            name: "strategic_visionary".to_string(),
+            version: "2.0.0".to_string(),
+            capabilities: vec![
+                crate::a2a::Capability::Analysis,
+                crate::a2a::Capability::Synthesis,
+            ],
+            protocols: vec!["a2a".to_string()],
+            authentication: vec!["oauth2".to_string()],
+            external: false,
+            provider: None,
+        });
+
+        Ok(Self {
+            base: Arc::new(PATOrchestrator::new().await?),
+            mcp_client: Arc::new(RwLock::new(mcp)),
+            a2a_server: Arc::new(RwLock::new(a2a)),
+            reasoning_engine: Arc::new(
+                MultiMethodReasoning::from_env(vec![
+                    ReasoningMethod::ChainOfThought,
+                    ReasoningMethod::TreeOfThought,
+                    ReasoningMethod::GraphOfThought,
+                    ReasoningMethod::ReAct,
+                    ReasoningMethod::Reflexion,
+                ])
+                .await,
+            ),
+            sub_agent_count: Arc::new(RwLock::new(0)),
+            max_sub_agents: 100,
+        })
+    }
+
+    #[instrument(skip(self))]
+    pub async fn execute_enhanced(
+        &self,
+        request: EnhancedDualAgenticRequest,
+    ) -> anyhow::Result<DualAgenticResponse> {
+        let start = Instant::now();
+        info!("🚀 Enhanced PAT execution with full capabilities");
+
+        // Handle slash commands
+        if let Some(cmd) = &request.slash_command {
+            return self.handle_slash_command(cmd, &request).await;
+        }
+
+        // Select reasoning method
+        let method = self.reasoning_engine.select_method(
+            "general",
+            0.5,
+            request.reasoning_preference.clone(),
+        );
+
+        info!(?method, "Selected reasoning method");
+
+        let tool_allowlist = Self::normalize_tool_allowlist(&request.mcp_tools_whitelist);
+
+        // Execute with MCP tools if needed
+        let mcp = self.mcp_client.read().await;
+        let available_tools = Self::apply_tool_allowlist(mcp.list_tools(), &tool_allowlist);
+        info!(tools_count = available_tools.len(), "MCP tools available");
+
+        // Spawn sub-agents if enabled
+        if request.enable_sub_agents {
+            let mut count = self.sub_agent_count.write().await;
+            if *count < self.max_sub_agents {
+                *count += 1;
+                info!(sub_agents = *count, "Sub-agent spawned");
+            }
+        }
+
+        // Execute base orchestration
+        let base_result = self
+            .base
+            .execute_parallel(vec![], request.base.clone())
+            .await?;
+
+        let pat_avg = avg_confidence_fixed(&base_result);
+        let (ihsan_score, ihsan_vector) = self.calculate_ihsan_pat_only(&base_result)?;
+        let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+            self.enforce_ihsan(ihsan_score, "docs")?;
+        let latency = start.elapsed();
+
+        // Build enhanced response
+        Ok(DualAgenticResponse {
+            pat_contributions: base_result.iter().map(|r| r.contribution.clone()).collect(),
+            sat_contributions: vec![],
+            synergy_score: pat_avg,
+            ihsan_score,
+            latency,
+            meta: serde_json::json!({
+                "reasoning_method": format!("{:?}", method),
+                "mcp_tools_available": available_tools.len(),
+                "mcp_allowlist_provided": request.mcp_tools_whitelist.is_some(),
+                "sub_agents_spawned": *self.sub_agent_count.read().await,
+                "sat_absent": true,
+                "synergy_score_source": "pat_avg_confidence_v0",
+                "adapter_modes": AdapterModes::current(),
+                "ihsan_constitution_id": ihsan::constitution().id(),
+                "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                "ihsan_env": ihsan_env,
+                "ihsan_artifact_class": "docs",
+                "ihsan_threshold_applied": ihsan_threshold_applied,
+                "ihsan_passes_threshold": ihsan_passes_threshold,
+                "ihsan_vector": ihsan_vector,
+                "ihsan_vector_source": "pat_only_confidence_mapping_v0",
+            }),
+        })
+    }
+
+    async fn handle_slash_command(
+        &self,
+        command: &SlashCommand,
+        request: &EnhancedDualAgenticRequest,
+    ) -> anyhow::Result<DualAgenticResponse> {
+        let start = Instant::now();
+        let tool_allowlist = Self::normalize_tool_allowlist(&request.mcp_tools_whitelist);
+        match command {
+            SlashCommand::Reason { method } => {
+                info!(?method, "Slash command: Force reasoning method");
+                let result = self
+                    .reasoning_engine
+                    .reason(method, &request.base.task, serde_json::json!({}))
+                    .await?;
+
+                let (ihsan_score, ihsan_vector) =
+                    self.ihsan_from_scalar_confidence(result.confidence)?;
+                let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+                    self.enforce_ihsan(ihsan_score, "docs")?;
+
+                Ok(DualAgenticResponse {
+                    pat_contributions: vec![result.conclusion],
+                    sat_contributions: vec![],
+                    synergy_score: Fixed64::from_f64(result.confidence),
+                    ihsan_score,
+                    latency: start.elapsed(),
+                    meta: serde_json::json!({
+                        "slash_command": "reason",
+                        "method": format!("{:?}", method),
+                        "steps": result.steps,
+                        "sat_absent": true,
+                        "adapter_modes": AdapterModes::current(),
+                        "ihsan_constitution_id": ihsan::constitution().id(),
+                        "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                        "ihsan_env": ihsan_env,
+                        "ihsan_artifact_class": "docs",
+                        "ihsan_threshold_applied": ihsan_threshold_applied,
+                        "ihsan_passes_threshold": ihsan_passes_threshold,
+                        "ihsan_vector": ihsan_vector,
+                        "ihsan_vector_source": "reasoning_confidence_v0",
+                    }),
+                })
+            }
+
+            SlashCommand::Tools { filter } => {
+                info!(filter, "Slash command: List tools");
+                Self::ensure_tools_allowed(&tool_allowlist)?;
+                let mcp = self.mcp_client.read().await;
+                let tools = Self::apply_tool_allowlist(mcp.filter_tools(filter), &tool_allowlist);
+
+                let (ihsan_score, ihsan_vector) = self.ihsan_from_scalar_confidence(1.0)?;
+                let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+                    self.enforce_ihsan(ihsan_score, "docs")?;
+
+                Ok(DualAgenticResponse {
+                    pat_contributions: tools
+                        .iter()
+                        .map(|t| format!("{}: {}", t.name, t.description))
+                        .collect(),
+                    sat_contributions: vec![],
+                    synergy_score: Fixed64::ONE,
+                    ihsan_score,
+                    latency: start.elapsed(),
+                    meta: serde_json::json!({
+                        "slash_command": "tools",
+                        "filter": filter,
+                        "count": tools.len(),
+                        "mcp_allowlist_provided": request.mcp_tools_whitelist.is_some(),
+                        "sat_absent": true,
+                        "adapter_modes": AdapterModes::current(),
+                        "ihsan_constitution_id": ihsan::constitution().id(),
+                        "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                        "ihsan_env": ihsan_env,
+                        "ihsan_artifact_class": "docs",
+                        "ihsan_threshold_applied": ihsan_threshold_applied,
+                        "ihsan_passes_threshold": ihsan_passes_threshold,
+                        "ihsan_vector": ihsan_vector,
+                        "ihsan_vector_source": "deterministic_tools_listing_v0",
+                    }),
+                })
+            }
+
+            SlashCommand::Spawn { role, task } => {
+                info!(role, task, "Slash command: Spawn sub-agent");
+                let mut count = self.sub_agent_count.write().await;
+                *count += 1;
+
+                let (ihsan_score, ihsan_vector) = self.ihsan_from_scalar_confidence(0.5)?;
+                let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+                    self.enforce_ihsan(ihsan_score, "docs")?;
+
+                Ok(DualAgenticResponse {
+                    pat_contributions: vec![format!(
+                        "Spawned sub-agent '{}' for task: {}",
+                        role, task
+                    )],
+                    sat_contributions: vec![],
+                    synergy_score: Fixed64::from_f64(0.95),
+                    ihsan_score,
+                    latency: start.elapsed(),
+                    meta: serde_json::json!({
+                        "slash_command": "spawn",
+                        "sub_agent_role": role,
+                        "total_sub_agents": *count,
+                        "sat_absent": true,
+                        "adapter_modes": AdapterModes::current(),
+                        "ihsan_constitution_id": ihsan::constitution().id(),
+                        "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                        "ihsan_env": ihsan_env,
+                        "ihsan_artifact_class": "docs",
+                        "ihsan_threshold_applied": ihsan_threshold_applied,
+                        "ihsan_passes_threshold": ihsan_passes_threshold,
+                        "ihsan_vector": ihsan_vector,
+                        "ihsan_vector_source": "slash_command_v0",
+                    }),
+                })
+            }
+
+            SlashCommand::Delegate { agent, task } => {
+                info!(agent, task, "Slash command: Delegate to agent");
+                let a2a = self.a2a_server.read().await;
+                let result = a2a
+                    .delegate(agent, task.clone())
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Delegation failed: {}", e))?;
+
+                let (ihsan_score, ihsan_vector) = self.ihsan_from_scalar_confidence(0.5)?;
+                let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+                    self.enforce_ihsan(ihsan_score, "docs")?;
+
+                Ok(DualAgenticResponse {
+                    pat_contributions: vec![format!("Delegated to {}: {}", agent, result.result)],
+                    sat_contributions: vec![],
+                    synergy_score: Fixed64::from_f64(0.93),
+                    ihsan_score,
+                    latency: start.elapsed(),
+                    meta: serde_json::json!({
+                        "slash_command": "delegate",
+                        "agent": agent,
+                        "result": result.result,
+                        "execution_time_ms": result.execution_time_ms,
+                        "delegation_depth": result.delegation_depth,
+                        "sat_absent": true,
+                        "adapter_modes": AdapterModes::current(),
+                        "ihsan_constitution_id": ihsan::constitution().id(),
+                        "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                        "ihsan_env": ihsan_env,
+                        "ihsan_artifact_class": "docs",
+                        "ihsan_threshold_applied": ihsan_threshold_applied,
+                        "ihsan_passes_threshold": ihsan_passes_threshold,
+                        "ihsan_vector": ihsan_vector,
+                        "ihsan_vector_source": "slash_command_v0",
+                    }),
+                })
+            }
+
+            _ => {
+                // Other slash commands...
+                let (ihsan_score, ihsan_vector) = self.ihsan_from_scalar_confidence(0.5)?;
+                let (ihsan_env, ihsan_threshold_applied, ihsan_passes_threshold) =
+                    self.enforce_ihsan(ihsan_score, "docs")?;
+
+                Ok(DualAgenticResponse {
+                    pat_contributions: vec![format!("Slash command executed: {:?}", command)],
+                    sat_contributions: vec![],
+                    synergy_score: Fixed64::from_f64(0.90),
+                    ihsan_score,
+                    latency: start.elapsed(),
+                    meta: serde_json::json!({
+                        "slash_command": format!("{:?}", command),
+                        "sat_absent": true,
+                        "adapter_modes": AdapterModes::current(),
+                        "ihsan_constitution_id": ihsan::constitution().id(),
+                        "ihsan_threshold_baseline": ihsan::constitution().threshold(),
+                        "ihsan_env": ihsan_env,
+                        "ihsan_artifact_class": "docs",
+                        "ihsan_threshold_applied": ihsan_threshold_applied,
+                        "ihsan_passes_threshold": ihsan_passes_threshold,
+                        "ihsan_vector": ihsan_vector,
+                        "ihsan_vector_source": "slash_command_v0",
+                    }),
+                })
+            }
+        }
+    }
+
+    fn normalize_tool_allowlist(raw: &Option<Vec<String>>) -> Option<HashSet<String>> {
+        let Some(list) = raw else {
+            return None;
+        };
+
+        let mut allowlist = HashSet::new();
+        for name in list {
+            let trimmed = name.trim();
+            if !trimmed.is_empty() {
+                allowlist.insert(trimmed.to_string());
+            }
+        }
+        Some(allowlist)
+    }
+
+    fn apply_tool_allowlist<'a>(
+        tools: Vec<&'a crate::mcp::ToolDefinition>,
+        allowlist: &Option<HashSet<String>>,
+    ) -> Vec<&'a crate::mcp::ToolDefinition> {
+        match allowlist {
+            Some(set) => tools
+                .into_iter()
+                .filter(|tool| set.contains(&tool.name))
+                .collect(),
+            None => tools,
+        }
+    }
+
+    fn ensure_tools_allowed(allowlist: &Option<HashSet<String>>) -> Result<(), PolicyError> {
+        if let Some(set) = allowlist {
+            if set.is_empty() {
+                return Err(PolicyError::McpToolsBlocked {
+                    message: "MCP allowlist provided but empty".to_string(),
+                });
+            }
+        }
+        Ok(())
+    }
+
+    fn enforce_ihsan(
+        &self,
+        ihsan_score: Fixed64,
+        artifact_class: &'static str,
+    ) -> anyhow::Result<(String, f64, bool)> {
+        let env = ihsan::current_env();
+        let threshold = ihsan::constitution().threshold_for(&env, artifact_class);
+        let ihsan_score_f64 = ihsan_score.to_f64();
+        let passes = ihsan_score_f64 >= threshold;
+        if !passes && ihsan::should_enforce() {
+            return Err(PolicyError::IhsanGateFailed {
+                env,
+                score: ihsan_score_f64,
+                threshold,
+            }
+            .into());
+        }
+        Ok((env, threshold, passes))
+    }
+
+    fn ihsan_from_scalar_confidence(
+        &self,
+        confidence: f64,
+    ) -> anyhow::Result<(Fixed64, BTreeMap<String, Fixed64>)> {
+        fn clamp01(value: f64) -> f64 {
+            value.clamp(0.0, 1.0)
+        }
+
+        let mut scores = BTreeMap::new();
+        scores.insert("correctness".to_string(), clamp01(confidence));
+        scores.insert("safety".to_string(), 0.0);
+        scores.insert("user_benefit".to_string(), clamp01(confidence));
+        scores.insert("efficiency".to_string(), 0.0);
+        scores.insert("auditability".to_string(), 0.0);
+        scores.insert("anti_centralization".to_string(), 0.0);
+        scores.insert("robustness".to_string(), clamp01(confidence));
+        scores.insert("adl_fairness".to_string(), 0.0);
+
+        let score = ihsan::score(&scores)?;
+        // Convert to Fixed64 for deterministic core
+        let score_fixed = Fixed64::from_f64(score);
+        let scores_fixed: BTreeMap<String, Fixed64> = scores
+            .iter()
+            .map(|(k, v)| (k.clone(), Fixed64::from_f64(*v)))
+            .collect();
+        Ok((score_fixed, scores_fixed))
+    }
+
+    fn calculate_ihsan_pat_only(
+        &self,
+        pat_results: &[AgentResult],
+    ) -> anyhow::Result<(Fixed64, BTreeMap<String, Fixed64>)> {
+        fn clamp01(value: f64) -> f64 {
+            value.clamp(0.0, 1.0)
+        }
+
+        fn find(results: &[AgentResult], name: &str) -> Option<f64> {
+            results
+                .iter()
+                .find(|r| r.agent_name == name)
+                .map(|r| r.confidence.to_f64())
+        }
+
+        let pat_avg = avg_confidence(pat_results);
+
+        let mut scores = BTreeMap::new();
+        scores.insert(
+            "correctness".to_string(),
+            clamp01(find(pat_results, "quality_guardian").unwrap_or(pat_avg)),
+        );
+        scores.insert("safety".to_string(), 0.0);
+        scores.insert(
+            "user_benefit".to_string(),
+            clamp01(find(pat_results, "user_advocate").unwrap_or(pat_avg)),
+        );
+        scores.insert("efficiency".to_string(), 0.0);
+        scores.insert("auditability".to_string(), 0.0);
+        scores.insert("anti_centralization".to_string(), 0.0);
+        scores.insert(
+            "robustness".to_string(),
+            clamp01(calculate_consistency(pat_results)),
+        );
+        scores.insert("adl_fairness".to_string(), 0.0);
+
+        let score = ihsan::score(&scores)?;
+        // Convert to Fixed64 for deterministic core
+        let score_fixed = Fixed64::from_f64(score);
+        let scores_fixed: BTreeMap<String, Fixed64> = scores
+            .iter()
+            .map(|(k, v)| (k.clone(), Fixed64::from_f64(*v)))
+            .collect();
+        Ok((score_fixed, scores_fixed))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::mcp::ToolDefinition;
+
+    #[test]
+    fn normalize_tool_allowlist_trims_and_dedupes() {
+        let raw = Some(vec![
+            "calculator".to_string(),
+            "  calculator  ".to_string(),
+            "".to_string(),
+        ]);
+        let allowlist =
+            EnhancedPATOrchestrator::normalize_tool_allowlist(&raw).expect("expected allowlist");
+        assert_eq!(allowlist.len(), 1);
+        assert!(allowlist.contains("calculator"));
+    }
+
+    #[test]
+    fn apply_tool_allowlist_filters_tools() {
+        let tools = vec![
+            ToolDefinition {
+                name: "calculator".to_string(),
+                description: "math".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+            ToolDefinition {
+                name: "filesystem_read".to_string(),
+                description: "fs".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+        ];
+        let refs: Vec<&ToolDefinition> = tools.iter().collect();
+
+        let mut allow = HashSet::new();
+        allow.insert("calculator".to_string());
+        let filtered = EnhancedPATOrchestrator::apply_tool_allowlist(refs, &Some(allow));
+
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].name, "calculator");
+    }
+
+    #[test]
+    fn ensure_tools_allowed_blocks_empty_allowlist() {
+        let allowlist = Some(HashSet::<String>::new());
+        let err = EnhancedPATOrchestrator::ensure_tools_allowed(&allowlist)
+            .expect_err("expected empty allowlist error");
+        assert!(err.to_string().contains("MCP allowlist provided but empty"));
+    }
+
+    #[test]
+    fn normalize_tool_allowlist_with_none_returns_none() {
+        let result = EnhancedPATOrchestrator::normalize_tool_allowlist(&None);
+        assert!(result.is_none(), "None input should return None");
+    }
+
+    #[test]
+    fn normalize_tool_allowlist_with_only_empty_strings_returns_empty_set() {
+        let raw = Some(vec!["".to_string(), "   ".to_string(), "\t".to_string()]);
+        let allowlist = EnhancedPATOrchestrator::normalize_tool_allowlist(&raw)
+            .expect("expected Some with empty set");
+        assert!(
+            allowlist.is_empty(),
+            "Allowlist with only empty/whitespace strings should be empty set"
+        );
+    }
+
+    #[test]
+    fn apply_tool_allowlist_with_none_returns_all_tools() {
+        let tools = vec![
+            ToolDefinition {
+                name: "calculator".to_string(),
+                description: "math".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+            ToolDefinition {
+                name: "filesystem_read".to_string(),
+                description: "fs".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+        ];
+        let refs: Vec<&ToolDefinition> = tools.iter().collect();
+
+        let filtered = EnhancedPATOrchestrator::apply_tool_allowlist(refs.clone(), &None);
+
+        assert_eq!(
+            filtered.len(),
+            2,
+            "None allowlist should return all tools unchanged"
+        );
+    }
+
+    #[test]
+    fn apply_tool_allowlist_with_nonexistent_names_returns_empty() {
+        let tools = vec![
+            ToolDefinition {
+                name: "calculator".to_string(),
+                description: "math".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+            ToolDefinition {
+                name: "filesystem_read".to_string(),
+                description: "fs".to_string(),
+                parameters: vec![],
+                server: "local".to_string(),
+            },
+        ];
+        let refs: Vec<&ToolDefinition> = tools.iter().collect();
+
+        let mut allow = HashSet::new();
+        allow.insert("nonexistent_tool".to_string());
+        allow.insert("another_missing_tool".to_string());
+        let filtered = EnhancedPATOrchestrator::apply_tool_allowlist(refs, &Some(allow));
+
+        assert!(
+            filtered.is_empty(),
+            "Allowlist with names not present in tools should return empty vec"
+        );
+    }
+
+    #[test]
+    fn ensure_tools_allowed_with_none_returns_ok() {
+        let result = EnhancedPATOrchestrator::ensure_tools_allowed(&None);
+        assert!(
+            result.is_ok(),
+            "None allowlist should return Ok, got: {:?}",
+            result
+        );
+    }
+}
+
+/// Average confidence as f64 (for ihsan calculations)
+fn avg_confidence(results: &[AgentResult]) -> f64 {
+    if results.is_empty() {
+        return 0.0;
+    }
+    let sum: Fixed64 = results.iter().map(|r| r.confidence).sum();
+    sum.to_f64() / results.len() as f64
+}
+
+/// Average confidence as Fixed64 (for deterministic response construction)
+fn avg_confidence_fixed(results: &[AgentResult]) -> Fixed64 {
+    if results.is_empty() {
+        return Fixed64::ZERO;
+    }
+    let sum: Fixed64 = results.iter().map(|r| r.confidence).sum();
+    sum.saturating_div(Fixed64::from_int(results.len() as i32))
+}
+
+fn calculate_consistency(results: &[AgentResult]) -> f64 {
+    if results.is_empty() {
+        return 0.0;
+    }
+
+    let mean = avg_confidence(results);
+
+    let variance: f64 = results
+        .iter()
+        .map(|r| (r.confidence.to_f64() - mean).powi(2))
+        .sum::<f64>()
+        / results.len() as f64;
+
+    // High consistency = low variance
+    1.0 - variance.sqrt()
+}

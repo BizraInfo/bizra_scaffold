@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251228234043-000001",
+  "timestamp": "2025-12-28T23:40:43.896147200Z",
+  "task_summary": "Review the authentication module for security vulnerabilities",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 67635,
+  "total_latency_ms": 67636,
+  "synergy_score": 0.9261372103618566,
+  "ihsan_score": 0.926742536708789,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:16ceffc08500d47c67cbdcf41ed2a79eeaad46f8ca7afc0719890e6a246ceb08"
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251219133001-000001",
+  "timestamp": "2025-12-19T13:30:01.440614700Z",
+  "task_summary": "Write API documentation for the payment processing endpoint",
+  "sat_validation_ms": 1,
+  "pat_execution_ms": 120016,
+  "total_latency_ms": 120017,
+  "synergy_score": 0.9297761741918472,
+  "ihsan_score": 0.9290110766339886,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:fc85bdc1302776a768a9720fae9f469c55b72eb1c4d14ad7036b73527c381a5f"
+}}

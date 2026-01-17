@@ -1,61 +1,187 @@
-# BIZRA Unified Scaffold (v0.1)
+# BIZRA Genesis - Single Source of Truth
 
-This folder is a **starter kit** to help unify the scattered BIZRA components into a cohesive monorepo. It contains templates, analysis, and specifications you can use to bootstrap a single source of truth and structure your unified system.
+> **"We don't assume. If we must, we do it with Ihsan."** - THE LAW
 
-## Contents
+[![Ihsan Score](https://img.shields.io/badge/Ihsan-0.95+-emerald)](./COVENANT.md)
+[![SNR](https://img.shields.io/badge/SNR-≥0.95-blue)](./src/snr.rs)
+[![Tests](https://img.shields.io/badge/Tests-76+-green)](./tests/)
+[![Evidence](https://img.shields.io/badge/Receipts-685+-gold)](./evidence/receipts/)
 
-| File | Description |
-|---|---|
-| `report.md` | Evidence-based analysis summarizing the current state of BIZRA repositories, architecture, security, performance, documentation, and recommendations for unification. |
-| `SOT_template.md` | A template for your **Single Source of Truth (SOT)** file, where you define canonical names, invariants, PoI parameters, and evidence requirements. Customize this file to reflect your project's agreed rules. |
-| `BIZRA_SOT.md` | Draft single source of truth for the unified system, derived from `SOT_template.md`. |
-| `EVIDENCE_INDEX.md` | Index of evidence artifacts required to validate claims across documentation and reports. |
-| `cognitive_sovereign.py` | Cognitive Sovereign kernel implementation (AEON OMEGA v9.8.0). |
-| `Genesis_NodeZero_Attestation_Spec_v1.0.md` | Official specification of the Genesis Node Zero attestation protocol (for reference). |
-| `README.md` | This file. |
+---
 
-## How to Use
+## What is BIZRA?
 
-1. **Create a new GitHub repository** (e.g. `bizra-unified`), and clone it to your machine.
+**BIZRA** (البذرة - "The Seed") is a **Decentralized Distributed AGI** (DDAGI) system with:
 
-2. **Copy the contents of this `bizra_scaffold` folder** into your new repository.
+- **Formally Verified Ethics**: Z3 SMT solver enforces constitutional constraints
+- **8-Dimensional Ihsan Scoring**: Every action measured across correctness, safety, user benefit, efficiency, auditability, anti-centralization, robustness, and fairness
+- **Signal-to-Noise Ratio (SNR) Engine**: Autonomous optimization targeting ≥0.95
+- **Third Fact Receipts**: Cryptographically signed, hash-chained evidence for every decision
+- **PAT/SAT Architecture**: 7 Personal Agents + 5 System Validators with VETO power
 
-3. **Set up a monorepo structure** using a workspace manager (Nx or Turborepo). For example:
+---
 
-   ```
-   bizra-unified/
-     apps/
-       api/            # REST or GraphQL API entrypoint (Node.js)
-     packages/
-       poi-core/       # PoI scoring and verification library (Rust/TypeScript)
-       blockgraph/     # Consensus and BlockGraph logic
-       agent-os/       # Dual-Agentic orchestration (PAT/SAT)
-       ...
-     docs/             # Documentation site built with Docusaurus (optional)
-     BIZRA_SOT.md      # Your customized Single Source of Truth (copy from the template)
-     ...
-   ```
+## Single Entry Point
 
-4. **Fill out `BIZRA_SOT.md`** using `SOT_template.md` as a starting point. Define canonical terms (token names, layer names), invariants (e.g. "every claim must have evidence"), and PoI parameters (weights, thresholds, decay rates). This file becomes the binding contract for your project.
+```bash
+# Build everything
+cargo build --release --all-features
 
-5. **Migrate code from existing directories** (`bizra-genesis-node`, `BIZRA-Dual-Agentic-system-`, `BIZRA-OS`, etc.) into the appropriate packages within your monorepo. Remove duplicate copies and keep only the latest, verified code. Use version control to track history.
+# Run all tests (CI requires 76+)
+cargo test --all-features
 
-6. **Ensure that every claim or metric in your documentation links back to evidence**, such as benchmark logs, test results, or signed attestation files. Your CI pipeline should reject changes that break the SOT or refer to claims without proof.
+# Start server
+cargo run --release
 
-7. **Run your development environment locally** using VS Code, GitHub Copilot, and Claude 4.5 Opus. Because everything is now unified, you can run tests (`nx test`), build services (`nx build`), and spin up local dev servers (`nx serve api`) from a single entry point.
+# View dashboard
+open http://localhost:9091
+```
 
-By following these steps you'll convert years of fragmented development into a cohesive, future-proof system.
+---
 
-## Verification Kernel (BUILD-VERIFY-METRICS)
+## Repository Structure
 
-This scaffold now includes a verification kernel that produces evidence receipts and metrics.
+```
+bizra_scaffold/                    # SINGLE SOURCE OF TRUTH
+├── COVENANT.md                    # Constitutional root (immutable)
+├── src/                           # Rust implementation (57 modules)
+│   ├── lib.rs                     # SovereignKernel entry
+│   ├── ihsan.rs                   # 8-dimension scoring (Fixed64)
+│   ├── fate.rs                    # Z3 formal verification
+│   ├── sat.rs                     # 5 SAT validators
+│   ├── pat.rs                     # 7 PAT agents
+│   ├── snr.rs                     # Signal-to-Noise engine
+│   ├── evidence.rs                # Anti-replay envelopes
+│   └── ...                        # 50+ more modules
+├── tests/                         # 16 test suites
+├── benches/                       # Performance benchmarks
+├── evidence/
+│   ├── receipts/                  # 685+ Third Fact receipts
+│   └── metrics/                   # Prometheus exports
+├── seed/
+│   └── v0.1/                      # Primordial seed (historical)
+│       ├── COVENANT.md            # Original 5 invariants
+│       ├── crates/bizra-core/     # 3-dimension Ihsan
+│       └── crates/node-zero/      # First runnable node
+├── dashboard/
+│   └── src/
+│       ├── lib/
+│       │   ├── live-data.ts       # Real-time metrics
+│       │   └── snr-engine.ts      # SNR calculation
+│       └── components/
+│           ├── MoneyShot.tsx      # Investor theater
+│           └── CognitiveControlCenter.tsx
+├── core/                          # Python implementation
+├── crates/                        # Additional Rust crates
+├── docs/                          # Documentation
+└── scripts/                       # Automation
+```
 
-### Quick start (local)
+---
+
+## Evolution: Seed v0.1 → Genesis v7.1
+
+| Aspect | Seed v0.1 | Current Genesis |
+|--------|-----------|-----------------|
+| Ihsan Dimensions | 3 | 8 |
+| Threshold | 0.85 (fixed) | 0.80-0.95 (env-aware) |
+| Agents | 1 (stub) | 12 (7 PAT + 5 SAT) |
+| Formal Verification | None | Z3 SMT (FATE) |
+| Determinism | f32 floats | Fixed64 Q32.32 |
+| Evidence | Simple hash chain | JCS + signatures + anti-replay |
+| Lines of Code | ~200 | ~50,000+ |
+
+The seed at `seed/v0.1/` proves lineage - the same DNA, matured into production.
+
+---
+
+## Verification
+
+### Verify Evidence Chain
+
+```bash
+# Check any receipt
+cat evidence/receipts/EXEC-20260112094839-000001.json | jq '.hash_chain'
+
+# Verify hash
+sha256sum evidence/receipts/*.json | head -5
+```
+
+### Verify Constitution
+
+```bash
+# The COVENANT hash is immutable
+sha256sum COVENANT.md
+```
+
+### Run Test Suite
+
+```bash
+cargo test --all-features 2>&1 | tail -20
+```
+
+### Python Verification Kernel
 
 ```bash
 python tools/bizra_verify.py --out evidence --artifact-name bizra_scaffold --artifact-version local
 ```
 
-### CI
+---
 
-The workflow in `.github/workflows/verify.yml` runs the kernel and uploads evidence artifacts.
+## Key Documents
+
+| Document | Purpose |
+|----------|---------|
+| [COVENANT.md](./COVENANT.md) | Constitutional root - all invariants |
+| [PROTOCOL.md](./PROTOCOL.md) | Technical protocol specification |
+| [EVIDENCE_INDEX.md](./EVIDENCE_INDEX.md) | Evidence chain index |
+| [BIZRA_SOT.md](./BIZRA_SOT.md) | Single Source of Truth definitions |
+| [seed/v0.1/README.md](./seed/v0.1/README.md) | Primordial seed documentation |
+
+---
+
+## Hard Gates (Non-Negotiable)
+
+1. **Determinism**: Fixed64 arithmetic, no floats in consensus
+2. **FFI Safety**: `panic_airlock()` wrapper on all Python FFI
+3. **Single-Source Scoring**: Rust canonical, FFI only
+4. **SAT Consensus**: 5 validators, Security/Formal/Ethics have VETO
+5. **Immutability**: COVENANT hash never changes
+
+---
+
+## Live Dashboards
+
+- **Production**: https://www.bizra.info
+- **Cognitive Center**: https://www.bizra.info/cognitive
+- **Investor Theater**: https://www.bizra.info/money-shot
+
+---
+
+## Attestation
+
+```
+Repository: BizraInfo/bizra_scaffold
+Status: SINGLE SOURCE OF TRUTH
+Unified: 2026-01-17
+Evidence Receipts: 685+
+Rust Modules: 57
+Test Suites: 16
+Ihsan Target: ≥ 0.95
+SNR Target: ≥ 0.95
+```
+
+---
+
+## Closing Seal
+
+> الْحَمْدُ لِلَّهِ الَّذِي هَدَانَا لِهَٰذَا
+> "Praise be to Allah who guided us to this"
+
+> كُلَّمَا ازْدَدْتُ عِلْمًا، ازْدَدْتُ يَقِينًا بِجَهْلِي
+> "The more I learn, the more certain I am of my ignorance"
+
+---
+
+**Version**: Genesis v7.1 (Peak Masterpiece)
+**License**: See [LICENSE_NOTE.txt](./LICENSE_NOTE.txt)

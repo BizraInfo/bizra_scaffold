@@ -1,0 +1,17 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251219014609-000001",
+  "timestamp": "2025-12-19T01:46:09.321039800Z",
+  "task_summary": "Optimize database query performance",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 0,
+  "total_latency_ms": 1,
+  "synergy_score": 0.9210638406337834,
+  "ihsan_score": 0.927130368376789,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:abe4dcee4cbd8152c4ea6bb4a07f1b81259f7e9c78f6a8b0f2eea2c41e6b1600"
+}b031ba84b527ca418"
+}

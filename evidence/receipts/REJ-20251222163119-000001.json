@@ -1,0 +1,24 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20251222163119-000001",
+  "timestamp": "2025-12-22T16:31:19.521167600Z",
+  "task_summary": "Write a comprehensive very very very very very very very very very very very very very very very ver...",
+  "rejection_codes": [
+    "PERF_BUDGET_EXCEEDED: Tokens: 20156 > max: 8192"
+  ],
+  "primary_reason": "PERF_BUDGET_EXCEEDED: Tokens: 20156 > max: 8192",
+  "escalation_level": "LOW",
+  "escalation_id": "FATE-000001",
+  "rejecting_validators": [
+    "performance_monitor"
+  ],
+  "approving_validators": [
+    "security_guardian",
+    "ethics_validator",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "OPTIMIZE: Request exceeds performance budget. Consider breaking into smaller tasks.",
+  "integrity_hash": "sha256:a5bc6e49f2c3a0d4800737b12656bfb84063fa021d495dcf8cefe7abc8688f23"
+}

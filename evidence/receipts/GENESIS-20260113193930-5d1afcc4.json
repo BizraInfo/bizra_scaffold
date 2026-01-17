@@ -1,0 +1,23 @@
+{
+  "receipt_id": "GENESIS-20260113193930-5d1afcc4",
+  "receipt_type": "TOKEN_MINT",
+  "timestamp": "2026-01-13T19:39:30.156670+00:00",
+  "token": {
+    "name": "BLOOM",
+    "symbol": "BLOOM",
+    "total_supply": 100000000,
+    "genesis_allocation": 42500,
+    "decimal_places": 18,
+    "is_stable": false
+  },
+  "network": "BIZRA_MAINNET_V1",
+  "ihsan_score": 0.97,
+  "sat_validation": {
+    "security": "PASS",
+    "formal": "PASS",
+    "ethics": "PASS",
+    "resource": "PASS",
+    "context": "PASS"
+  },
+  "signature": "1f2e50b9570693b254ced996335a40e5a494c9d931f8c9dce7fab9b5b72311fc"
+}

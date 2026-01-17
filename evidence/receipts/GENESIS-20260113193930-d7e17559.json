@@ -1,0 +1,23 @@
+{
+  "receipt_id": "GENESIS-20260113193930-d7e17559",
+  "receipt_type": "TOKEN_MINT",
+  "timestamp": "2026-01-13T19:39:30.156647+00:00",
+  "token": {
+    "name": "SEED",
+    "symbol": "SEED",
+    "total_supply": 1000000000,
+    "genesis_allocation": 175000,
+    "decimal_places": 18,
+    "is_stable": true
+  },
+  "network": "BIZRA_MAINNET_V1",
+  "ihsan_score": 0.97,
+  "sat_validation": {
+    "security": "PASS",
+    "formal": "PASS",
+    "ethics": "PASS",
+    "resource": "PASS",
+    "context": "PASS"
+  },
+  "signature": "ffb79faa326dd9513c4b091ecfa70a658186a9856850d187b663eb1e1c84d8a2"
+}

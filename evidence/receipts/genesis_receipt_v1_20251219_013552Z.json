@@ -1,0 +1,97 @@
+{
+  "schema": "bizra_genesis_receipt_v1",
+  "version": 1,
+  "truth_label": "MEASURED",
+  "timestamp_utc": "2025-12-19T01:35:53.448946+00:00",
+  "git_commit_sha": "5df23b4ad54ad27af2730214c369e0f101b31bd8",
+  "git_dirty": true,
+  "artifacts": {
+    "compose_file": "docker-compose.yml",
+    "compose_sha256": "f6f428865eaeca6b4e1174cb1835372e12151e08a39bd75c00469d74da914d57",
+    "model_family_manifest": "model-family-genesis-v1-SEALED.yaml",
+    "model_family_manifest_sha256": "2dcd67447fabfb80d0841864e9823459b01e03848ec1b3975ca1adb6b09bfc06",
+    "gates_file": "docs/evidence/gates/node0_gates_latest.json",
+    "gates_sha256": "fab1b18b8edf9501ecd413cf462ad59e4f9227439054d96eb8f9673e77c5534d"
+  },
+  "healthz_config": {
+    "budget_s": 0.85,
+    "redis_timeout_s": 0.35,
+    "neo4j_timeout_s": 0.55,
+    "llm_timeout_s": 0.25,
+    "cache_ttl_s": 0.5
+  },
+  "healthz_snapshot": {
+    "url": "http://127.0.0.1:8010/healthz",
+    "status_code": 200,
+    "body_sha256": "b93552c15b76b6189685ce7c4776a3c2fe7f30859358b810cbb9fd167ad9f95f",
+    "elapsed_ms": 10.09,
+    "checks": {
+      "synapse": {
+        "enabled": true,
+        "ok": true,
+        "url": "redis://synapse:6379",
+        "latency_ms": 1.82
+      },
+      "wisdom": {
+        "enabled": true,
+        "ok": true,
+        "url": "bolt://wisdom:7687",
+        "latency_ms": 9.88
+      },
+      "ollama": {
+        "enabled": true,
+        "ok": true,
+        "status": "ok",
+        "url": "http://host.docker.internal:11434",
+        "latency_ms": 2.9
+      },
+      "lmstudio": {
+        "enabled": true,
+        "ok": true,
+        "status": "ok",
+        "url": "http://host.docker.internal:1234",
+        "latency_ms": 3.57
+      }
+    }
+  },
+  "first_sape_plan": {
+    "url": "http://127.0.0.1:8010/v1/sape/plan",
+    "request_sha256": "95c6dab0b2cf0779ba6357cabba7ba18ee210766f4e93cd34b86c58505254466",
+    "response_sha256": "658d96e2aae5686fecc2e43df903e7c86bafc485564a7e98e141287e57ead463",
+    "http_status": 200,
+    "latency_ms": 70.75,
+    "response_status": "PLANNED",
+    "slot": "cold_core",
+    "prompt_sha256": "19515b309196c65c578365172fdcad6cfc7ff621e3c1257a9c8b5b7dacf60c26",
+    "audit_id": null,
+    "missing_artifacts": null,
+    "warnings": []
+  },
+  "neo4j_snapshot": {
+    "http_url": "http://127.0.0.1:7474",
+    "node_count": 26954,
+    "relationship_count": 80767,
+    "query_response_sha256": "b1c110bad32f4b53a04677a484615b7403154a49256c48f0ef54c40324c75a31",
+    "error": null
+  },
+  "gates_snapshot": {
+    "passed": true,
+    "timestamp_utc": "2025-12-19T01:35:51.8267432Z",
+    "base_url": "http://127.0.0.1:8010",
+    "gates": {
+      "A": "PASS",
+      "B": "PASS",
+      "C": "PASS",
+      "D": "PASS",
+      "E": "PASS"
+    },
+    "details": {
+      "A": "Stable readiness confirmed",
+      "B": "Kernel recovers after restart storms",
+      "C": "Kernel mount rejected writes",
+      "D": "LLM observability verified",
+      "E": "E1 confirmed fail-closed when evidence missing"
+    }
+  },
+  "receipt_sha256": "ae66be6f8e5b8e2c077d66eb4277f28e8ceb56dcde4fc702d360cb9f8054c1ba"
+}

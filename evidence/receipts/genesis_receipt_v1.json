@@ -1,0 +1,73 @@
+{
+  "schema": "bizra_genesis_receipt_v1",
+  "version": 1,
+  "truth_label": "MEASURED",
+  "timestamp_utc": "2025-12-18T15:27:40.478631+00:00",
+  "git_commit_sha": "24d743681be2141fe4b73a31159a47e2863a3b55",
+  "artifacts": {
+    "compose_file": "docker-compose.yml",
+    "compose_sha256": "2950430f2b58f2d704e2fd2e800e48f0faef4fe6da1a3f7debc35af691dbabe3",
+    "model_family_manifest": "model-family-genesis-v1-SEALED.yaml",
+    "model_family_manifest_sha256": "2dcd67447fabfb80d0841864e9823459b01e03848ec1b3975ca1adb6b09bfc06"
+  },
+  "healthz_config": {
+    "budget_s": 0.85,
+    "redis_timeout_s": 0.35,
+    "neo4j_timeout_s": 0.55,
+    "llm_timeout_s": 0.25,
+    "cache_ttl_s": 0.5
+  },
+  "healthz_snapshot": {
+    "url": "http://127.0.0.1:8010/healthz",
+    "status_code": 200,
+    "body_sha256": "01f4989643f94d44fad808047edc511358e8e90554b3cb1f47d93fa2c77023c5",
+    "elapsed_ms": 5.35,
+    "checks": {
+      "synapse": {
+        "enabled": true,
+        "ok": true,
+        "url": "redis://synapse:6379",
+        "latency_ms": 1.62
+      },
+      "wisdom": {
+        "enabled": true,
+        "ok": true,
+        "url": "bolt://wisdom:7687",
+        "latency_ms": 5.2
+      },
+      "ollama": {
+        "enabled": true,
+        "ok": true,
+        "status": "ok",
+        "url": "http://host.docker.internal:11434",
+        "latency_ms": 2.59
+      },
+      "lmstudio": {
+        "enabled": true,
+        "ok": true,
+        "status": "ok",
+        "url": "http://host.docker.internal:1234",
+        "latency_ms": 2.7
+      }
+    }
+  },
+  "first_sape_plan": {
+    "url": "http://127.0.0.1:8010/v1/sape/plan",
+    "request_sha256": "6052e9d1240cd66e5beb3feb862ceb3f0f13fa195f7d1d12c50a74ffbb2f948e",
+    "response_sha256": "3689fe04b078241d468a3a52a275e9c6fdb913fc9e209bc863d5c76fa3448b73",
+    "http_status": 200,
+    "latency_ms": 56.26,
+    "response_status": "PLANNED",
+    "slot": "cold_core",
+    "prompt_sha256": "19515b309196c65c578365172fdcad6cfc7ff621e3c1257a9c8b5b7dacf60c26",
+    "warnings": []
+  },
+  "neo4j_snapshot": {
+    "http_url": "http://127.0.0.1:7474",
+    "node_count": 26954,
+    "relationship_count": 80767,
+    "query_response_sha256": "b1c110bad32f4b53a04677a484615b7403154a49256c48f0ef54c40324c75a31",
+    "error": null
+  },
+  "receipt_sha256": "fa48754876029a6cfbec5404a39d6948317abb27f15873b5ecdb3ccd5314a4af"
+}

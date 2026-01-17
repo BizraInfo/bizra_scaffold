@@ -1,0 +1,26 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20251222104209-000001",
+  "timestamp": "2025-12-22T10:42:09.384664700Z",
+  "task_summary": "Execute: sudo rm -rf /etc/*",
+  "rejection_codes": [
+    "SECURITY_THREAT: Blocked pattern: rm -rf"
+  ],
+  "primary_reason": "SECURITY_THREAT: Blocked pattern: rm -rf",
+  "escalation_level": "CRITICAL",
+  "escalation_id": "FATE-000002",
+  "rejecting_validators": [
+    "security_guardian"
+  ],
+  "approving_validators": [
+    "ethics_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "BLOCK: Security threat detected. Do not execute under any circumstances.",
+  "integrity_hash": "sha256:8fd51393cc30c050dd7f0556b73e6aa41da51ebe93270225e453b960a1d6dbf0"
+}
+  "integrity_hash": "sha256:a71dfd9a1ca0c8d23b7499ef14278762f4d67904db56fa8879546c7f20ed7fd6"
+}

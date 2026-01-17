@@ -1,0 +1,19 @@
+{
+  "schema": "bizra-execution-receipt-v3",
+  "receipt_type": "Execution",
+  "hardware_anchor": "fc095b726fdba80dfdc8ad303f22b3e917aae3bf989b2fbeb3ec35872847c8ab",
+  "receipt_id": "EXEC-20260116155408-000003",
+  "request_id": "b01d78cb61584af193876607086bfb11",
+  "timestamp": "2026-01-16T15:54:08.697057705Z",
+  "task_summary": "Explain the concept of Ihsan in two sentences",
+  "sat_validation_ms": 9,
+  "pat_execution_ms": 2,
+  "total_latency_ms": 13,
+  "synergy_score": 0.9211236257106066,
+  "ihsan_score": 0.9239835934713483,
+  "ihsan_threshold": 0.7999999998137355,
+  "pat_agents_count": 8,
+  "sat_approvers_count": 6,
+  "harberger_tax": 0.00009999983012676239,
+  "integrity_hash": "sha256:d3b8940a4ee92997efdd3baef2565aec97dc47a40125fcc1ae2d190171d23ea9"
+}

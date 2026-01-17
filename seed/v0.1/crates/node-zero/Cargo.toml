@@ -1,0 +1,10 @@
+[package]
+name = "node-zero"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bizra-core = { path = "../bizra-core" }
+serde_json = "1"
+anyhow = "1"
+hex = "0.4"

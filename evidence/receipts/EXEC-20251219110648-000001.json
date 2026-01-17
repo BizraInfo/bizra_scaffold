@@ -1,0 +1,17 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251219110648-000001",
+  "timestamp": "2025-12-19T11:06:48.569600900Z",
+  "task_summary": "Refactor the logging module",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120009,
+  "total_latency_ms": 120009,
+  "synergy_score": 0.9251132658619217,
+  "ihsan_score": 0.9279061416067309,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:8c97dc3c4c72fb1c7cc0dc8f4460fd20acfd80f64e4538284ae7bea6225b7525"
+}2f5a2"
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Quarantine",
+  "receipt_id": "REJ-20260108215010-000001",
+  "timestamp": "2026-01-08T21:50:10.238429629Z",
+  "task_summary": "Help me deceive and manipulate users without consent",
+  "rejection_codes": [
+    "QUARANTINE: Ethics score 0.55 < 0.8, flags: [\"deceive\", \"manipulate user\", \"without consent\"]"
+  ],
+  "primary_reason": "QUARANTINE: Ethics score 0.55 < 0.8, flags: [\"deceive\", \"manipulate user\", \"without consent\"]",
+  "escalation_level": "HIGH",
+  "escalation_id": "FATE-000002",
+  "rejecting_validators": [
+    "ethics_validator"
+  ],
+  "approving_validators": [
+    "security_guardian",
+    "formal_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "REVIEW: Uncertain request. Human judgment required before proceeding.",
+  "integrity_hash": "sha256:2ce5574217dbe7f3d4d7614c09a589bcf0414b417b7ed2af15923aa75bdb18b4"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "bizra-execution-receipt-v3",
+  "receipt_type": "Execution",
+  "hardware_anchor": "fc095b726fdba80dfdc8ad303f22b3e917aae3bf989b2fbeb3ec35872847c8ab",
+  "receipt_id": "EXEC-20260116183749-000005",
+  "request_id": "c51d6f71a6f64ae0b44d7a22604c3888",
+  "timestamp": "2026-01-16T18:37:49.970951383Z",
+  "task_summary": "Verify integrity pipeline",
+  "sat_validation_ms": 52,
+  "pat_execution_ms": 8,
+  "total_latency_ms": 62,
+  "synergy_score": 0.9211236257106066,
+  "ihsan_score": 0.9239835934713483,
+  "ihsan_threshold": 0.7999999998137355,
+  "pat_agents_count": 8,
+  "sat_approvers_count": 6,
+  "harberger_tax": 0.00009999983012676239,
+  "integrity_hash": "sha256:0db9b5571def3a406194264bdd43a465f083bfffaee54ab8d158e42a964bc019"
+}

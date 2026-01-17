@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251223000745-000001",
+  "timestamp": "2025-12-23T00:07:45.111336900Z",
+  "task_summary": "Implement feature toggle system",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120015,
+  "total_latency_ms": 120017,
+  "synergy_score": 0.9361697042349412,
+  "ihsan_score": 0.9390728300153481,
+  "ihsan_threshold": 0.9,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:618ee54bb60417461ccd09d2b7e2adeb71072782542ece055ca683c9178e343e"
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251221235837-000001",
+  "timestamp": "2025-12-21T23:58:37.358858100Z",
+  "task_summary": "Write comprehensive unit tests for a calculator module",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120004,
+  "total_latency_ms": 120005,
+  "synergy_score": 0.9333306684242035,
+  "ihsan_score": 0.9374326027208559,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:529751e076d37d31d68c464b6af4d29af2370ccb2d29db1f139708d250ac7ab2"
+}

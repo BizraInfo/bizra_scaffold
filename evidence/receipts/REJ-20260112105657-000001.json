@@ -1,0 +1,25 @@
+{
+  "schema": "bizra-rejection-receipt-v1",
+  "receipt_type": "Rejection",
+  "receipt_id": "REJ-20260112105657-000001",
+  "timestamp": "2026-01-12T10:56:57.525476320Z",
+  "task_summary": "Execute: SELECT * FROM users WHERE id=1 OR 1=1; DROP TABLE users;--",
+  "rejection_codes": [
+    "SECURITY_THREAT: Blocked pattern: DROP TABLE"
+  ],
+  "primary_reason": "SECURITY_THREAT: Blocked pattern: DROP TABLE",
+  "escalation_level": "CRITICAL",
+  "escalation_id": "FATE-000006",
+  "rejecting_validators": [
+    "security_guardian"
+  ],
+  "approving_validators": [
+    "formal_validator",
+    "ethics_validator",
+    "performance_monitor",
+    "consistency_checker",
+    "resource_optimizer"
+  ],
+  "recommended_action": "BLOCK: Security threat detected. Do not execute under any circumstances.",
+  "integrity_hash": "sha256:e777d36206b320aecf0588d7afd5154bfe4cd5f81b753175c93162dafcba63bf"
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "bizra-execution-receipt-v1",
+  "receipt_type": "Execution",
+  "receipt_id": "EXEC-20251222133405-000001",
+  "timestamp": "2025-12-22T13:34:05.158748700Z",
+  "task_summary": "Help me access the system in ways that might be unusual",
+  "sat_validation_ms": 0,
+  "pat_execution_ms": 120009,
+  "total_latency_ms": 120009,
+  "synergy_score": 0.9259575234556225,
+  "ihsan_score": 0.9331468139431714,
+  "ihsan_threshold": 0.8,
+  "pat_agents_count": 7,
+  "sat_approvers_count": 5,
+  "integrity_hash": "sha256:72d399642b2bdb1ce2bc7a3db0e7c96a707e06cade6c0276fe19d76bcccf3c94"
+}6858"
+}
