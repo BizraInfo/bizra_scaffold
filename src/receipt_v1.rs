@@ -15,7 +15,8 @@
 // - Ed25519: https://ed25519.cr.yp.to/
 // - SHA-256 for hashing (FIPS 180-4)
 
-use crate::fixed::Fixed64;
+// Note: Fixed64 from crate::fixed could be used here but we use i64 directly
+// to avoid tight coupling and keep receipt schema self-contained.
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 

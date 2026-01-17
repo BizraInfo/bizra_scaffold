@@ -1,0 +1,15 @@
+[package]
+name = "bizra-jcs"
+version = "0.1.0"
+edition = "2021"
+description = "RFC 8785 JSON Canonicalization Scheme for BIZRA deterministic hashing"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+thiserror = "2.0"
+
+[dev-dependencies]
+hex = "0.4"

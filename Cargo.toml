@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/bizra-jcs", "crates/finance-v1", "crates/bizra-gateway", "bizra-genesis-node/backend", "third_fact_demokit/verifier", "crates/policy_engine", "hypervisor-prototype/minimal-hypervisor", "crates/bizra-sdk-core", "crates/bizra-sdk-cli"]
+members = ["crates/bizra-jcs"]
 exclude = ["fuzz"]
 
 [package]
