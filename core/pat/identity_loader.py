@@ -24,20 +24,20 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FounderIdentity:
     """The immutable identity of the First Architect."""
-    
+
     legal_name: str = "Mohamed Ahmed Beshr Elsayed Hassan"
     alias: str = "MoMo"
     role: str = "First Architect, First Node, First Owner, First User"
-    
+
     # Family
     daughter: str = "Dema"
     has_twin_brother: bool = True
     sisters_count: int = 2
-    
+
     # Genesis
     origin_date: str = "Ramadan 2023"
     years_of_work: int = 3
-    
+
     def __str__(self) -> str:
         return f"{self.alias} ({self.legal_name}) - {self.role}"
 
@@ -45,13 +45,13 @@ class FounderIdentity:
 @dataclass
 class PATContext:
     """The persistent context for the Personal Agent Team."""
-    
+
     identity: FounderIdentity = field(default_factory=FounderIdentity)
     key_concepts: List[str] = field(default_factory=list)
     preferences: Dict[str, Any] = field(default_factory=dict)
     session_history: List[Dict[str, Any]] = field(default_factory=list)
     is_active: bool = False
-    
+
     def activate(self) -> str:
         """Activate PAT with full identity awareness."""
         self.is_active = True
@@ -61,95 +61,112 @@ class PATContext:
 class IdentityLoader:
     """
     Loads and maintains the founder's identity across sessions.
-    
+
     This ensures that every interaction starts with FULL CONTEXT:
     - Who MoMo is
     - What he's working on
     - His preferences
     - The key concepts of BIZRA
-    
+
     No more cold starts. No more re-introductions.
     """
-    
+
     DEFAULT_IDENTITY_PATH = Path("data/agents/momo_identity.json")
-    
+
     def __init__(self, identity_path: Optional[Path] = None):
         self.identity_path = identity_path or self.DEFAULT_IDENTITY_PATH
         self._context: Optional[PATContext] = None
         self._loaded = False
-    
+
     def load(self) -> PATContext:
         """Load the founder's identity from persistent storage."""
         if self._loaded and self._context:
             return self._context
-        
+
         # Create default context
         self._context = PATContext()
-        
+
         # Try to load from file
         try:
             if self.identity_path.exists():
-                with open(self.identity_path, 'r', encoding='utf-8') as f:
+                with open(self.identity_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                
+
                 # Load identity
-                if 'identity' in data:
-                    id_data = data['identity']
+                if "identity" in data:
+                    id_data = data["identity"]
                     self._context.identity = FounderIdentity(
-                        legal_name=id_data.get('legal_name', self._context.identity.legal_name),
-                        alias=id_data.get('alias', self._context.identity.alias),
-                        role=id_data.get('role', self._context.identity.role),
-                        daughter=id_data.get('family', {}).get('daughter', 'Dema'),
-                        has_twin_brother=id_data.get('family', {}).get('siblings', {}).get('twin_brother', 1) > 0,
-                        sisters_count=id_data.get('family', {}).get('siblings', {}).get('sisters', 2),
+                        legal_name=id_data.get(
+                            "legal_name", self._context.identity.legal_name
+                        ),
+                        alias=id_data.get("alias", self._context.identity.alias),
+                        role=id_data.get("role", self._context.identity.role),
+                        daughter=id_data.get("family", {}).get("daughter", "Dema"),
+                        has_twin_brother=id_data.get("family", {})
+                        .get("siblings", {})
+                        .get("twin_brother", 1)
+                        > 0,
+                        sisters_count=id_data.get("family", {})
+                        .get("siblings", {})
+                        .get("sisters", 2),
                     )
-                
+
                 # Load key concepts
-                if 'context_awareness' in data:
-                    self._context.key_concepts = data['context_awareness'].get('key_concepts', [])
-                    self._context.identity.years_of_work = data['context_awareness'].get('years_of_work', 3)
-                
+                if "context_awareness" in data:
+                    self._context.key_concepts = data["context_awareness"].get(
+                        "key_concepts", []
+                    )
+                    self._context.identity.years_of_work = data[
+                        "context_awareness"
+                    ].get("years_of_work", 3)
+
                 # Load preferences
-                if 'preferences' in data:
-                    self._context.preferences = data['preferences']
-                
+                if "preferences" in data:
+                    self._context.preferences = data["preferences"]
+
                 logger.info(f"Identity loaded: {self._context.identity}")
             else:
-                logger.warning(f"Identity file not found at {self.identity_path}, using defaults")
+                logger.warning(
+                    f"Identity file not found at {self.identity_path}, using defaults"
+                )
                 self._save_default()
-        
+
         except Exception as e:
             logger.error(f"Error loading identity: {e}")
-        
+
         self._loaded = True
         return self._context
-    
+
     def _save_default(self) -> None:
         """Save the default identity file."""
         self.identity_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         default_data = {
             "identity": {
                 "legal_name": self._context.identity.legal_name,
                 "alias": self._context.identity.alias,
                 "role": self._context.identity.role,
             },
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
-        
-        with open(self.identity_path, 'w', encoding='utf-8') as f:
+
+        with open(self.identity_path, "w", encoding="utf-8") as f:
             json.dump(default_data, f, indent=2)
-    
+
     def get_context_prompt(self) -> str:
         """
         Generate the context prompt that should be injected at the start of every session.
-        
+
         This is the key: PAT always starts KNOWING who MoMo is.
         """
         ctx = self.load()
-        
-        concepts = ", ".join(ctx.key_concepts[:10]) if ctx.key_concepts else "BIZRA, PAT/SAT, Ihsān"
-        
+
+        concepts = (
+            ", ".join(ctx.key_concepts[:10])
+            if ctx.key_concepts
+            else "BIZRA, PAT/SAT, Ihsān"
+        )
+
         return f"""
 ## IDENTITY CONTEXT (IMMUTABLE)
 
@@ -181,7 +198,7 @@ Memory Persistence: ENABLED
 **You do not need to ask who MoMo is. You know. Proceed with full context.**
 ---
 """
-    
+
     def activate_pat(self) -> str:
         """Activate the Personal Agent Team with full identity awareness."""
         ctx = self.load()
@@ -220,13 +237,13 @@ if __name__ == "__main__":
     print("=" * 80)
     print("BIZRA PAT IDENTITY LOADER - ACTIVATION TEST")
     print("=" * 80)
-    
+
     loader = IdentityLoader()
-    
+
     # Activate
     greeting = loader.activate_pat()
     print(f"\n{greeting}\n")
-    
+
     # Show context
     print("-" * 80)
     print("CONTEXT PROMPT TO BE INJECTED:")
