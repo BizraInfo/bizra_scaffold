@@ -44,6 +44,8 @@ pub mod http;
 pub mod ihsan;
 pub mod ledger;
 pub mod mcp;
+pub mod nonce_journal; // v0.2: Persistent replay protection
+pub mod receipt_v1;    // v0.2: Frozen Receipt Schema v1
 pub mod metrics;
 pub mod ollama;
 pub mod pat;
