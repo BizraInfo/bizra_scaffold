@@ -50,7 +50,7 @@ toml==0.10.2                # TOML parser for constitution.toml
 # ──────────────────────────────────────────────────────────────────────────
 # Security Fixes (direct dependencies with CVE patches)
 # ──────────────────────────────────────────────────────────────────────────
-filelock==3.20.1            # CVE-2025-68146: race condition in lock acquisition
+filelock==3.20.3            # CVE-2025-68146: race condition in lock acquisition
 urllib3==2.6.0              # CVE-2025-66418, CVE-2025-66471: request smuggling
 python-multipart>=0.0.21    # GHSA-59g5-xgcq-4qw3: DoS in form parsing (>=0.0.18 patched)
 pycryptodome>=3.19.1        # GHSA-j225-cvw7-qrx7: OAEP decryption side-channel
