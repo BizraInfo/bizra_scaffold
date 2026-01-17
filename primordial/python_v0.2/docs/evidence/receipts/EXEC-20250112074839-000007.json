@@ -1,0 +1,111 @@
+{
+  "action": {
+    "action": "generate_audit_pack",
+    "intent": "compliance_report",
+    "risk_level": "0.10",
+    "trace": {
+      "inputs": [
+        "benefit",
+        "cost",
+        "fairness",
+        "intent",
+        "observed_ok",
+        "predicted_ok",
+        "proposed_action",
+        "risk_level"
+      ],
+      "rule": "deterministic_stub_v1",
+      "thought_id": "46e3bdfcc7b1f7f55c5080dbea3bee4a38291f6bc5b5425abaf3bd5f0679aec3"
+    }
+  },
+  "decision": "committed",
+  "envelope": {
+    "agent_id": "node-0",
+    "counter": 6,
+    "nonce": "49193ddb3d7438fc49a44d93a92260bc",
+    "payload_hash": "aa7ca66ef0a3490fbd0e3019b63b160190fe77c48855fff0f147fcdacda3350d",
+    "policy_hash": "0fff729abefa8c4b8abdade3d701a366813a70a5e42ba4c409a9996df395f0fe",
+    "session_id": "lifecycle",
+    "timestamp_ns": 1736668119006000000
+  },
+  "fate_reason": "ok",
+  "fate_result": "SAT",
+  "hash_chain": {
+    "current": "7c52f4b48273a5213113083009e1d1d9eb1c4318de35b549b30625564276ba5a",
+    "prev": "8d50cfe0963c2532a462df26c0dd05da2ae50360016f5880ca796a4ac2c574ef"
+  },
+  "ihsan_score": {
+    "composite": "0.918000",
+    "composite_bits": 3942779977,
+    "dimensions": {
+      "adl": "1.000000",
+      "amanah": "0.900000",
+      "bayan": "1.000000",
+      "hikmah": "0.650000",
+      "ihsan": "0.820000",
+      "mizan": "0.950000",
+      "sabr": "1.000000",
+      "tawhid": "1.000000"
+    }
+  },
+  "receipt_id": "EXEC-20250112074839-000007",
+  "result": {
+    "applied_action": "generate_audit_pack",
+    "note": "simulation_only",
+    "status": "ok"
+  },
+  "sat_consensus": {
+    "pass_ratio": "1.000000",
+    "pass_ratio_bits": 4294967296,
+    "passed": true,
+    "passed_weight_centi": 900,
+    "total_weight_centi": 900,
+    "veto_triggered": false,
+    "votes": [
+      {
+        "passed": true,
+        "reason": "amanah=0.900000",
+        "role": "security",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "adl=1.000000",
+        "role": "formal",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "min(ihsan,mizan)=0.820000",
+        "role": "ethics",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "hikmah=0.650000",
+        "role": "performance",
+        "weight_centi": 150
+      },
+      {
+        "passed": true,
+        "reason": "sabr=1.000000",
+        "role": "reliability",
+        "weight_centi": 100
+      },
+      {
+        "passed": true,
+        "reason": "bayan=1.000000",
+        "role": "ops",
+        "weight_centi": 50
+      }
+    ]
+  },
+  "signature": {
+    "public_key_b64": "VsMRirtTtFsNB8n4l1TAm/4Vnm9Qj6aA0mJY4rh+AT4=",
+    "scheme": "ed25519",
+    "signature_b64": "VhBCWaX7PPeZ6cYSplrRxW6mQZLmog6s+Z1PnrQ0FaRIHkFVGQ/9wE75N5qTu7Gw63mpIGoFlWsCl11pqlzPDQ=="
+  },
+  "thought_id": "46e3bdfcc7b1f7f55c5080dbea3bee4a38291f6bc5b5425abaf3bd5f0679aec3",
+  "timestamp_ns": 1736668119006000000,
+  "type": "execution"
+}

@@ -1,0 +1,107 @@
+{
+  "action": {
+    "action": "enable_memory_protection",
+    "intent": "security_patch",
+    "risk_level": "0.20",
+    "trace": {
+      "inputs": [
+        "benefit",
+        "cost",
+        "fairness",
+        "intent",
+        "observed_ok",
+        "predicted_ok",
+        "proposed_action",
+        "risk_level"
+      ],
+      "rule": "deterministic_stub_v1",
+      "thought_id": "7372448e4c15b3e4b31c59e6e5f241a31fc5fc79a1f57a24426c133ac1dfafde"
+    }
+  },
+  "decision": "rejected",
+  "envelope": {
+    "agent_id": "node-0",
+    "counter": 2,
+    "nonce": "fb47df571ec8fd4468a374047ada939b",
+    "payload_hash": "87fe0fcb94a0e40f94a2e98d4425b006147a33b9638e6c40d9b395148a39e9ea",
+    "policy_hash": "0fff729abefa8c4b8abdade3d701a366813a70a5e42ba4c409a9996df395f0fe",
+    "session_id": "lifecycle",
+    "timestamp_ns": 1736668119002000000
+  },
+  "fate_reason": "ok",
+  "fate_result": "SAT",
+  "hash_chain": {
+    "current": "e70483dfd6883e5ddd2b7f4601a58ef865a83424b395d7b6821483a6e0c33caf",
+    "prev": "2880aaf3caecbd69b6d9a950613da2161d74bcd1081bbe62b852ccf24f872d2f"
+  },
+  "ihsan_score": {
+    "composite": "0.905000",
+    "composite_bits": 3886945402,
+    "dimensions": {
+      "adl": "1.000000",
+      "amanah": "0.800000",
+      "bayan": "1.000000",
+      "hikmah": "0.600000",
+      "ihsan": "0.900000",
+      "mizan": "0.900000",
+      "sabr": "1.000000",
+      "tawhid": "1.000000"
+    }
+  },
+  "reason": "sat_consensus",
+  "receipt_id": "REJ-20250112074839-000003",
+  "sat_consensus": {
+    "pass_ratio": "0.777778",
+    "pass_ratio_bits": 3340530119,
+    "passed": false,
+    "passed_weight_centi": 700,
+    "total_weight_centi": 900,
+    "veto_triggered": true,
+    "votes": [
+      {
+        "passed": false,
+        "reason": "amanah=0.800000",
+        "role": "security",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "adl=1.000000",
+        "role": "formal",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "min(ihsan,mizan)=0.900000",
+        "role": "ethics",
+        "weight_centi": 200
+      },
+      {
+        "passed": true,
+        "reason": "hikmah=0.600000",
+        "role": "performance",
+        "weight_centi": 150
+      },
+      {
+        "passed": true,
+        "reason": "sabr=1.000000",
+        "role": "reliability",
+        "weight_centi": 100
+      },
+      {
+        "passed": true,
+        "reason": "bayan=1.000000",
+        "role": "ops",
+        "weight_centi": 50
+      }
+    ]
+  },
+  "signature": {
+    "public_key_b64": "VsMRirtTtFsNB8n4l1TAm/4Vnm9Qj6aA0mJY4rh+AT4=",
+    "scheme": "ed25519",
+    "signature_b64": "03DSAP4tsfPhqW3q43icxTAKSpCjCKez1xqKlNOHsHErb/wm8Dly0THi7yNFPwK+bbf4VcGXbRejOzPQ3oOjDw=="
+  },
+  "thought_id": "7372448e4c15b3e4b31c59e6e5f241a31fc5fc79a1f57a24426c133ac1dfafde",
+  "timestamp_ns": 1736668119002000000,
+  "type": "rejection"
+}

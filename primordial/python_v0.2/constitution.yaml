@@ -1,0 +1,99 @@
+# BIZRA Genesis Constitution (simulation)
+# This file is treated as the cryptographic policy root.
+# Any change changes policy_hash and invalidates prior receipts.
+
+version: 0.2
+name: bizra-genesis-sim
+
+invariants:
+  - id: L0-01
+    name: Serve with Ihsan
+    description: "We don't assume. If we must, we do it with Ihsan."
+  - id: L0-02
+    name: No Harm
+    description: "Actions must not create unacceptable harm."
+  - id: L0-03
+    name: Auditability
+    description: "Every decision must leave a verifiable evidence trail."
+  - id: L0-04
+    name: Consent
+    description: "User intent and consent gate actions."
+  - id: L0-05
+    name: Reversibility
+    description: "State changes must be reversible/rollbackable."
+
+# Environment-aware thresholds
+thresholds:
+  dev: "0.80"
+  ci: "0.90"
+  prod: "0.95"
+
+# Artifact-class-specific thresholds (optional overrides)
+artifact_thresholds:
+  execution:
+    dev: "0.80"
+    ci: "0.90"
+    prod: "0.95"
+  governance:
+    dev: "0.85"
+    ci: "0.93"
+    prod: "0.97"
+
+# 8-dimensional Ihsan scoring model
+# Scores and weights are expressed as decimals in [0,1].
+# Internally they are converted to Fixed64 (Q32.32).
+ihsan_engine:
+  dimensions:
+    - key: adl
+      name: Correctness (Adl)
+      weight: "0.20"
+    - key: amanah
+      name: Safety (Amanah)
+      weight: "0.15"
+    - key: ihsan
+      name: User Benefit (Ihsan)
+      weight: "0.15"
+    - key: hikmah
+      name: Efficiency (Hikmah)
+      weight: "0.10"
+    - key: bayan
+      name: Auditability (Bayan)
+      weight: "0.10"
+    - key: tawhid
+      name: Anti-Centralization (Tawhid)
+      weight: "0.10"
+    - key: sabr
+      name: Robustness (Sabr)
+      weight: "0.10"
+    - key: mizan
+      name: Fairness (Mizan)
+      weight: "0.10"
+
+consensus:
+  validators:
+    - role: security
+      weight: 2.0
+      veto: true
+    - role: formal
+      weight: 2.0
+      veto: true
+    - role: ethics
+      weight: 2.0
+      veto: true
+    - role: performance
+      weight: 1.5
+      veto: false
+    - role: reliability
+      weight: 1.0
+      veto: false
+    - role: ops
+      weight: 0.5
+      veto: false
+  pass_ratio: "0.70"
+
+replay_guard:
+  nonce_ttl_ns: 600000000000  # 10 minutes
+
+snr:
+  # SNR = (signal + eps) / (noise + eps)
+  eps: 1

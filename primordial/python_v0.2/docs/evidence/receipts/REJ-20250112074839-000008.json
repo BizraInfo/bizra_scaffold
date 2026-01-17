@@ -1,0 +1,62 @@
+{
+  "action": {
+    "action": "disable_safety_checks",
+    "intent": "aggressive_perf_tuning",
+    "risk_level": "0.70",
+    "trace": {
+      "inputs": [
+        "benefit",
+        "cost",
+        "fairness",
+        "intent",
+        "observed_ok",
+        "predicted_ok",
+        "proposed_action",
+        "risk_level"
+      ],
+      "rule": "deterministic_stub_v1",
+      "thought_id": "fbe42efe5958cc2f1b596998384bf09fb0b651d4d74d7de603c51ac9eaf911a8"
+    }
+  },
+  "decision": "rejected",
+  "envelope": {
+    "agent_id": "node-0",
+    "counter": 7,
+    "nonce": "4879a0eee4a1978708318448a5196787",
+    "payload_hash": "b041170e6220383cf1c14d29c60f48320584a08737e72cfa691729055dc6a664",
+    "policy_hash": "0fff729abefa8c4b8abdade3d701a366813a70a5e42ba4c409a9996df395f0fe",
+    "session_id": "lifecycle",
+    "timestamp_ns": 1736668119007000000
+  },
+  "fate_reason": "ihsan_below_threshold(0.765000<0.800000)",
+  "fate_result": "UNSAT",
+  "hash_chain": {
+    "current": "24c42b5f397cd45f39b7cc2cbde2aafa7a41f7fd023a644a399c34b02d66d390",
+    "prev": "7c52f4b48273a5213113083009e1d1d9eb1c4318de35b549b30625564276ba5a"
+  },
+  "ihsan_score": {
+    "composite": "0.765000",
+    "composite_bits": 3285649980,
+    "dimensions": {
+      "adl": "1.000000",
+      "amanah": "0.300000",
+      "bayan": "1.000000",
+      "hikmah": "0.900000",
+      "ihsan": "0.600000",
+      "mizan": "0.400000",
+      "sabr": "1.000000",
+      "tawhid": "1.000000"
+    }
+  },
+  "reason": "human_veto_gate",
+  "receipt_id": "REJ-20250112074839-000008",
+  "sat_consensus": null,
+  "signature": {
+    "public_key_b64": "VsMRirtTtFsNB8n4l1TAm/4Vnm9Qj6aA0mJY4rh+AT4=",
+    "scheme": "ed25519",
+    "signature_b64": "FHfn8caWoDQlSVZ63eGjG44V6078spZFT2A1/T0aTu+GjpGuNRJvulW66H9BYJPONVCw/Skw5QMf/DrHDFGYAQ=="
+  },
+  "thought_id": "fbe42efe5958cc2f1b596998384bf09fb0b651d4d74d7de603c51ac9eaf911a8",
+  "timestamp_ns": 1736668119007000000,
+  "type": "rejection"
+}
