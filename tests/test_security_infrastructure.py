@@ -124,8 +124,12 @@ class TestSecureJWTService:
     @pytest.fixture
     def jwt_service(self):
         from core.security.jwt_hardened import create_secure_jwt_service
-
-        return create_secure_jwt_service()
+        
+        # Use explicit secure secret that doesn't contain weak patterns
+        # This prevents random test failures when generated secret happens to contain
+        # words like "test", "token", "secret", etc. in the base64 encoding
+        secure_secret = "8K9mNpQr7X6vBc5LzYw4HjGfDa2Sx1Wq0Eu3Ti_Vm-"
+        return create_secure_jwt_service(secret=secure_secret)
 
     def test_create_and_verify_token(self, jwt_service):
         """Basic token creation and verification."""
